@@ -1,0 +1,858 @@
+// TOEIC Learning Platform - ERD & Database Design v1.6
+// Converted from the supplied Markdown data dictionary (64 tables).
+// Logical schema only: SQL CHECK, triggers, permission rules and immutability remain to be implemented.
+Project TOEIC_Learning_Platform {
+  database_type: "PostgreSQL"
+  Note: "Logical ERD v1.6 - review candidate; PostgreSQL validation pending"
+}
+
+Table users {
+  user_id uuid [pk]
+  email varchar(255) [not null, unique]
+  password_hash varchar(255) [not null]
+  full_name varchar(150) [not null]
+  avatar_url text
+  status varchar(20) [not null]
+  email_verified_at timestamptz
+  last_login_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table roles {
+  role_id integer [pk, increment]
+  name varchar(50) [not null, unique]
+  description text
+}
+
+Table permissions {
+  permission_id integer [pk, increment]
+  code varchar(100) [not null, unique]
+  description text
+}
+
+Table user_roles {
+  user_id uuid [not null]
+  role_id integer [not null]
+  assigned_at timestamptz
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table role_permissions {
+  role_id integer [not null]
+  permission_id integer [not null]
+
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+}
+
+Table content_categories {
+  category_id integer [pk, increment]
+  code varchar(50) [not null, unique]
+  name varchar(100) [not null]
+  description text
+}
+
+Table learning_contents {
+  current_published_version_id uuid
+  content_id uuid [pk]
+  category_id integer [not null]
+  author_id uuid [not null]
+  title varchar(255) [not null]
+  summary text
+  body text
+  difficulty varchar(20)
+  status varchar(20) [not null]
+  published_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (content_id, current_published_version_id) [unique]
+  }
+
+}
+
+Table media_resources {
+  resource_id uuid [pk]
+  resource_type varchar(30) [not null]
+  storage_url text [not null]
+  mime_type varchar(100)
+  file_size bigint
+  duration_seconds integer
+  transcript text
+  created_at timestamptz [not null]
+}
+
+Table content_resources {
+  content_id uuid [not null]
+  resource_id uuid [not null]
+
+  indexes {
+    (content_id, resource_id) [pk]
+  }
+}
+
+Table learning_progress {
+  completed_content_version_id uuid
+  progress_id uuid [pk]
+  user_id uuid [not null]
+  content_id uuid [not null]
+  status varchar(20) [not null]
+  progress_percent decimal(5,2)
+  started_at timestamptz
+  completed_at timestamptz
+  last_accessed_at timestamptz
+  indexes {
+    (user_id, content_id) [unique]
+  }
+
+}
+
+Table bookmarks {
+  user_id uuid [not null]
+  content_id uuid [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (user_id, content_id) [pk]
+  }
+}
+
+Table toeic_parts {
+  part_id integer [pk, increment]
+  part_number integer [not null, unique]
+  skill varchar(20) [not null]
+  name varchar(100) [not null]
+}
+
+Table topics {
+  topic_id integer [pk, increment]
+  name varchar(100) [not null, unique]
+  description text
+}
+
+Table question_types {
+  question_type_id integer [pk, increment]
+  code varchar(50) [not null, unique]
+  name varchar(100) [not null]
+  description text
+}
+
+Table question_groups {
+  group_id uuid [pk]
+  group_type varchar(30)
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table questions {
+  question_id uuid [pk]
+  group_id uuid
+  part_id integer [not null]
+  topic_id integer
+  question_type_id integer [not null]
+  created_by uuid [not null]
+  status varchar(20) [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table question_versions {
+  reviewed_by uuid
+  reviewed_at timestamptz
+  approved_by uuid
+  approved_at timestamptz
+  published_at timestamptz
+  archived_at timestamptz
+  group_version_id uuid
+  question_version_id uuid [pk]
+  question_id uuid [not null]
+  version_number integer [not null]
+  question_text text [not null]
+  status varchar(20) [not null, default: 'DRAFT']
+  explanation text
+  difficulty varchar(20)
+  created_at timestamptz [not null]
+  indexes {
+    (question_id, version_number) [unique]
+    (question_version_id, question_id) [unique]
+    (question_version_id, group_version_id) [unique]
+  }
+
+}
+
+Table question_choices {
+  choice_id uuid [pk]
+  question_version_id uuid [not null]
+  choice_label varchar(10) [not null]
+  content text [not null]
+  is_correct boolean [not null]
+  display_order integer [not null]
+  indexes {
+    (question_version_id, choice_id) [unique]
+    (question_version_id, choice_label) [unique]
+    (question_version_id, display_order) [unique]
+  }
+
+}
+
+Table question_resources {
+  question_version_id uuid [not null]
+  resource_id uuid [not null]
+
+  indexes {
+    (question_version_id, resource_id) [pk]
+  }
+}
+
+Table tests {
+  test_id uuid [pk]
+  created_by uuid [not null]
+  title varchar(255) [not null]
+  description text
+  test_type varchar(30) [not null]
+  status varchar(20) [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table test_versions {
+  blueprint_id uuid
+  retired_at timestamptz
+  max_attempts integer
+  test_version_id uuid [pk]
+  test_id uuid [not null]
+  version_number integer [not null]
+  duration_seconds integer
+  total_questions integer
+  status varchar(20) [not null]
+  published_at timestamptz
+  created_at timestamptz [not null]
+  indexes {
+    (test_id, version_number) [unique]
+  }
+
+}
+
+Table test_questions {
+  test_version_id uuid [not null]
+  question_version_id uuid [not null]
+  question_group_version_id uuid
+  question_order integer [not null]
+  points decimal(6,2)
+
+  indexes {
+    (test_version_id, question_version_id) [pk]
+  }
+}
+
+Table attempts {
+  attempt_id uuid [pk]
+  user_id uuid [not null]
+  test_version_id uuid
+  attempt_type varchar(30) [not null]
+  attempt_source_type varchar(30) [not null]
+  expires_at timestamptz [not null]
+  max_attempts_snapshot integer
+  status varchar(20) [not null]
+  started_at timestamptz [not null]
+  submitted_at timestamptz
+  duration_seconds integer
+  total_questions integer
+  correct_count integer
+  listening_correct_count integer
+  reading_correct_count integer
+  listening_estimated_score integer
+  reading_estimated_score integer
+  total_estimated_score integer
+  score_conversion_table_id uuid
+  created_at timestamptz [not null]
+}
+
+Table attempt_answers {
+  attempt_answer_id uuid [pk]
+  attempt_id uuid [not null]
+  question_version_id uuid [not null]
+  selected_choice_id uuid
+  is_correct boolean
+  answered_at timestamptz
+  updated_at timestamptz [not null]
+  indexes {
+    (attempt_id, question_version_id) [unique]
+  }
+
+}
+
+Table attempt_part_results {
+  attempt_part_result_id uuid [pk]
+  attempt_id uuid [not null]
+  part_id integer [not null]
+  total_questions integer [not null]
+  correct_count integer [not null]
+  accuracy decimal(5,2)
+  indexes {
+    (attempt_id, part_id) [unique]
+  }
+
+}
+
+Table vocabulary_decks {
+  deck_id uuid [pk]
+  user_id uuid [not null]
+  name varchar(150) [not null]
+  description text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table vocabularies {
+  part_of_speech varchar(40)
+  pronunciation_audio_resource_id uuid
+  vocabulary_id uuid [pk]
+  created_by uuid [not null]
+  word varchar(150) [not null]
+  meaning text [not null]
+  pronunciation varchar(255)
+  example text
+  note text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table deck_vocabularies {
+  deck_id uuid [not null]
+  vocabulary_id uuid [not null]
+  added_at timestamptz [not null]
+
+  indexes {
+    (deck_id, vocabulary_id) [pk]
+  }
+}
+
+Table review_states {
+  review_state_id uuid [pk]
+  user_id uuid [not null]
+  vocabulary_id uuid [not null]
+  repetition_count integer [not null]
+  interval_days integer [not null]
+  ease_factor decimal(4,2)
+  last_reviewed_at timestamptz
+  next_review_at timestamptz [not null]
+  indexes {
+    (user_id, vocabulary_id) [unique]
+  }
+
+}
+
+Table review_history {
+  review_history_id uuid [pk]
+  review_state_id uuid [not null]
+  rating integer [not null]
+  previous_interval integer
+  new_interval integer
+  reviewed_at timestamptz [not null]
+}
+
+Table learning_profiles {
+  profile_id uuid [pk]
+  user_id uuid [not null, unique]
+  target_score integer
+  estimated_score integer
+  listening_level varchar(30)
+  reading_level varchar(30)
+  updated_at timestamptz [not null]
+}
+
+Table part_performance {
+  performance_id uuid [pk]
+  user_id uuid [not null]
+  part_id integer [not null]
+  attempted_questions integer [not null]
+  correct_questions integer [not null]
+  accuracy decimal(5,2)
+  mastery_score decimal(5,2)
+  updated_at timestamptz [not null]
+  indexes {
+    (user_id, part_id) [unique]
+  }
+
+}
+
+Table recommendations {
+  recommendation_id uuid [pk]
+  user_id uuid [not null]
+  recommendation_type varchar(50) [not null]
+  title varchar(255) [not null]
+  description text
+  source varchar(50)
+  priority integer
+  generated_at timestamptz [not null]
+  expires_at timestamptz
+}
+
+Table ai_conversations {
+  conversation_id uuid [pk]
+  user_id uuid [not null]
+  title varchar(255)
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table ai_messages {
+  message_id uuid [pk]
+  conversation_id uuid [not null]
+  role varchar(20) [not null]
+  content text [not null]
+  created_at timestamptz [not null]
+}
+
+Table knowledge_documents {
+  learning_content_version_id uuid
+  document_id uuid [pk]
+  title varchar(255) [not null]
+  source_type varchar(50)
+  source_url text
+  status varchar(20) [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table knowledge_chunks {
+  learning_content_version_id uuid
+  chunk_id uuid [pk]
+  document_id uuid [not null]
+  chunk_index integer [not null]
+  content text [not null]
+  embedding vector(768)
+  embedding_model varchar(120)
+  created_at timestamptz [not null]
+  indexes {
+    (document_id, chunk_index) [unique]
+  }
+
+}
+
+Table ai_message_sources {
+  message_id uuid [not null]
+  chunk_id uuid [not null]
+  relevance_score decimal(6,5)
+
+  indexes {
+    (message_id, chunk_id) [pk]
+  }
+}
+
+Table ai_configs {
+  config_id uuid [pk]
+  config_key varchar(100) [not null, unique]
+  config_value text [not null]
+  description text
+  updated_by uuid
+  updated_at timestamptz [not null]
+}
+
+Table dictation_exercises {
+  dictation_id uuid [pk]
+  title varchar(255) [not null]
+  instruction text
+  audio_resource_id uuid [not null]
+  transcript text [not null]
+  difficulty varchar(20)
+  status varchar(20) [not null]
+  created_by uuid [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table dictation_attempts {
+  attempt_id uuid [pk]
+  dictation_id uuid [not null]
+  user_id uuid [not null]
+  status varchar(20) [not null]
+  score decimal(5,2)
+  started_at timestamptz [not null]
+  completed_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table dictation_answers {
+  answer_id uuid [pk]
+  attempt_id uuid [not null]
+  user_text text [not null]
+  accuracy decimal(5,2)
+  submitted_at timestamptz [not null]
+}
+
+Table shadowing_exercises {
+  shadowing_id uuid [pk]
+  title varchar(255) [not null]
+  instruction text
+  audio_resource_id uuid [not null]
+  transcript text [not null]
+  difficulty varchar(20)
+  status varchar(20) [not null]
+  created_by uuid [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table shadowing_attempts {
+  attempt_id uuid [pk]
+  shadowing_id uuid [not null]
+  user_id uuid [not null]
+  recording_resource_id uuid
+  status varchar(20) [not null]
+  pronunciation_score decimal(5,2)
+  fluency_score decimal(5,2)
+  overall_score decimal(5,2)
+  started_at timestamptz [not null]
+  completed_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table shadowing_feedback {
+  feedback_id uuid [pk]
+  attempt_id uuid [not null]
+  feedback_type varchar(30)
+  feedback_text text [not null]
+  created_at timestamptz [not null]
+}
+
+Table question_group_versions {
+  group_version_id uuid [pk]
+  group_id uuid [not null]
+  version_number integer [not null]
+  instruction text
+  passage_text text
+  created_at timestamptz [not null]
+  indexes {
+    (group_id, version_number) [unique]
+  }
+
+}
+
+Table question_group_version_resources {
+  group_version_id uuid [not null]
+  resource_id uuid [not null]
+  display_order integer [not null, default: 1]
+
+  indexes {
+    (group_version_id, resource_id) [pk]
+  }
+}
+
+Table attempt_question_snapshots {
+  snapshot_id uuid [pk]
+  attempt_id uuid [not null]
+  question_version_id uuid [not null]
+  question_group_version_id uuid
+  question_order integer [not null]
+  points decimal(6,2)
+  created_at timestamptz [not null]
+  indexes {
+    (attempt_id, question_order) [unique]
+    (attempt_id, question_version_id) [unique]
+  }
+
+}
+
+Table score_conversion_tables {
+  score_conversion_table_id uuid [pk]
+  name varchar(150) [not null]
+  version_number integer [not null]
+  status varchar(20) [not null]
+  activated_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table score_conversion_rules {
+  rule_id uuid [pk]
+  score_conversion_table_id uuid [not null]
+  skill varchar(20) [not null]
+  correct_count integer [not null]
+  estimated_score integer [not null]
+  indexes {
+    (score_conversion_table_id, skill, correct_count) [unique]
+  }
+
+}
+
+Table audit_logs {
+  audit_id uuid [pk]
+  actor_user_id uuid
+  action varchar(100) [not null]
+  entity_type varchar(100) [not null]
+  entity_id uuid
+  details jsonb
+  created_at timestamptz [not null]
+}
+
+Table system_settings {
+  setting_key varchar(100) [pk]
+  setting_value jsonb [not null]
+  updated_by uuid
+  updated_at timestamptz [not null]
+}
+
+Table learning_content_versions {
+  content_version_id uuid [pk]
+  content_id uuid [not null]
+  version_number integer [not null]
+  title varchar(255) [not null]
+  summary text
+  body text [not null]
+  status varchar(20) [not null]
+  published_at timestamptz
+  archived_at timestamptz
+  created_by uuid [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (content_id, version_number) [unique]
+    (content_id, content_version_id) [unique]
+  }
+
+}
+
+Table tags {
+  tag_id uuid [pk]
+  code varchar(80) [not null, unique]
+  name varchar(120) [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table question_tags {
+  question_id uuid [not null]
+  tag_id uuid [not null]
+  created_at timestamptz [not null]
+
+  indexes {
+    (question_id, tag_id) [pk]
+  }
+}
+
+Table test_blueprints {
+  blueprint_id uuid [pk]
+  code varchar(80) [not null]
+  version_number integer [not null]
+  name varchar(150) [not null]
+  blueprint_type varchar(30) [not null]
+  status varchar(20) [not null]
+  expected_total_questions integer [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (code, version_number) [unique]
+  }
+
+}
+
+Table test_blueprint_items {
+  blueprint_item_id uuid [pk]
+  blueprint_id uuid [not null]
+  part_id integer [not null]
+  expected_question_count integer [not null]
+  expected_group_count integer
+  indexes {
+    (blueprint_id, part_id) [unique]
+  }
+
+}
+
+Table ai_request_logs {
+  request_id uuid [pk]
+  conversation_id uuid
+  user_id uuid
+  provider varchar(100) [not null]
+  model varchar(150) [not null]
+  prompt_tokens integer
+  completion_tokens integer
+  total_tokens integer
+  latency_ms integer
+  estimated_cost decimal(16,8)
+  cost_currency varchar(3)
+  status varchar(30) [not null]
+  error_code varchar(100)
+  created_at timestamptz [not null]
+}
+
+Table notifications {
+  notification_id uuid [pk]
+  notification_type varchar(60) [not null]
+  title varchar(255) [not null]
+  body text [not null]
+  payload_json jsonb
+  created_at timestamptz [not null]
+}
+
+Table user_notifications {
+  user_notification_id uuid [pk]
+  notification_id uuid [not null]
+  user_id uuid [not null]
+  delivery_status varchar(20) [not null]
+  delivered_at timestamptz
+  read_at timestamptz
+  created_at timestamptz [not null]
+  indexes {
+    (user_id, notification_id) [unique]
+  }
+
+}
+
+Table error_categories {
+  error_category_id uuid [pk]
+  code varchar(80) [not null, unique]
+  name varchar(150) [not null]
+  description text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table question_error_categories {
+  question_id uuid [not null]
+  error_category_id uuid [not null]
+
+  indexes {
+    (question_id, error_category_id) [pk]
+  }
+}
+
+Table user_error_statistics {
+  user_id uuid [not null]
+  error_category_id uuid [not null]
+  attempted_count integer [not null]
+  incorrect_count integer [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (user_id, error_category_id) [pk]
+  }
+}
+
+Table outbox_events {
+  event_id uuid [pk]
+  event_type varchar(100) [not null]
+  aggregate_type varchar(80) [not null]
+  aggregate_id uuid [not null]
+  payload_json jsonb [not null]
+  status varchar(20) [not null]
+  occurred_at timestamptz [not null]
+  processed_at timestamptz
+  retry_count integer [not null, default: 0]
+}
+
+Ref: user_roles.user_id > users.user_id
+Ref: user_roles.role_id > roles.role_id
+Ref: role_permissions.role_id > roles.role_id
+Ref: role_permissions.permission_id > permissions.permission_id
+Ref: learning_contents.(content_id, current_published_version_id) - learning_content_versions.(content_id, content_version_id)
+Ref: learning_contents.category_id > content_categories.category_id
+Ref: learning_contents.author_id > users.user_id
+Ref: content_resources.content_id > learning_contents.content_id
+Ref: content_resources.resource_id > media_resources.resource_id
+Ref: learning_progress.completed_content_version_id > learning_content_versions.content_version_id
+Ref: learning_progress.user_id > users.user_id
+Ref: learning_progress.content_id > learning_contents.content_id
+Ref: bookmarks.user_id > users.user_id
+Ref: bookmarks.content_id > learning_contents.content_id
+Ref: questions.group_id > question_groups.group_id
+Ref: questions.part_id > toeic_parts.part_id
+Ref: questions.topic_id > topics.topic_id
+Ref: questions.question_type_id > question_types.question_type_id
+Ref: questions.created_by > users.user_id
+Ref: question_versions.reviewed_by > users.user_id
+Ref: question_versions.approved_by > users.user_id
+Ref: question_versions.group_version_id > question_group_versions.group_version_id
+Ref: question_versions.question_id > questions.question_id
+Ref: question_choices.question_version_id > question_versions.question_version_id
+Ref: question_resources.question_version_id > question_versions.question_version_id
+Ref: question_resources.resource_id > media_resources.resource_id
+Ref: tests.created_by > users.user_id
+Ref: test_versions.blueprint_id > test_blueprints.blueprint_id
+Ref: test_versions.test_id > tests.test_id
+Ref: test_questions.test_version_id > test_versions.test_version_id
+Ref: test_questions.(question_version_id, question_group_version_id) > question_versions.(question_version_id, group_version_id)
+Ref: attempts.user_id > users.user_id
+Ref: attempts.test_version_id > test_versions.test_version_id
+Ref: attempts.score_conversion_table_id > score_conversion_tables.score_conversion_table_id
+Ref: attempt_answers.attempt_id > attempts.attempt_id
+Ref: attempt_answers.question_version_id > question_versions.question_version_id
+Ref: attempt_answers.(question_version_id, selected_choice_id) > question_choices.(question_version_id, choice_id)
+Ref: attempt_part_results.attempt_id > attempts.attempt_id
+Ref: attempt_part_results.part_id > toeic_parts.part_id
+Ref: vocabulary_decks.user_id > users.user_id
+Ref: vocabularies.pronunciation_audio_resource_id > media_resources.resource_id
+Ref: vocabularies.created_by > users.user_id
+Ref: deck_vocabularies.deck_id > vocabulary_decks.deck_id
+Ref: deck_vocabularies.vocabulary_id > vocabularies.vocabulary_id
+Ref: review_states.user_id > users.user_id
+Ref: review_states.vocabulary_id > vocabularies.vocabulary_id
+Ref: review_history.review_state_id > review_states.review_state_id
+Ref: learning_profiles.user_id - users.user_id
+Ref: part_performance.user_id > users.user_id
+Ref: part_performance.part_id > toeic_parts.part_id
+Ref: recommendations.user_id > users.user_id
+Ref: ai_conversations.user_id > users.user_id
+Ref: ai_messages.conversation_id > ai_conversations.conversation_id
+Ref: knowledge_documents.learning_content_version_id > learning_content_versions.content_version_id
+Ref: knowledge_chunks.learning_content_version_id > learning_content_versions.content_version_id
+Ref: knowledge_chunks.document_id > knowledge_documents.document_id
+Ref: ai_message_sources.message_id > ai_messages.message_id
+Ref: ai_message_sources.chunk_id > knowledge_chunks.chunk_id
+Ref: ai_configs.updated_by > users.user_id
+Ref: dictation_exercises.audio_resource_id > media_resources.resource_id
+Ref: dictation_exercises.created_by > users.user_id
+Ref: dictation_attempts.dictation_id > dictation_exercises.dictation_id
+Ref: dictation_attempts.user_id > users.user_id
+Ref: dictation_answers.attempt_id > dictation_attempts.attempt_id
+Ref: shadowing_exercises.audio_resource_id > media_resources.resource_id
+Ref: shadowing_exercises.created_by > users.user_id
+Ref: shadowing_attempts.shadowing_id > shadowing_exercises.shadowing_id
+Ref: shadowing_attempts.user_id > users.user_id
+Ref: shadowing_attempts.recording_resource_id > media_resources.resource_id
+Ref: shadowing_feedback.attempt_id > shadowing_attempts.attempt_id
+Ref: question_group_versions.group_id > question_groups.group_id
+Ref: question_group_version_resources.group_version_id > question_group_versions.group_version_id
+Ref: question_group_version_resources.resource_id > media_resources.resource_id
+Ref: attempt_question_snapshots.attempt_id > attempts.attempt_id
+Ref: attempt_question_snapshots.(question_version_id, question_group_version_id) > question_versions.(question_version_id, group_version_id)
+Ref: score_conversion_rules.score_conversion_table_id > score_conversion_tables.score_conversion_table_id
+Ref: audit_logs.actor_user_id > users.user_id
+Ref: system_settings.updated_by > users.user_id
+Ref: learning_content_versions.content_id > learning_contents.content_id
+Ref: learning_content_versions.created_by > users.user_id
+Ref: question_tags.question_id > questions.question_id
+Ref: question_tags.tag_id > tags.tag_id
+Ref: test_blueprint_items.blueprint_id > test_blueprints.blueprint_id
+Ref: test_blueprint_items.part_id > toeic_parts.part_id
+Ref: ai_request_logs.conversation_id > ai_conversations.conversation_id
+Ref: ai_request_logs.user_id > users.user_id
+Ref: user_notifications.notification_id > notifications.notification_id
+Ref: user_notifications.user_id > users.user_id
+Ref: question_error_categories.question_id > questions.question_id
+Ref: question_error_categories.error_category_id > error_categories.error_category_id
+Ref: user_error_statistics.user_id > users.user_id
+Ref: user_error_statistics.error_category_id > error_categories.error_category_id
+
+// Business rules DB-01..DB-18 and version/publish invariants must be implemented in PostgreSQL/application.
+// vector(768) is illustrative; confirm embedding model dimension before migration.
+
+// IMPLEMENTATION RULES (enforce via PostgreSQL CHECK / triggers / service transactions):
+// - All statuses/difficulty/skill/attempt_type/rating are closed vocabularies.
+// - PUBLISHED versions are immutable (including choices, group resources, blueprint items).
+// - learning_contents.current_published_version_id must point to PUBLISHED version.
+// - Composite FK with nullable group_version_id only checks matching when non-null.
+//   Require group_version_id for grouped questions and validate the group's identity.
+// - Each test_version must pass blueprint validation BEFORE publish.
+// - attempt_answers must belong to attempt's fixed question set; snapshot or test_version.
+// - attempt grading is idempotent; scores are derived immutable grading snapshots.
+// - Attempt expiration uses server time; media referenced by published content cannot be hard-deleted.
+// - estimated TOEIC score is NOT an ETS official score.
+
+// NOTE: Reversing < for nullable child FKs is a diagram orientation change, not a change to SQL cardinality.
+// DBML Ref operators alone do not encode SQL ON DELETE, deferrability, publish guards or composite FK NULL behavior.
