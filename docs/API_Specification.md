@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — API Specification v1.0
 
+> **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
+> **Đồng bộ:** Các endpoint/DTO trong tài liệu này là contract đề xuất, không phải OpenAPI đã kiểm thử. ERD v1.6 đã có `question_versions.status` và không còn cột `learning_progress.content_id` trùng; các ghi chú “missing/duplicate” dựa trên ERD v1.3 là lịch sử. API `rating: AGAIN/HARD/GOOD/EASY` chưa khớp cột `review_history.rating integer`; API `clientSequence` chưa có cột lưu ở `attempt_answers`. `Idempotency-Key` chưa có bảng lưu yêu cầu tương ứng. Các điểm này phải được duyệt trước khi freeze contract.
+> Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
+
+
 > **Status:** Proposed HTTP contract (Markdown), chưa phải OpenAPI machine-readable. **Based on:** SRS v1.2, ERD v1.3, HLD v1.1, LLD v1.0. Endpoint names, field names and policies tagged [DESIGN] must be reviewed before freeze.
 
 ## 1. Contract conventions
@@ -435,3 +440,19 @@ Log provider/model, token counts, latency, cost, status, trace ID; do not log ra
 
 **Document status:** design proposal; not a tested or approved API contract.
 
+
+
+## Phụ lục — Đồng bộ liên tài liệu v1.7
+
+| Hạng mục | Quy ước liên tài liệu | Trạng thái |
+|---|---|---|
+| Nguồn yêu cầu | SRS v1.2 | Draft chờ phê duyệt |
+| Kiến trúc | HLD v1.1 Phần B ưu tiên; module `content` theo LLD | Design review |
+| Schema | ERD v1.6 là bản logical hiện tại | Chưa kiểm chứng PostgreSQL |
+| HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
+| Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
+| Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
+| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
+
+> **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
