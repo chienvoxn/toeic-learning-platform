@@ -1,5 +1,10 @@
 # SOFTWARE ARCHITECTURE DOCUMENT (SAD / HLD v1.0)
 
+> **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
+> **Đồng bộ:** Phần B (HLD v1.1) có ưu tiên khi xung đột với Phần A (v1.0). Tên module code chuẩn hóa theo LLD là `content` (thay cho `learning` ở các đoạn HLD cũ); `notification` là module riêng. Chuẩn lỗi API là `code`, `message`, `traceId`, `details` (thay cho `requestId`/`timestamp` trong đề xuất cũ). Baseline dữ liệu tham chiếu hiện tại là ERD v1.6, không còn v1.2/v1.3. Chưa có bằng chứng migration chạy thành công.
+> Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
+
+
 **Dự án:** TOEIC Learning Platform  
 **Trạng thái:** Proposed architecture — chờ architecture review  
 **Cơ sở:** SRS v1.1, ERD v1.2 Reviewed (52 bảng), các quyết định nghiệp vụ đã thống nhất.  
@@ -612,3 +617,19 @@ sequenceDiagram
 - [ ] Privacy, retention, embedding dimension, NFR thresholds and role approval policy are approved.
 
 **Only after these gates:** Architecture Freeze → LLD → OpenAPI → Sprint Planning → Development.
+
+
+## Phụ lục — Đồng bộ liên tài liệu v1.7
+
+| Hạng mục | Quy ước liên tài liệu | Trạng thái |
+|---|---|---|
+| Nguồn yêu cầu | SRS v1.2 | Draft chờ phê duyệt |
+| Kiến trúc | HLD v1.1 Phần B ưu tiên; module `content` theo LLD | Design review |
+| Schema | ERD v1.6 là bản logical hiện tại | Chưa kiểm chứng PostgreSQL |
+| HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
+| Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
+| Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
+| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
+
+> **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.

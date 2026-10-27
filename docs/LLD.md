@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
+> **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
+> **Đồng bộ:** Danh mục bảng ở §7.1 được trích từ ERD v1.3 cũ và chỉ mang tính lịch sử, **không phải schema v1.6 hiện hành**. ERD v1.6 đã sửa trùng `learning_progress.content_id` và bổ sung `question_versions.status`. Các vấn đề còn mở: `attempt_answers.client_sequence` chưa persisted; `review_history.rating` integer khác API enum chuỗi; chưa có `idempotency_requests`/`auth_sessions` trong ERD v1.6. Không tự coi thuật toán 4 mức SRS đã được freeze.
+> Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
+
+
 > **Status:** Design draft for review, not implementation proof. **Baseline:** SRS v1.2, ERD/DBML v1.3, SAD/HLD v1.1. **Language:** Vietnamese, identifiers English. **Date:** 2026-10-28.
 >
 > **Phân loại:** [BASELINE] kế thừa yêu cầu đã mô tả; [DESIGN] lựa chọn triển khai ở LLD; [OPEN] phải xác nhận trước khi freeze. API contract chi tiết nằm trong `TOEIC_API_Specification_v1.0.md`.
@@ -639,3 +644,19 @@ Ngoài ra phải kiểm tra FK cho `learning_contents.current_published_version_
 - [ ] Không có endpoint ghi trực tiếp vào published versions.
 - [ ] Review của BA/Architect/Backend/QA hoàn tất.
 
+
+
+## Phụ lục — Đồng bộ liên tài liệu v1.7
+
+| Hạng mục | Quy ước liên tài liệu | Trạng thái |
+|---|---|---|
+| Nguồn yêu cầu | SRS v1.2 | Draft chờ phê duyệt |
+| Kiến trúc | HLD v1.1 Phần B ưu tiên; module `content` theo LLD | Design review |
+| Schema | ERD v1.6 là bản logical hiện tại | Chưa kiểm chứng PostgreSQL |
+| HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
+| Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
+| Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
+| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
+
+> **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.

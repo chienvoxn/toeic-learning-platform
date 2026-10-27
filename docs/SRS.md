@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
+> **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
+> **Đồng bộ:** SRS là nguồn yêu cầu nghiệp vụ; HLD/LLD/API là thiết kế đề xuất triển khai. BR-02, BR-07–10, BR-15–18 và BR-22 là các điểm giao cắt quan trọng. ERD v1.6 đã bổ sung `question_versions.status`, nhưng `review_history.rating` vẫn là `integer`, chưa tương thích trực tiếp với API rating dạng chuỗi. Không coi các quyết định còn [OPEN] là yêu cầu đã phê duyệt.
+> Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
+
+
 > **Trạng thái:** Consolidated design-review draft. Nguồn gốc: SRS v1.0.1 (09/2026), requirements baseline v1.1, ERD v1.2, HLD v1.0 và 13 cải tiến Design Review. Các yêu cầu bổ sung là thay đổi đề xuất cần phê duyệt trước khi freeze.
 
 ## 1. Giới thiệu
@@ -335,3 +340,18 @@
 - Xác nhận chỉ tiêu NFR đo được, quota AI, retention logs, privacy policy và mô hình tính phí.
 - Xác nhận việc lưu tag/error category ở question identity hay question version.
 - SRS chưa được ký duyệt; không tuyên bố requirements frozen.
+
+## Phụ lục — Đồng bộ liên tài liệu v1.7
+
+| Hạng mục | Quy ước liên tài liệu | Trạng thái |
+|---|---|---|
+| Nguồn yêu cầu | SRS v1.2 | Draft chờ phê duyệt |
+| Kiến trúc | HLD v1.1 Phần B ưu tiên; module `content` theo LLD | Design review |
+| Schema | ERD v1.6 là bản logical hiện tại | Chưa kiểm chứng PostgreSQL |
+| HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
+| Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
+| Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
+| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
+
+> **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
