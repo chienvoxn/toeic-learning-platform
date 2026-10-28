@@ -1,92 +1,88 @@
-# TOEIC AI — LangChain + Gemini RAG
+# AI Tutor
 
-Service FastAPI nội bộ cho AI Tutor, tách khỏi backend Spring Boot theo `docs/HLD.md`.
-Đây là phần xử lý AI; chưa nối vào giao diện React hay các controller Spring Boot.
+Phần AI của ứng dụng học TOEIC, dùng FastAPI, LangChain và Gemini.
+Service tìm nội dung trong học liệu rồi trả lời kèm nguồn tham khảo.
+Hiện chạy riêng, chưa nối với Spring Boot và giao diện React.
 
-## Chức năng đã triển khai
-
-| Chức năng | Cách dùng |
-|---|---|
-| Hỏi đáp TOEIC có nguồn | `mode: ask` |
-| Giải thích ngữ pháp và ví dụ | `mode: grammar` |
-| Giải nghĩa từ, từ loại, collocation | `mode: vocabulary` |
-| Giải thích đáp án chuẩn và đáp án nhiễu | `mode: explain_answer`, gửi câu hỏi và đáp án chuẩn trong `context` |
-| Giải thích, dịch, tóm tắt bài đọc/transcript | `mode: reading`, gửi nội dung được cấp quyền trong `context` |
-| Sinh câu luyện tập nháp | `mode: practice`, `exerciseCount: 1..5`; 4 lựa chọn, đáp án, giải thích, nguồn |
-| Tìm kiếm theo ngữ nghĩa | Endpoint `search`, không cần gọi chat model |
-| Nạp/cập nhật/xóa học liệu | JSON text hoặc file PDF có text, TXT, Markdown UTF-8 |
-| Hội thoại nhiều lượt | Nhận tối đa 12 tin nhắn lịch sử do Spring Boot cung cấp |
-| Kiểm soát nguồn | Bắt buộc `allowedDocumentIds`; lọc trong SQL trước khi xếp hạng và tạo prompt |
-| Xử lý thiếu nguồn | `grounded=false`, `citations=[]`, cảnh báo chính xác theo SRS |
-| Metadata sử dụng | Provider, model, token chat, latency, trace ID trả về Spring Boot |
-
-Các mode dùng prompt chuyên biệt trên cùng pipeline RAG. Nội dung trả lời vẫn cần đánh giá
-trên học liệu thực. `grounded=true` xác nhận ID nguồn thuộc các đoạn đã truy xuất; không phải
-cam kết mọi nhận định của mô hình đều đúng. Bài luyện do AI sinh có `aiGenerated=true`, cần
-giáo viên duyệt trước khi đưa vào ngân hàng câu hỏi chính thức.
-
-## Luồng xử lý
+## Cấu trúc thư mục
 
 ```text
-React → Spring Boot (xác thực, ownership, ACL, quota, lịch sử)
-             → FastAPI /internal/v1/tutor/ask
-                 → Gemini query embedding qua LangChain
-                 → PostgreSQL + pgvector / SQLite (lọc allowedDocumentIds)
-                 → Gemini chat qua LangChain, structured output
-                 → kiểm tra ID nguồn → trả answer + citations + usage
+AI/
+├── app/                 # API, xử lý RAG và lưu vector
+├── tests/               # Kiểm thử
+├── scripts/             # Tạo cấu hình, chạy demo, kiểm tra server
+├── examples/            # Học liệu và request mẫu
+├── .env.example         # Mẫu cấu hình
+├── compose.yaml         # PostgreSQL có pgvector
+├── pyproject.toml       # Thông tin package và thư viện
+└── requirements.lock    # Phiên bản thư viện đã chốt
 ```
 
-Nạp học liệu: text/PDF → LangChain RecursiveCharacterTextSplitter → Gemini document
-embeddings → chuẩn hóa vector → lưu tất cả chunks trong một transaction. Nếu embedding thất
-bại, dữ liệu cũ vẫn giữ nguyên. Nạp lại cùng `documentId` thay thế các chunks cũ.
+## Cài đặt và chạy
 
-Mặc định dùng **`models/gemini-embedding-001`**, 768 chiều, task type `RETRIEVAL_DOCUMENT`
-và `RETRIEVAL_QUERY`. Đây là pipeline text; PDF được trích text trước khi embedding.
-Chat mặc định `gemini-3.5-flash-lite`; có thể đổi model chat trong `.env` theo quyền API của bạn.
-Không đổi tùy tiện embedding model/dimension/chunking trên index cũ: service sẽ từ chối khởi
-động nếu cấu hình không khớp. Muốn đổi, dùng database mới rồi nạp lại học liệu.
-Adapter hiện dùng task types của embedding-001; embedding-2 cần cách định dạng task khác.
-
-## Chạy trên Windows
-
-Cần Python 3.11 trở lên. Chạy trong PowerShell:
+Dùng Python 3.11 trở lên. Các lệnh dưới đây chạy trong PowerShell, tại thư mục `AI`:
 
 ```powershell
-cd D:\TOEIC_app\AI
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.lock
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]" --no-deps
 .\.venv\Scripts\python.exe scripts/init_env.py
 ```
 
-Mở `.env`, điền `GOOGLE_API_KEY` lấy từ [Google AI Studio](https://aistudio.google.com/apikey).
-Script đã tạo hai khóa nội bộ ngẫu nhiên khác nhau; không đưa các khóa này vào React hoặc Git.
-Nếu `.env` đã tồn tại, script giữ nguyên toàn bộ nội dung. Có thể dùng môi trường đã cài sẵn
-trong workspace này, bỏ qua hai lệnh tạo venv/cài thư viện.
+Điền `GOOGLE_API_KEY` vào `.env`. Có thể lấy key tại [Google AI Studio](https://aistudio.google.com/apikey).
+`init_env.py` tạo sẵn hai khóa gọi API nội bộ và giữ nguyên file `.env` nếu đã có.
+Không đưa `.env` lên Git hoặc gửi các khóa này xuống frontend.
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-- Swagger: http://127.0.0.1:8001/docs
-- Health: http://127.0.0.1:8001/health
-- Ready: http://127.0.0.1:8001/ready — kiểm tra DB và có cấu hình key, **không gọi thử Gemini**.
+Swagger ở http://127.0.0.1:8001/docs. `/health` kiểm tra server;
+`/ready` kiểm tra database và cấu hình key, chưa kiểm tra kết nối tới Gemini.
 
-Mở terminal thứ hai để nạp mẫu và hỏi thử. Lệnh này gọi Gemini thật, sử dụng quota của key:
+Mở terminal khác, vẫn ở thư mục `AI`, để nạp học liệu mẫu và hỏi thử:
 
 ```powershell
-cd D:\TOEIC_app\AI
 .\.venv\Scripts\python.exe scripts/demo.py --ingest-sample
 .\.venv\Scripts\python.exe scripts/demo.py --mode practice --question "Tạo câu luyện tập về present perfect."
 ```
 
-Dữ liệu mẫu nhỏ chỉ đủ thử luồng present perfect. Hãy nạp học liệu TOEIC thật mà nhóm được
-phép sử dụng để các chế độ khác có căn cứ trả lời. Chưa có corpus thì tutor sẽ báo thiếu nguồn.
-Không cần kích hoạt venv hay thay ExecutionPolicy khi dùng các lệnh trên.
+Demo gọi Gemini thật và dùng quota của API key. Học liệu mẫu chỉ có phần hiện tại hoàn thành;
+cần nạp thêm tài liệu cho những chủ đề khác.
 
-## API nội bộ
+## Các chế độ hỗ trợ
 
-| Method | Endpoint | Khóa `X-API-Key` |
+| `mode` | Nội dung |
+|---|---|
+| `ask` | Hỏi đáp TOEIC |
+| `grammar` | Giải thích ngữ pháp, đưa ví dụ |
+| `vocabulary` | Giải nghĩa từ, từ loại và cách dùng |
+| `explain_answer` | Giải thích câu hỏi và đáp án chuẩn gửi trong `context` |
+| `reading` | Giải thích, dịch hoặc tóm tắt bài đọc/transcript trong `context` |
+| `practice` | Tạo 1–5 câu luyện tập, mỗi câu có 4 lựa chọn và giải thích |
+
+Các chế độ dùng chung luồng RAG:
+
+```text
+Câu hỏi → Gemini embedding → tìm đoạn học liệu được phép xem
+        → Gemini trả lời → kiểm tra ID nguồn → trả kết quả
+```
+
+Khi nạp tài liệu, LangChain chia text thành các đoạn nhỏ, Gemini tạo embedding rồi lưu vào
+database. Nạp lại cùng `documentId` sẽ thay nội dung cũ; nếu tạo embedding thất bại thì dữ liệu
+cũ vẫn được giữ lại.
+
+Model embedding đang dùng là `models/gemini-embedding-001`, 768 chiều, với task type
+`RETRIEVAL_DOCUMENT` và `RETRIEVAL_QUERY`. Model chat mặc định là `gemini-3.5-flash-lite`.
+Có thể đổi model chat trong `.env`. Nếu đổi embedding model, số chiều hoặc cách chia đoạn,
+cần tạo database mới và nạp lại tài liệu. Code hiện dùng task type của embedding-001;
+embedding-2 cần chỉnh lại cách định dạng đầu vào.
+
+## API
+
+Gửi khóa qua header `X-API-Key`:
+
+| Method | Endpoint | Khóa |
 |---|---|---|
 | PUT | `/internal/v1/documents` | `AI_ADMIN_KEY` |
 | POST | `/internal/v1/documents/upload` | `AI_ADMIN_KEY` |
@@ -95,12 +91,12 @@ Không cần kích hoạt venv hay thay ExecutionPolicy khi dùng các lệnh tr
 | POST | `/internal/v1/search` | `AI_SERVICE_KEY` |
 | POST | `/internal/v1/tutor/ask` | `AI_SERVICE_KEY` |
 
-JSON dùng camelCase. Xem `examples/knowledge.json` và `examples/ask.json` hoặc Swagger.
-Upload dùng multipart fields `documentId`, `title`, `file`. Giới hạn mặc định: 5 MiB/file,
-200.000 ký tự, 300 chunks, PDF tối đa 300 trang, không mã hóa. PDF scan cần OCR bên ngoài.
-`sourceUrl` chỉ là metadata HTTP/HTTPS, service không tải URL hoặc đọc đường dẫn do client gửi.
+Request mẫu nằm trong `examples/`. JSON dùng camelCase. Upload dùng multipart với ba trường
+`documentId`, `title`, `file`; nhận PDF có text, TXT và Markdown UTF-8. Giới hạn mặc định là
+5 MiB/file, 200.000 ký tự, 300 đoạn và 300 trang PDF. PDF mã hóa không được hỗ trợ; PDF scan
+cần OCR trước. `sourceUrl` chỉ lưu làm thông tin nguồn, không dùng để tải nội dung.
 
-Ví dụ request hỏi đáp:
+Ví dụ giải thích đáp án:
 
 ```json
 {
@@ -113,60 +109,64 @@ Ví dụ request hỏi đáp:
 }
 ```
 
-Response có `answer`, `grounded`, `warning`, `citations`, `exercises`, `usage`, `traceId`.
-Mỗi nguồn có `documentId`, `chunkId`, `title`, `sourceUrl`, `page`, `excerpt`, `similarity`.
-Thiếu nguồn trả HTTP 200 với cảnh báo **Không tìm thấy tài liệu tham khảo trong hệ thống.**
-Gemini lỗi/thiếu key trả 503; cấu trúc trả lời hoặc ID nguồn không hợp lệ trả 502; input lỗi
-trả 422; sai khóa trả 401; file quá lớn trả 413; định dạng file không hỗ trợ trả 415.
+`allowedDocumentIds` là trường bắt buộc. Danh sách này phải do Spring Boot xác định sau khi
+kiểm tra quyền, không lấy trực tiếp từ trình duyệt. Service lọc tài liệu trước khi tìm nguồn
+và tạo prompt. `history` nhận tối đa 12 tin nhắn do backend gửi sang.
 
-`usage` chứa số token **chat**; token embedding và chi phí chưa có dữ liệu đáng tin nên trả
-`null`, không ước lượng thành 0. Spring Boot có thể tính chi phí từ bảng giá đã cấu hình.
-Lỗi provider không lộ exception/credentials. Log ứng dụng chỉ ghi trace, method, status, latency.
+Kết quả gồm `answer`, `citations`, `grounded`, `warning`, `exercises`, `usage`, `traceId`.
+Nguồn trích dẫn có ID tài liệu, ID đoạn, tiêu đề, URL, trang, nội dung và điểm tương đồng.
+`grounded=true` nghĩa là các ID nguồn đã được đối chiếu với kết quả tìm kiếm; vẫn cần kiểm tra
+độ đúng của câu trả lời. Câu luyện tập được đánh dấu `aiGenerated=true` và cần duyệt trước
+khi đưa vào ngân hàng câu hỏi.
 
-## Nối với Spring Boot
+Nếu thiếu nguồn, API trả HTTP 200, `grounded=false`, `citations=[]` và cảnh báo:
+“Không tìm thấy tài liệu tham khảo trong hệ thống.” Các lỗi còn lại:
 
-1. Module `backend/.../ai` nhận request của learner, kiểm tra đăng nhập, conversation ownership,
-   quota, rate limit; không nhận danh sách quyền do trình duyệt tự khai.
-2. Từ ACL và trạng thái publish/version hiện hành, tính `allowedDocumentIds` ở backend.
-   ID học liệu gửi vào service nên là ID phiên bản bất biến, tránh trộn nội dung giữa các phiên bản.
-3. Chỉ gửi lịch sử của đúng người học, nội dung đề/bài đọc đã được cấp quyền và danh sách ID
-   trên. Gọi service bằng `AI_SERVICE_KEY`; chuyển tiếp `X-Request-ID` dạng UUID nếu có.
-4. Lưu messages, citations và usage vào các bảng đã thiết kế trong ERD. Wrapper Spring thêm
-   `messageId` để khớp public API trong `docs/API_Specification.md`.
-5. Khi xuất bản học liệu, dùng `AI_ADMIN_KEY` để upsert text. Khi thu hồi/ẩn học liệu, loại ID
-   khỏi ACL ngay; xóa index khi phù hợp. Không xem index AI là nguồn quyết định quyền.
-6. Đặt HTTP timeout bên Spring phù hợp; xử lý 502/503 để học/thi vẫn hoạt động. Quota và retry
-   do Spring quản lý; không tự retry vô hạn vì có thể tăng chi phí gọi model.
+- `401`: sai khóa gọi service.
+- `413` / `415`: file quá lớn hoặc sai định dạng.
+- `422`: dữ liệu đầu vào không hợp lệ hoặc tài liệu không đọc được.
+- `502`: kết quả từ model sai cấu trúc hoặc chứa ID nguồn không hợp lệ.
+- `503`: lỗi Gemini, thiếu key hoặc lỗi truy cập index.
 
-Chưa triển khai các public controller, lưu lịch sử, quota, dashboard usage hay giao diện chat
-trong repo này; đó là phần tích hợp Spring/React tiếp theo, không nằm trong service AI nội bộ.
-FastAPI không chấm điểm bài thi, ghi điểm hoặc cập nhật lịch ôn tập.
+`usage` trả số token chat và thời gian xử lý. Token embedding và chi phí hiện trả `null`;
+phần tính chi phí cần bổ sung ở backend. Log chỉ ghi trace ID, method, status và thời gian,
+không ghi nội dung câu hỏi hay khóa API.
 
-Service phải ở mạng nội bộ, chỉ backend/admin đáng tin cậy gọi. Shared key chứng minh caller
-là backend, không thay thế kiểm tra quyền learner. Không expose trực tiếp lên Internet.
+## Database
 
-## PostgreSQL + pgvector
+Mặc định dùng SQLite tại `data/ai.db` để chạy local. Vector lưu dạng JSON, tìm kiếm bằng cosine
+trên các đoạn được phép truy cập. Cách này phù hợp với lượng học liệu nhỏ.
 
-SQLite mặc định lưu vector trong JSON và tính cosine trên các chunks **được cấp quyền**, phù hợp
-corpus nhỏ khi phát triển. PostgreSQL dùng kiểu `vector` và toán tử cosine trong SQL. Hiện tìm
-chính xác, chưa có index ANN; cần đo tải trước khi thêm HNSW/IVFFlat cho corpus lớn.
-
-Để chạy PostgreSQL riêng cho AI, mở Docker Desktop, thêm `POSTGRES_PASSWORD` vào `.env` rồi:
+Để dùng PostgreSQL + pgvector, mở Docker Desktop, thêm `POSTGRES_PASSWORD` vào `.env` rồi chạy:
 
 ```powershell
 docker compose up -d postgres
 ```
 
-Đổi `DATABASE_URL` trong `.env` sang PostgreSQL với mật khẩu vừa đặt, sau đó khởi động lại
-service và nạp lại học liệu. URL-encode mật khẩu nếu chứa ký tự đặc biệt. Database AI này là
-index dẫn xuất, không thay thế database nghiệp vụ Spring Boot; tên bảng dùng prefix `rag_`.
-Account DB cần quyền tạo extension `vector` khi khởi tạo, hoặc DBA tạo sẵn extension.
+Đổi `DATABASE_URL` theo mẫu trong `.env.example`, khởi động lại service và nạp lại học liệu.
+Mật khẩu có ký tự đặc biệt cần được URL-encode. Tài khoản DB cần quyền tạo extension `vector`,
+hoặc extension phải được tạo sẵn.
 
-Schema được tạo khi startup cho MVP; triển khai lâu dài cần migration có version và backup.
-Không chạy nhiều tác vụ upsert/delete cho cùng documentId đồng thời: backend nên tuần tự hóa
-các sự kiện index theo phiên bản tài liệu.
+Các bảng có tiền tố `rag_`, chỉ lưu index học liệu. PostgreSQL dùng toán tử cosine của pgvector,
+chưa thêm index ANN. Schema hiện được tạo lúc khởi động; migration và backup cần bổ sung
+khi triển khai. Các lần cập nhật/xóa cùng một `documentId` cần được xử lý tuần tự.
 
-## Kiểm thử
+## Phần tích hợp còn lại
+
+Spring Boot sẽ quản lý đăng nhập, chủ hội thoại, quyền học liệu, quota, rate limit và lưu
+lịch sử. Khi gọi AI, backend gửi danh sách tài liệu được phép xem, lịch sử và nội dung đã
+kiểm tra quyền qua `AI_SERVICE_KEY`. Có thể gửi thêm `X-Request-ID` dạng UUID để theo dõi lỗi.
+
+Khi học liệu được xuất bản, backend dùng `AI_ADMIN_KEY` để nạp dữ liệu; nên dùng ID phiên bản
+tài liệu làm `documentId`. Khi thu hồi học liệu, phải bỏ ID khỏi danh sách quyền ngay.
+Backend lưu câu trả lời, nguồn và usage, thêm `messageId` theo hợp đồng public API trong
+`../docs/API_Specification.md`, đồng thời xử lý timeout và lỗi 502/503.
+
+Chưa có controller Spring Boot, giao diện chat, lưu hội thoại hay dashboard usage cho phần này.
+Service AI chỉ dùng nội bộ; khóa service không thay thế quyền của người học. Việc chấm điểm
+bài thi và cập nhật lịch ôn tập vẫn do backend xử lý.
+
+## Kiểm tra
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
@@ -175,20 +175,15 @@ các sự kiện index theo phiên bản tài liệu.
 .\.venv\Scripts\python.exe scripts/smoke.py
 ```
 
-Test mặc định dùng SQLite tạm và provider giả lập, không gửi dữ liệu ra ngoài hay tốn quota.
-Có test adapter LangChain thật với network client được thay thế. Để kiểm tra pgvector, đặt
-`TEST_POSTGRES_URL` trỏ đến **database test riêng**, rồi chạy lại pytest. Test chỉ xóa các tài
-liệu có ID ngẫu nhiên do nó tạo. Test PostgreSQL/pgvector chạy khi bạn cấu hình biến này.
+Test mặc định dùng SQLite tạm và model giả lập, không gọi Gemini. Test adapter LangChain thay
+network client bằng mock. Test pgvector chỉ chạy khi có `TEST_POSTGRES_URL` trỏ tới database
+test riêng; dữ liệu kiểm thử được tạo bằng ID ngẫu nhiên và xóa sau khi chạy.
 
-`requirements.lock` chốt các phiên bản đã cài và kiểm thử; cập nhật file này có chủ đích khi
-nâng thư viện. `pyproject.toml` khai báo các khoảng phiên bản tương thích của service.
+`smoke.py` khởi động server để kiểm tra HTTP rồi dừng lại, không gọi Gemini. Để đánh giá chất
+lượng trả lời, cần chạy demo bằng key thật và đối chiếu nguồn trên học liệu của dự án.
 
-Kiểm thử với Gemini thật: khởi động service, chạy demo, kiểm tra nguồn và nội dung trả lời
-trên câu hỏi tiếng Việt/Anh. Chưa có API key nên chưa thể xác minh chất lượng model/quota
-thực tế; không dùng kết quả offline để kết luận độ chính xác RAG.
+## Tham khảo
 
-## Tài liệu thư viện
-
-- [LangChain Google integration](https://reference.langchain.com/python/langchain-google-genai/embeddings/GoogleGenerativeAIEmbeddings)
-- [Gemini embeddings và task types](https://ai.google.dev/gemini-api/docs/embeddings)
-- [Danh sách Gemini chat models](https://ai.google.dev/gemini-api/docs/models)
+- [LangChain Google embeddings](https://reference.langchain.com/python/langchain-google-genai/embeddings/GoogleGenerativeAIEmbeddings)
+- [Gemini embeddings](https://ai.google.dev/gemini-api/docs/embeddings)
+- [Gemini models](https://ai.google.dev/gemini-api/docs/models)

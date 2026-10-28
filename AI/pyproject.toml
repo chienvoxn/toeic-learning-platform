@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "toeic-ai-service"
 version = "0.1.0"
-description = "Internal TOEIC RAG service powered by LangChain and Gemini"
+description = "TOEIC tutor API using LangChain and Gemini"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.6,<1",
