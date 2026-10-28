@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toeic-ai-service"
+version = "0.1.0"
+description = "Internal TOEIC RAG service powered by LangChain and Gemini"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.6,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "pydantic-settings>=2.7,<3",
+  "langchain-google-genai>=4,<5",
+  "langchain-text-splitters>=1,<2",
+  "sqlalchemy>=2.0.36,<3",
+  "pgvector>=0.3.6,<1",
+  "psycopg[binary]>=3.2,<4",
+  "pypdf>=6,<7",
+  "python-multipart>=0.0.20,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
