@@ -1,6 +1,7 @@
 
 package com.toeic.backend.identity.domain;
-
+import java.util.HashSet;
+import java.util.Set;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -39,6 +40,13 @@ public class User {
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     protected User() {
     }
@@ -97,5 +105,16 @@ public class User {
         this.emailVerifiedAt = OffsetDateTime.now();
         this.status = "ACTIVE";
         this.updatedAt = OffsetDateTime.now();
+    }
+    public Set<Role> getRoles() {
+        return Set.copyOf(roles);
+    }
+
+    public void addRole(Role role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role must not be null");
+        }
+
+        this.roles.add(role);
     }
 }
