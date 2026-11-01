@@ -10,10 +10,10 @@
 ## 1. Contract conventions
 
 - Base URL: `/api/v1`; JSON UTF-8; `Content-Type: application/json`; HTTPS mandatory.
-- JWT Bearer cho private endpoints. Guest chỉ register/login và đọc nội dung public nếu được phép.
+- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; public content cần cấp phép riêng khi triển khai.
 - IDs UUID; timestamps ISO-8601 UTC; pagination `page` (0-based), `size` (default 20, max 100), `sort` allowlist.
 - `GET` safe; `PUT` idempotent where possible; `POST` state transition cần idempotency policy.
-- Các API cá nhân lấy actor từ JWT, không tin userId request. Teacher/Admin permissions theo RBAC, ownership khi sửa draft.
+- Các API cá nhân lấy actor từ phiên Bearer đã xác thực, không tin userId request. Teacher/Admin permissions theo RBAC, ownership khi sửa draft.
 - Standard response: object hoặc paginated list; không wrap tất cả response bằng `data` nếu không cần.
 - Error body: `{ "code":"ATTEMPT_EXPIRED", "message":"...", "traceId":"...", "details":[{"field":"...","reason":"..."}] }`.
 - HTTP codes: 200 read/update/submit, 201 create, 204 delete/no body, 400 malformed, 401 unauthenticated, 403 forbidden, 404 not found/hidden, 409 conflict, 422 business validation, 429 quota, 500 internal, 503 AI unavailable.
@@ -41,9 +41,9 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/auth/register` | Guest | RegisterRequest | 201 UserSummary | 409 EMAIL_EXISTS |
 
-| `POST` | `/auth/login` | Guest | LoginRequest | 200 TokenPair | 401 INVALID_CREDENTIALS |
+| `POST` | `/auth/login` | Guest | LoginRequest | 200 LoginResponse | 400 VALIDATION_ERROR; 401 INVALID_CREDENTIALS |
 
-| `POST` | `/auth/logout` | Authenticated | LogoutRequest | 204 | 401 |
+| `POST` | `/auth/logout` | Authenticated | — (Bearer header) | 204 | 401 |
 
 | `GET` | `/users/me` | Authenticated | — | 200 UserProfile | 401 |
 
@@ -240,11 +240,21 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 {"email":"learner@example.com","password":"<user-provided-secret>","fullName":"Learner"}
 // POST /auth/login
 {"email":"learner@example.com","password":"<user-provided-secret>"}
-// 200 TokenPair (refresh token policy pending)
-{"accessToken":"<jwt>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","roles":["LEARNER"]}}
+// 200 LoginResponse (opaque session; no refresh token)
+{"accessToken":"<opaque-token>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","email":"learner@example.com","fullName":"Learner","avatarUrl":null,"status":"ACTIVE","emailVerifiedAt":"2026-11-01T00:00:00Z","lastLoginAt":"2026-11-01T00:01:00Z","roles":["LEARNER"]}}
 ```
 
-Do not log password or tokens. Refresh token endpoint/table remains [OPEN] and must be specified if implemented.
+Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Current-session revocation uses V13 and [ADR-017](ADR_Auth_Session.md).
+
+**Contract identity hiện triển khai:**
+
+- Login: email hợp lệ, tối đa 255 ký tự, chuẩn hóa không phân biệt hoa thường; password không trống, tối đa 72 ký tự và 72 byte UTF-8. Chỉ ACTIVE được login. Sai email/password hoặc không ACTIVE cùng trả `401 INVALID_CREDENTIALS`; vượt 72 byte cũng trả mã này. JSON sai/validation lỗi trả `400 VALIDATION_ERROR`.
+- Private requests dùng `Authorization: Bearer <accessToken>`; thời hạn mặc định 900 giây (đọc expiresIn thực tế). Không nhận token qua cookie/query/body. Public auth bỏ qua bearer cũ.
+- Logout không có body, thu hồi phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Dùng lại token/logout lần hai trả `401 INVALID_TOKEN`.
+- `GET /api/v1/users/me` trả chính object user trong ví dụ login, với dữ liệu và role hiện tại; không chứa password, passwordHash hay tokenHash. Actor lấy từ principal.
+- Thiếu token: `401 UNAUTHENTICATED`; sai/không tồn tại/đã thu hồi hoặc tài khoản bị khóa: `401 INVALID_TOKEN`; tại hoặc sau expiresAt: `401 TOKEN_EXPIRED`. Lỗi auth có `{code,message,traceId,details:[]}` và `WWW-Authenticate: Bearer`.
+- `/api/v1/admin/**` yêu cầu ADMIN: phiên hợp lệ thiếu role trả `403 FORBIDDEN`, thiếu phiên trả 401. API admin trong catalogue vẫn là đề xuất; rule route không đồng nghĩa nghiệp vụ admin đã triển khai.
+- Register/verify-email/resend-otp và hai health endpoint cũ vẫn public. Contract lỗi đăng ký–OTP giữ nguyên.
 
 ### 4.2 Question version and publish
 
@@ -430,7 +440,8 @@ Log provider/model, token counts, latency, cost, status, trace ID; do not log ra
 
 - [ ] Fix DBML duplicate `learning_progress.content_id` and missing `question_versions.status`.
 - [ ] Confirm permission matrix for teacher/reviewer/admin and self-approval rule.
-- [ ] Define refresh-token and session revocation mechanism.
+- [x] Define current-session revocation: V13 + [ADR-017](ADR_Auth_Session.md).
+- [ ] Define refresh-token policy if introduced.
 - [ ] Decide autosave `clientSequence` persistence / idempotency storage.
 - [ ] Freeze precise SRS SRS/SM-2 rating algorithm.
 - [ ] Define media upload protocol and private object authorization.
@@ -452,7 +463,7 @@ Log provider/model, token counts, latency, cost, status, trace ID; do not log ra
 | HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
 | Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
 | Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
-| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| Idempotency/session | V13 bổ sung auth_sessions theo ADR-017; DBML v1.6 là lịch sử | Session hiện tại đã triển khai; refresh/idempotency **OPEN** |
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.

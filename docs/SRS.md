@@ -62,6 +62,8 @@
 2. Xác minh mật khẩu/trạng thái.
 3. Phát hành phiên đăng nhập/token và tải quyền.
 
+**Quyết định triển khai identity 2026-11-01:** theo [ADR-017](ADR_Auth_Session.md), login chỉ cho ACTIVE, phát opaque Bearer session mặc định 15 phút; mỗi request kiểm phiên/trạng thái/role từ DB. Logout thu hồi phiên hiện tại; GET /api/v1/users/me trả tài khoản và role không lộ passwordHash. Chưa xác thực trả 401, thiếu role trả 403. Đăng ký–OTP hiện hữu giữ nguyên; refresh token vẫn OPEN.
+
 **Ngoại lệ:** đầu vào không hợp lệ; thiếu quyền; bản ghi không tồn tại; trạng thái không cho phép; lỗi mạng. Giao dịch phải an toàn, không phát sinh dữ liệu nửa chừng.
 
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
@@ -351,7 +353,7 @@
 | HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
 | Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
 | Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
-| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| Idempotency/session | V13 bổ sung auth_sessions theo ADR-017; DBML v1.6 là lịch sử | Session hiện tại đã triển khai; refresh/idempotency **OPEN** |
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
