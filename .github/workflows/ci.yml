@@ -19,7 +19,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: frontend-web
+        working-directory: frontend/web
 
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend-web/package-lock.json
+          cache-dependency-path: frontend/web/package-lock.json
 
       - run: npm ci
       - run: npm run lint
