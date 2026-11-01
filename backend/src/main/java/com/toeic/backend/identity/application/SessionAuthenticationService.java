@@ -11,11 +11,14 @@ public class SessionAuthenticationService {
     private final AuthSessionRepository sessions;
     private final SessionToken tokens;
     private final Clock clock;
+    private final PermissionService permissions;
 
-    public SessionAuthenticationService(AuthSessionRepository sessions, SessionToken tokens, Clock clock) {
+    public SessionAuthenticationService(AuthSessionRepository sessions, SessionToken tokens, Clock clock,
+                                        PermissionService permissions) {
         this.sessions = sessions;
         this.tokens = tokens;
         this.clock = clock;
+        this.permissions = permissions;
     }
 
     @Transactional(readOnly = true)
@@ -29,7 +32,8 @@ public class SessionAuthenticationService {
             }
             throw AuthException.invalidToken();
         }
+        var rights = permissions.resolve(session.getUser());
         return new SessionPrincipal(session.getSessionId(), session.getUser().getUserId(),
-                session.getUser().getRoles().stream().map(role -> role.getName()).sorted().toList());
+                rights.roles(), rights.permissions());
     }
 }

@@ -1,6 +1,9 @@
 package com.toeic.backend.identity.api;
 
 import com.toeic.backend.identity.domain.User;
+import com.toeic.backend.identity.application.SessionAuthenticationService;
+import com.toeic.backend.identity.application.UserProfileService;
+import com.toeic.backend.identity.application.AuthService;
 import com.toeic.backend.identity.infrastructure.OtpMailService;
 import com.toeic.backend.identity.infrastructure.RoleRepository;
 import com.toeic.backend.identity.infrastructure.UserRepository;
@@ -31,6 +34,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -85,8 +93,13 @@ class AuthFlowIntegrationTest {
     @Autowired MutableClock clock;
     @Autowired OtpMailService mail;
     @Autowired PlatformTransactionManager transactionManager;
+    @Autowired SessionAuthenticationService authentication;
+    @Autowired UserProfileService profiles;
+    @Autowired AuthService auth;
 
     private final List<UUID> createdUsers = new ArrayList<>();
+    private final List<Integer> createdRoles = new ArrayList<>();
+    private final List<Integer> createdPermissions = new ArrayList<>();
     private String email;
     private final String password = "TestPass123!";
     private User account;
@@ -105,11 +118,19 @@ class AuthFlowIntegrationTest {
 
     @AfterEach
     void cleanup() {
+        SecurityContextHolder.clearContext();
         for (var id : createdUsers) {
             jdbc.update("delete from auth_sessions where user_id = ?", id);
             jdbc.update("delete from email_verification_otps where user_id = ?", id);
             jdbc.update("delete from user_roles where user_id = ?", id);
             jdbc.update("delete from users where user_id = ?", id);
+        }
+        for (var roleId : createdRoles) {
+            jdbc.update("delete from role_permissions where role_id = ?", roleId);
+            jdbc.update("delete from roles where role_id = ?", roleId);
+        }
+        for (var permissionId : createdPermissions) {
+            jdbc.update("delete from permissions where permission_id = ?", permissionId);
         }
     }
 
@@ -246,11 +267,14 @@ class AuthFlowIntegrationTest {
                 Integer.class, account.getUserId()));
     }
 
-    @Test
-    void lockingAnAccountStopsItsExistingToken() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"PENDING", "LOCKED", "DISABLED"})
+    void nonActiveAccountStopsItsExistingToken(String status) throws Exception {
         var token = token();
-        jdbc.update("update users set status = 'LOCKED' where user_id = ?", account.getUserId());
+        jdbc.update("update users set status = ? where user_id = ?", status, account.getUserId());
         me(token).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
+        mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -312,5 +336,137 @@ class AuthFlowIntegrationTest {
                         .content(mapper.writeValueAsString(Map.of("email", newEmail, "otp", otp.getValue()))))
                 .andExpect(status().isOk());
         login(newEmail, password).andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"LEARNER", "TEACHER", "ADMIN"})
+    void seededRolesCanReadTheirOwnProfile(String role) throws Exception {
+        jdbc.update("delete from user_roles where user_id = ?", account.getUserId());
+        jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)",
+                account.getUserId(), roles.findByName(role).orElseThrow().getRoleId());
+        var token = token();
+        me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
+        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+    }
+
+    private int assignIsolatedRole() {
+        int roleId = jdbc.queryForObject("insert into roles (name) values (?) returning role_id",
+                Integer.class, "TEST_" + UUID.randomUUID());
+        createdRoles.add(roleId);
+        jdbc.update("delete from user_roles where user_id = ?", account.getUserId());
+        jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)", account.getUserId(), roleId);
+        return roleId;
+    }
+
+    private void grantProfileRead(int roleId) {
+        jdbc.update("""
+                insert into role_permissions (role_id, permission_id)
+                select ?, permission_id from permissions where code = 'user:read:self'
+                """, roleId);
+    }
+
+    @Test
+    void permissionGrantAndRevocationApplyOnNextRequestWithoutRelogin() throws Exception {
+        int roleId = assignIsolatedRole();
+        var token = token();
+        me(token).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.traceId").isNotEmpty())
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(header().doesNotExist("WWW-Authenticate"));
+        grantProfileRead(roleId);
+        me(token).andExpect(status().isOk());
+        jdbc.update("delete from role_permissions where role_id = ?", roleId);
+        me(token).andExpect(status().isForbidden());
+        // Revoking a business permission must not prevent revocation of one's own session.
+        mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void permissionUnionIsDistinctAndRemovingOneRoleKeepsOtherGrants() throws Exception {
+        int roleId = assignIsolatedRole();
+        grantProfileRead(roleId);
+        int learnerId = roles.findByName("LEARNER").orElseThrow().getRoleId();
+        jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)", account.getUserId(), learnerId);
+        var token = token();
+        assertEquals(2, authentication.authenticate(token).roles().size());
+        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        jdbc.update("delete from user_roles where user_id = ? and role_id = ?", account.getUserId(), roleId);
+        me(token).andExpect(status().isOk());
+        jdbc.update("delete from user_roles where user_id = ?", account.getUserId());
+        assertTrue(authentication.authenticate(token).roles().isEmpty());
+        assertTrue(authentication.authenticate(token).permissions().isEmpty());
+        me(token).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void serviceRequiresPermissionAndRejectsAnotherUsersProfile() throws Exception {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> profiles.me(account.getUserId()));
+        var principal = authentication.authenticate(token());
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(principal, null,
+                List.of(new SimpleGrantedAuthority("ROLE_LEARNER"))));
+        SecurityContextHolder.setContext(context);
+        assertThrows(AccessDeniedException.class, () -> profiles.me(account.getUserId()));
+        context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(principal, null,
+                List.of(new SimpleGrantedAuthority("user:read:self"))));
+        assertEquals(account.getUserId(), profiles.me(account.getUserId()).userId());
+        assertThrows(AccessDeniedException.class, () -> profiles.me(UUID.randomUUID()));
+    }
+
+    @Test
+    void logoutServiceRejectsOtherSessionsAndAllowsOwnSessionWithoutBusinessPermissions() throws Exception {
+        var firstToken = token();
+        var principal = authentication.authenticate(firstToken);
+        var otherSession = authentication.authenticate(token()).sessionId();
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> auth.logout(principal.sessionId()));
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(principal, null, List.of()));
+        SecurityContextHolder.setContext(context);
+        assertThrows(AccessDeniedException.class, () -> auth.logout(otherSession));
+        auth.logout(principal.sessionId());
+        assertThrows(com.toeic.backend.identity.application.AuthException.class,
+                () -> authentication.authenticate(firstToken));
+    }
+
+    @Test
+    void permissionCodeCannotMasqueradeAsAdminRole() throws Exception {
+        int roleId = assignIsolatedRole();
+        int permissionId = jdbc.queryForObject("insert into permissions (code) values ('ROLE_ADMIN') returning permission_id",
+                Integer.class);
+        createdPermissions.add(permissionId);
+        jdbc.update("insert into role_permissions (role_id, permission_id) values (?, ?)", roleId, permissionId);
+        mvc.perform(get("/api/v1/admin/auth-probe").header("Authorization", "Bearer " + token()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void clientSuppliedRolesAndPermissionsNeverElevateRegistrationOrSession() throws Exception {
+        var newEmail = "injection-" + email;
+        mvc.perform(post("/api/v1/auth/register").contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("email", newEmail, "password", password,
+                                "fullName", "Learner", "roles", List.of("ADMIN", "TEACHER"),
+                                "permissions", List.of("user:manage", "content:publish")))))
+                .andExpect(status().isCreated());
+        var registered = users.findByEmailIgnoreCase(newEmail).orElseThrow();
+        createdUsers.add(registered.getUserId());
+        assertEquals(List.of("LEARNER"), registered.getRoles().stream().map(role -> role.getName()).toList());
+        jdbc.update("update users set status = 'ACTIVE', email_verified_at = current_timestamp where user_id = ?",
+                registered.getUserId());
+        var loginResult = mvc.perform(post("/api/v1/auth/login").contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("email", newEmail, "password", password,
+                                "roles", List.of("ADMIN"), "permissions", List.of("user:manage")))))
+                .andExpect(status().isOk()).andReturn();
+        var token = mapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asString();
+        mvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + token)
+                        .header("X-Role", "ADMIN").header("X-Permissions", "user:manage")
+                        .param("roles", "ADMIN").param("permissions", "user:manage"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("LEARNER"));
+        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        mvc.perform(put("/api/v1/admin/users/" + registered.getUserId() + "/roles")
+                        .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
+                        .content("{\"roles\":[\"ADMIN\"]}"))
+                .andExpect(status().isForbidden());
     }
 }

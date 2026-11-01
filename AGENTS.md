@@ -48,3 +48,12 @@ HLD Phần B ưu tiên khi xung đột với Phần A.
 - Quy trình:
   feature → test → commit/push → PR → review/CI → develop.
 - Không tự merge PR.
+## Kiểm tra trước và sau mỗi nhiệm vụ
+- Trước khi sửa, chạy git branch --show-current và git status.
+- Không ghi đè thay đổi có sẵn của người khác.
+- Sau khi sửa, kiểm tra git diff --check và diff liên quan.
+- Chạy test phù hợp với thay đổi; sửa lỗi rồi chạy lại.
+- Thay đổi chỉ tài liệu không bắt buộc chạy Maven.
+- Sau khi push, kiểm tra CI của đúng commit nếu có quyền truy cập;
+  nếu không truy cập được, báo rõ chưa xác minh.
+- Bàn giao: chức năng đã làm, file thay đổi, test và phần còn thiếu.

@@ -30,6 +30,8 @@
 
 **Permission granularity [DESIGN]:** `content:write`, `content:publish`, `question:review`, `question:publish`, `test:publish`, `user:manage`, `score_conversion:manage`, `ai:usage:read`, `audit:read`. Seed in `permissions` and `role_permissions`.
 
+**AUTH-03 hiện thực:** [Ma trận và phạm vi kiểm chứng](AUTH03_RBAC.md). V14 chỉ seed `user:read:self` cho LEARNER/TEACHER/ADMIN để bảo vệ hồ sơ hiện có; các permission nghiệp vụ DESIGN ở trên chưa seed/grant, ma trận reviewer/publisher vẫn OPEN. Không có ADMIN bypass hoặc kế thừa role ngầm.
+
 ## 3. Endpoint catalogue
 
 Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
@@ -45,7 +47,7 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/auth/logout` | Authenticated | — (Bearer header) | 204 | 401 |
 
-| `GET` | `/users/me` | Authenticated | — | 200 UserProfile | 401 |
+| `GET` | `/users/me` | Authenticated + user:read:self, own user | — | 200 UserProfile | 401; 403 FORBIDDEN |
 
 | `PATCH` | `/users/me` | Authenticated | UpdateProfileRequest | 200 UserProfile | 422 |
 
@@ -252,6 +254,7 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 - Private requests dùng `Authorization: Bearer <accessToken>`; thời hạn mặc định 900 giây (đọc expiresIn thực tế). Không nhận token qua cookie/query/body. Public auth bỏ qua bearer cũ.
 - Logout không có body, thu hồi phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Dùng lại token/logout lần hai trả `401 INVALID_TOKEN`.
 - `GET /api/v1/users/me` trả chính object user trong ví dụ login, với dữ liệu và role hiện tại; không chứa password, passwordHash hay tokenHash. Actor lấy từ principal.
+- `/users/me` yêu cầu permission DB `user:read:self` ở API và service, kèm ownership ở service. V14 cấp cho ba role; thu hồi grant/role có hiệu lực từ request sau khi commit, trả 403 dù session còn hợp lệ. Logout vẫn cho phép thu hồi chính session khi không còn permission nghiệp vụ. Payload role/permission trong register/login không được áp dụng; không có API tự cấp quyền.
 - Thiếu token: `401 UNAUTHENTICATED`; sai/không tồn tại/đã thu hồi hoặc tài khoản bị khóa: `401 INVALID_TOKEN`; tại hoặc sau expiresAt: `401 TOKEN_EXPIRED`. Lỗi auth có `{code,message,traceId,details:[]}` và `WWW-Authenticate: Bearer`.
 - `/api/v1/admin/**` yêu cầu ADMIN: phiên hợp lệ thiếu role trả `403 FORBIDDEN`, thiếu phiên trả 401. API admin trong catalogue vẫn là đề xuất; rule route không đồng nghĩa nghiệp vụ admin đã triển khai.
 - Register/verify-email/resend-otp và hai health endpoint cũ vẫn public. Contract lỗi đăng ký–OTP giữ nguyên.
