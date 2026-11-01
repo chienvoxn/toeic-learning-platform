@@ -1,0 +1,5 @@
+export function AnswerNavigator({ questions = [], currentIndex = 0, onSelectQuestion }) {
+  const answered = questions.filter(q => q.userAnswer).length;
+  const parts = [...new Set(questions.map(q => q.partNumber))];
+  return <div className="answer-navigator"><h2>PHIẾU TRẢ LỜI</h2><div className="navigator-progress"><span>Đã trả lời</span><strong>{answered}/{questions.length}</strong></div><div className="thin-progress"><span style={{ width: `${questions.length ? answered / questions.length * 100 : 0}%` }} /></div><div className="navigator-legend"><span><i className="answered" />Đã làm</span><span><i />Chưa làm</span><span><i className="flagged" />Đánh dấu</span></div>{parts.map(part => <section key={part}><h3>Part {part}</h3><div className="question-number-grid">{questions.map((q, index) => q.partNumber === part && <button type="button" key={q.id} onClick={() => onSelectQuestion(index)} aria-label={`Đến câu ${q.orderIndex}`} aria-current={index === currentIndex ? 'step' : undefined} className={`${q.userAnswer ? 'answered' : ''} ${q.isFlagged ? 'flagged' : ''} ${index === currentIndex ? 'current' : ''}`}>{q.orderIndex}</button>)}</div></section>)}</div>;
+}

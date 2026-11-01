@@ -1,1 +1,0 @@
-export default function HomePage() { return <section><h1>TOEIC Learning Platform</h1><p>Nền tảng luyện thi TOEIC. Các chức năng học tập sẽ được triển khai theo từng feature branch.</p><p>Trang này là giao diện nền tảng, chưa có dữ liệu nghiệp vụ.</p></section>; }
