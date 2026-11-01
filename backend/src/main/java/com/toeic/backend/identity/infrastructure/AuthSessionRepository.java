@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> {
 
-    @EntityGraph(attributePaths = {"user", "user.roles"})
+    @EntityGraph(attributePaths = {"user", "user.roles", "user.roles.permissions"})
     Optional<AuthSession> findByTokenHash(String tokenHash);
 
     @Modifying

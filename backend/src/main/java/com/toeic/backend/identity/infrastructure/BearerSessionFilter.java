@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.stream.Stream;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,8 +40,11 @@ public class BearerSessionFilter extends OncePerRequestFilter {
                     throw AuthException.invalidToken();
                 }
                 var principal = sessions.authenticate(header.substring(7));
-                var authorities = principal.roles().stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
+                // Permission codes use their own namespace; never turn DB permissions into roles.
+                var authorities = Stream.concat(
+                                principal.roles().stream().map(role -> "ROLE_" + role),
+                                principal.permissions().stream().filter(code -> !code.startsWith("ROLE_")))
+                        .distinct().map(SimpleGrantedAuthority::new).toList();
                 var authentication = UsernamePasswordAuthenticationToken.authenticated(principal, null, authorities);
                 var context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);

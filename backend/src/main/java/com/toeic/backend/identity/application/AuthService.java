@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,7 @@ public class AuthService {
     }
 
     @Transactional
+    @PreAuthorize("isAuthenticated() and #sessionId == authentication.principal.sessionId")
     public void logout(UUID sessionId) {
         sessions.revoke(sessionId, OffsetDateTime.now(clock));
     }
