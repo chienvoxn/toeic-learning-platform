@@ -1,0 +1,18 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="stitch-placeholder-300x300.svg" clip-path="url(#clip0_0_47)">
+<path id="Vector" d="M0 0H36V0V36V36H0V36V0V0V0" fill="#6056F0" fill-opacity="0.15"/>
+<g id="Clip path group">
+<mask id="mask0_0_47" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="15" y="15" width="6" height="6">
+<path id="Vector_2" d="M15.12 15.12H20.88V15.12V20.88V20.88H15.12V20.88V15.12V15.12V15.12" fill="white"/>
+</mask>
+<g mask="url(#mask0_0_47)">
+<path id="Vector_3" d="M16.535 19.8C16.445 19.8 16.3667 19.7666 16.3 19.7C16.2334 19.6333 16.2 19.555 16.2 19.465V16.535C16.2 16.445 16.2334 16.3667 16.3 16.3C16.3667 16.2334 16.445 16.2 16.535 16.2H19.465C19.555 16.2 19.6333 16.2334 19.7 16.3C19.7666 16.3667 19.8 16.445 19.8 16.535V19.465C19.8 19.555 19.7666 19.6333 19.7 19.7C19.6333 19.7666 19.555 19.8 19.465 19.8H16.535V19.8M16.535 19.465H19.465V16.535H16.535V19.465V19.465M16.785 19.01H19.215L18.475 18.025L17.835 18.86L17.375 18.235L16.785 19.01V19.01M16.535 19.465V16.535V19.465V19.465" fill="#7168F6"/>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_47">
+<rect width="36" height="36" fill="white"/>
+</clipPath>
+</defs>
+</svg>
