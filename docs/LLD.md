@@ -59,6 +59,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AdminUserController/AssignRole và quyền nghiệp vụ khác bên trên vẫn là DESIGN, chưa triển khai; không coi ma trận reviewer/publisher OPEN là grant mặc định.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.2 Learning Content & Media
