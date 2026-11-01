@@ -604,6 +604,7 @@ sequenceDiagram
 - **ADR-014 — Notification:** in-app first, asynchronous consumer; trade-off: no OS-level reminders initially.
 - **ADR-015 — AI observability:** metadata-only usage logs with estimated cost and retention; trade-off: limited prompt debugging by default.
 - **ADR-016 — Error analytics:** taxonomy tagging and aggregated statistics; trade-off: categories describe potential skills, not definitive causes of mistakes.
+- **ADR-017 — Identity session:** [Opaque Bearer + PostgreSQL session](ADR_Auth_Session.md), token hash trong V13, expiry ngắn và thu hồi phiên khi logout. Thay đề xuất JWT cho identity hiện tại; refresh token vẫn OPEN.
 
 ## 28. Architecture validation and sign-off gate
 
@@ -629,7 +630,7 @@ sequenceDiagram
 | HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
 | Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
 | Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
-| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| Idempotency/session | V13 bổ sung auth_sessions theo ADR-017; DBML v1.6 là lịch sử | Session hiện tại đã triển khai; refresh/idempotency **OPEN** |
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.

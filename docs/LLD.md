@@ -46,13 +46,15 @@ backend/src/main/java/com/toeic/platform/
 
 ### 2.1 Identity & Authorization
 
+**Cập nhật triển khai 2026-11-01:** [ADR-017](ADR_Auth_Session.md) chọn opaque Bearer session có thu hồi trong PostgreSQL (V13). AuthService xử lý login/logout; SessionAuthenticationService xác thực mỗi request; UserProfileService trả hồ sơ an toàn. Đăng ký–OTP hiện hữu được kế thừa. DBML v1.6 và danh mục bên dưới chưa mô tả bảng auth_sessions mới.
+
 **Tables:** `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `learning_profiles`.
 
 | Layer | Thành phần |
 |---|---|
 | API | `AuthController`, `UserController`, `AdminUserController` |
 | Application/domain | `AuthService`, `UserProfileService`, `PermissionService` |
-| Persistence/adapters | `UserRepository`, `RoleRepository`, `RefreshTokenAdapter (nếu được duyệt)` |
+| Persistence/adapters | `UserRepository`, `RoleRepository`, `AuthSessionRepository`; refresh token vẫn OPEN |
 | Use cases | Register, Login, Logout, Me, AssignRole |
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
@@ -587,8 +589,8 @@ Ngoài ra phải kiểm tra FK cho `learning_contents.current_published_version_
 
 ## 8. Security, error handling, observability
 
-- Password hash dùng Argon2id/bcrypt; không lưu plaintext; refresh-token strategy là [OPEN] vì DBML hiện chưa có token table.
-- JWT access token có expiry ngắn; server xác thực issuer, audience, signature, roles/permissions; không tin `userId` từ client cho resource cá nhân.
+- Password hash hiện dùng BCrypt; không lưu plaintext. Refresh-token strategy vẫn [OPEN]; V13 chỉ lưu session cho access token.
+- Identity hiện dùng opaque Bearer token theo ADR-017 thay đề xuất JWT: server kiểm tra SHA-256, expiry, revoked_at, ACTIVE và role hiện tại từ DB; không tin `userId` client cho resource cá nhân.
 - RBAC và ownership kiểm tra trong service trước khi đọc/sửa dữ liệu; kiểm tra object-level authorization cho AI retrieval.
 - Media upload: MIME whitelist, size limit, signed URL nếu private; soft-delete khi đang được tham chiếu.
 - PII không đưa vào prompt/log trừ khi thật cần; redaction, retention policy, audit access.
@@ -656,7 +658,7 @@ Ngoài ra phải kiểm tra FK cho `learning_contents.current_published_version_
 | HTTP errors | `code`, `message`, `traceId`, `details` | API proposal |
 | Review rating | API chuỗi, ERD integer | **OPEN — cần mapping hoặc migration** |
 | Autosave concurrency | API `clientSequence`, ERD chưa lưu | **OPEN** |
-| Idempotency/session | Chưa có bảng chuyên biệt trong ERD v1.6 | **OPEN** |
+| Idempotency/session | V13 bổ sung auth_sessions theo ADR-017; DBML v1.6 là lịch sử | Session hiện tại đã triển khai; refresh/idempotency **OPEN** |
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
