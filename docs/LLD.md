@@ -76,6 +76,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Chỉ hiển thị published; progress tham chiếu content version đã học; media soft-delete.
 
+**CONTENT-01 hiện thực (2026-11-02):** [Quyết định và contract](CONTENT01_Read_API.md). ContentReadService + ContentAccessPolicy xử lý hai GET qua ContentRepository/ContentMediaRepository. V15 bổ sung visibility content/media (mặc định PRIVATE), bảng learning_content_version_resources và grant content:read cho ba role. Chỉ current version published, chưa archived và có published_at hợp lệ được đọc; title/summary/body từ version, không legacy. Guest đọc PUBLIC; session + content:read đọc thêm AUTHENTICATED; PRIVATE luôn ẩn. List/count/detail áp dụng cùng predicate ở DB; DTO chuyển trong transaction REPEATABLE_READ. Danh mục trả lồng trong DTO, không thêm endpoint category riêng. content_resources legacy không dùng làm published media vì không pin version. Teacher authoring/publish, progress, bookmark, media download/upload và soft-delete vẫn chưa triển khai.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.3 Question Bank

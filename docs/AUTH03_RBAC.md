@@ -2,11 +2,13 @@
 
 Ngày: 2026-11-01. Nhánh: `feat/auth-rbac`. Phạm vi: API identity hiện có, kế thừa [ADR-017](ADR_Auth_Session.md). Package giữ `com.toeic.backend`, modular monolith với các lớp api/application/domain/infrastructure.
 
+**Cập nhật CONTENT-01 (2026-11-02):** [Hai GET đọc học liệu](CONTENT01_Read_API.md) đã được triển khai trên nền này. V15 cấp thêm content:read cho ba role, Guest chỉ đọc published PUBLIC, session có quyền đọc thêm AUTHENTICATED; PRIVATE vẫn ẩn. Ma trận bên dưới mô tả phạm vi tại thời điểm AUTH-03; publish/review và API quản trị tiếp tục chưa triển khai.
+
 ## Đối chiếu và quyết định triển khai
 
 - SRS §2, UC-02, BR-25, NFR-01 yêu cầu RBAC, tải quyền và không tin role từ client; UC-15 yêu cầu thay đổi quyền theo chính sách phiên. HLD §9/§10 yêu cầu kiểm tra ở API/service và ownership; Phần B ưu tiên Phần A. LLD §2.1 yêu cầu chỉ admin gán role. API §2 liệt kê các permission nghiệp vụ dưới nhãn DESIGN và checklist vẫn OPEN ma trận teacher/reviewer/admin, self-approval.
 - SRS UC-15 ghi actor Teacher/Admin, khác LLD “role assignment chỉ admin” và route admin hiện có. Giữ giới hạn ADMIN cho `/api/v1/admin/**`; không mở quyền gán role cho Teacher. Khi triển khai API quản trị cần chốt permission, audit và chính sách tự thay đổi đặc quyền trước khi mở use case.
-- API catalogue có published public content; production hiện chỉ có auth và health public. Chưa mở wildcard public cho content chưa triển khai.
+- Tại thời điểm AUTH-03, public chỉ có auth và health. CONTENT-01 sau đó mở hai GET content theo visibility, không mở wildcard authoring/publish; xem cập nhật phía trên.
 - LLD có ví dụ package `com.toeic.platform`, khác code và AGENTS.md. Tiếp tục dùng `com.toeic.backend`.
 - ERD v1.6/V2 có `permissions` và `role_permissions`; trước AUTH-03 chưa có entity mapping và chưa seed permission. V11 đã seed LEARNER/TEACHER/ADMIN. V13 lưu opaque Bearer session. Giữ V1–V13; V14 chỉ thêm dữ liệu permission cho use case đã tồn tại, không đổi cấu trúc bảng.
 - Không tự chốt các mục OPEN về reviewer khác tác giả, Teacher được publish mặc định hay Admin kế thừa quyền Teacher/Learner. Không có role hierarchy hoặc ADMIN bypass permission. Một tài khoản có thể có nhiều role; quyền hiệu lực là hợp của permission được cấp qua các role hiện tại.

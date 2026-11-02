@@ -43,6 +43,8 @@ public class IdentitySecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new)).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
+                        // Optional bearer auth is still processed; content service filters public/member visibility.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
