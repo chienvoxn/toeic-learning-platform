@@ -4,6 +4,8 @@
 
 > **Cập nhật runtime CONTENT-01 (2026-11-02):** DBML bên dưới giữ làm lịch sử. V15 mở rộng V3/V10 với visibility PUBLIC/AUTHENTICATED/PRIVATE (default PRIVATE) trên learning_contents/media_resources và bảng learning_content_version_resources(content_version_id,resource_id,display_order), FK tới version/media, PK ghép hai ID. Không đổi migration cũ. Mapping/query đọc và quyết định không backfill content_resources legacy: [CONTENT01_Read_API.md](CONTENT01_Read_API.md).
 
+> **Cập nhật runtime Q-02 (2026-11-02):** V16 thêm questions.current_published_version_id và question_groups.current_published_version_id, composite FK cùng question/group; question_groups.status và question_group_versions.status/published_at/archived_at, default DRAFT/pointer NULL. Thêm unique (group_version_id,group_id) phục vụ FK, không backfill published. Đây là metadata cho API đọc, không phải publish workflow; [Q02_Question_Read_API.md](Q02_Question_Read_API.md). V1–V15 và DBML lịch sử giữ nguyên.
+
 ## 1. Danh mục bảng
 
 Tổng cộng **64 bảng** trong DBML nguồn.

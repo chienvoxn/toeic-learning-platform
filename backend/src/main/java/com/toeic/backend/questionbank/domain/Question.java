@@ -9,6 +9,7 @@ import java.util.UUID;
 @Table(name = "questions")
 public class Question {
     @Id @Column(name = "question_id") private UUID questionId;
+    @Column(name = "current_published_version_id") private UUID currentPublishedVersionId;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "group_id") private QuestionGroup group;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "part_id", nullable = false) private ToeicPart part;
@@ -33,6 +34,7 @@ public class Question {
         this.updatedAt = createdAt;
     }
     public UUID getQuestionId() { return questionId; }
+    public UUID getCurrentPublishedVersionId() { return currentPublishedVersionId; }
     public QuestionGroup getGroup() { return group; }
     public ToeicPart getPart() { return part; }
     public QuestionTopic getTopic() { return topic; }

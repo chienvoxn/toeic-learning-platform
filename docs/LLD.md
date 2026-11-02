@@ -95,6 +95,8 @@ backend/src/main/java/com/toeic/platform/
 
 **TV2 Q-01 hiện thực:** [Mapping, domain và giới hạn](Q01_Question_Domain.md) bám V4/V10, không thêm migration/API. Answer dùng question_choices.is_correct; explanation là cột question_versions. Aggregate tạo mới cascade PERSIST choice/resource, domain chỉ sửa DRAFT và kiểm tra group version; metadata media đọc qua link version có sẵn, không tạo entity media trùng. QuestionPromptMapper dùng allowlist không có answer key/explanation để Q-02 tích hợp sau; chưa quyết định quyền/publication policy. Trigger immutable, publish workflow, tags/error categories và learner answers vẫn ngoài phạm vi. Nhận định lịch sử “question_versions thiếu status” bên dưới không áp dụng cho V4 hiện có.
 
+**TV2 Q-02 hiện thực:** [Quyết định mới và contract](Q02_Question_Read_API.md) chốt Teacher/Admin + question:read, 401/403/404 theo phạm vi. QuestionReadService bảo vệ method và đọc trong REPEATABLE_READ; QuestionVersionRepository tái sử dụng Q-01, áp dụng chung predicate publication/quyền/filter ở data/count/detail. V16 thêm current pointer question/group với composite FK đúng identity, group/group version status/timestamps mặc định ẩn; không sửa migration cũ, không backfill published. DTO qua mapper allowlist, media metadata/ID đều lọc visibility và link version. Không triển khai workflow publish hoặc làm bài/chấm điểm.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.4 Assessment & Blueprint

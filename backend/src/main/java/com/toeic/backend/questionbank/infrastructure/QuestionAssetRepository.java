@@ -31,6 +31,20 @@ public class QuestionAssetRepository {
                 where r.group_version_id = :id order by r.display_order, m.resource_id
                 """, versionId);
     }
+    public List<QuestionAssetMetadata> findReadableForQuestionVersion(UUID versionId) {
+        return read(FIELDS + """
+                join question_resources r on r.resource_id = m.resource_id
+                where r.question_version_id = :id and m.visibility in ('PUBLIC', 'AUTHENTICATED')
+                order by m.resource_id
+                """, versionId);
+    }
+    public List<QuestionAssetMetadata> findReadableForGroupVersion(UUID versionId) {
+        return read(FIELDS + """
+                join question_group_version_resources r on r.resource_id = m.resource_id
+                where r.group_version_id = :id and m.visibility in ('PUBLIC', 'AUTHENTICATED')
+                order by r.display_order, m.resource_id
+                """, versionId);
+    }
     private List<QuestionAssetMetadata> read(String sql, UUID versionId) {
         @SuppressWarnings("unchecked")
         List<Tuple> rows = entityManager.createNativeQuery(sql, Tuple.class).setParameter("id", versionId).getResultList();

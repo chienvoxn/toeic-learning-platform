@@ -84,12 +84,14 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 ### 3.3 Question bank
 
-**Trạng thái Q-01:** [Domain/mapping/repository đã triển khai](Q01_Question_Domain.md), chưa tạo endpoint của mục này. Prompt DTO allowlist không có isCorrect/explanation; API Q-02 sau này vẫn phải kiểm tra quyền/status/thời điểm trả lời và media ACL. Không coi mapper nội bộ là API đã triển khai hay bằng chứng phân quyền.
+**Trạng thái triển khai:** Q-01 cung cấp [domain/mapping/repository](Q01_Question_Domain.md). [Q-02](Q02_Question_Read_API.md) bổ sung hai GET dưới đây theo quyết định người dùng ngày 2026-11-02: chỉ Teacher/Admin có question:read, Bearer bắt buộc, chỉ current published question/group và DTO không đáp án/giải thích/URL/transcript. Các endpoint ghi trong mục này vẫn là đề xuất.
 
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `GET` | `/questions` | Teacher | partId,tagIds,difficulty,status,page,size | 200 Page<QuestionSummary> | 403 |
+| `GET` | `/questions` | Teacher/Admin + question:read | partId,topicId,difficulty,page,size,sort | 200 Page<QuestionSummary> | 400; 401; 403 |
+
+| `GET` | `/questions/{id}` | Teacher/Admin + question:read | UUID question id, không query param | 200 QuestionDetail + choices/passage/asset metadata | 400; 401; 403; 404 không tồn tại/không readable |
 
 | `POST` | `/questions` | Teacher | CreateQuestionRequest | 201 Question | 422 |
 
@@ -108,6 +110,8 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | `POST` | `/tags` | Teacher | CreateTagRequest | 201 Tag | 409 |
 
 | `POST` | `/question-groups/{id}/versions` | Teacher | CreateGroupVersionRequest | 201 QuestionGroupVersion | 422 |
+
+Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionId/partId/topicId/difficulty/publishedAt, mặc định publishedAt,desc, khóa phụ questionId ASC. Unknown/duplicate parameter, status/version tự chọn và sort ngoài allowlist trả 400 VALIDATION_ERROR. V16 thêm pointer đúng identity và trạng thái group/group version (mặc định ẩn, không backfill). List/count/detail dùng cùng predicate tại DB, không latest/fallback; question và group đều phải pin đúng version PUBLISHED với published_at hợp lệ, archived_at NULL. Thiếu/sai token 401, thiếu quyền endpoint 403 FORBIDDEN; có quyền nhưng record ẩn 404 QUESTION_NOT_FOUND. Không có quyền đọc cho Guest/Learner hoặc ADMIN bypass. [Contract DTO và quyết định chi tiết](Q02_Question_Read_API.md).
 
 ### 3.4 Tests/Blueprint/Attempts
 
