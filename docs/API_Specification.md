@@ -10,7 +10,7 @@
 ## 1. Contract conventions
 
 - Base URL: `/api/v1`; JSON UTF-8; `Content-Type: application/json`; HTTPS mandatory.
-- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; public content cần cấp phép riêng khi triển khai.
+- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; [CONTENT-01](CONTENT01_Read_API.md) mở hai GET content, chỉ trả published PUBLIC cho Guest và thêm AUTHENTICATED khi session có content:read; PRIVATE luôn ẩn.
 - IDs UUID; timestamps ISO-8601 UTC; pagination `page` (0-based), `size` (default 20, max 100), `sort` allowlist.
 - `GET` safe; `PUT` idempotent where possible; `POST` state transition cần idempotency policy.
 - Các API cá nhân lấy actor từ phiên Bearer đã xác thực, không tin userId request. Teacher/Admin permissions theo RBAC, ownership khi sửa draft.
@@ -62,9 +62,9 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `GET` | `/contents` | Public/Authenticated | categoryId,part,difficulty,page,size | 200 Page<ContentSummary> | 400 |
+| `GET` | `/contents` | PUBLIC; AUTHENTICATED cần session + content:read | categoryId,difficulty,page,size,sort | 200 Page<ContentSummary> | 400; 401 nếu Bearer gửi lên sai |
 
-| `GET` | `/contents/{id}` | Public/Authenticated | — | 200 PublishedContentVersion | 404 |
+| `GET` | `/contents/{id}` | Theo visibility như list | UUID content id | 200 PublishedContentVersion + media metadata | 400 UUID sai; 404 không tồn tại/không được phép; 401 Bearer sai |
 
 | `POST` | `/teacher/contents` | Teacher | CreateContentRequest | 201 ContentDraft | 422 |
 
@@ -79,6 +79,8 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | `DELETE` | `/contents/{id}/bookmarks` | Learner | — | 204 | 404 |
 
 | `POST` | `/teacher/media` | Teacher | UploadMetadata / multipart (separate contract) | 201 MediaResource | 413 |
+
+**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET trên đã triển khai; các API ghi trong §3.2 vẫn là đề xuất. page=0, size=20 mặc định, size 1–100; sort một trường trong title/publishedAt/difficulty/contentId với asc|desc, mặc định publishedAt,desc. categoryId dương, difficulty khớp chuỗi thực tế tối đa 20 ký tự; chưa hỗ trợ part vì schema chưa liên kết Part. Unknown/duplicate query parameters bị từ chối 400. List/count/detail dùng cùng điều kiện content + current version PUBLISHED, publishedAt có giá trị không ở tương lai, version chưa archived và đúng visibility. Không fallback legacy hoặc version cũ. Media pin theo version qua V15, lọc visibility; response chỉ metadata, không storage_url/transcript. V15 mặc định PRIVATE cho content/media cũ, không backfill/công khai dữ liệu. Payload DTO và trách nhiệm service được mô tả tại tài liệu CONTENT-01.
 
 ### 3.3 Question bank
 

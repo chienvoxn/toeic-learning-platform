@@ -346,7 +346,7 @@ class AuthFlowIntegrationTest {
                 account.getUserId(), roles.findByName(role).orElseThrow().getRoleId());
         var token = token();
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        assertEquals(List.of("content:read", "user:read:self"), authentication.authenticate(token).permissions());
     }
 
     private int assignIsolatedRole() {
@@ -391,7 +391,7 @@ class AuthFlowIntegrationTest {
         jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)", account.getUserId(), learnerId);
         var token = token();
         assertEquals(2, authentication.authenticate(token).roles().size());
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        assertEquals(List.of("content:read", "user:read:self"), authentication.authenticate(token).permissions());
         jdbc.update("delete from user_roles where user_id = ? and role_id = ?", account.getUserId(), roleId);
         me(token).andExpect(status().isOk());
         jdbc.update("delete from user_roles where user_id = ?", account.getUserId());
@@ -463,7 +463,7 @@ class AuthFlowIntegrationTest {
                         .header("X-Role", "ADMIN").header("X-Permissions", "user:manage")
                         .param("roles", "ADMIN").param("permissions", "user:manage"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("LEARNER"));
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        assertEquals(List.of("content:read", "user:read:self"), authentication.authenticate(token).permissions());
         mvc.perform(put("/api/v1/admin/users/" + registered.getUserId() + "/roles")
                         .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
                         .content("{\"roles\":[\"ADMIN\"]}"))

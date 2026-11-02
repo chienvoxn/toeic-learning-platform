@@ -2,6 +2,8 @@
 
 > **Trạng thái:** Logical schema từ DBML v1.6 được cung cấp; chưa xác nhận import, migration, constraints hay JPA mapping.
 
+> **Cập nhật runtime CONTENT-01 (2026-11-02):** DBML bên dưới giữ làm lịch sử. V15 mở rộng V3/V10 với visibility PUBLIC/AUTHENTICATED/PRIVATE (default PRIVATE) trên learning_contents/media_resources và bảng learning_content_version_resources(content_version_id,resource_id,display_order), FK tới version/media, PK ghép hai ID. Không đổi migration cũ. Mapping/query đọc và quyết định không backfill content_resources legacy: [CONTENT01_Read_API.md](CONTENT01_Read_API.md).
+
 ## 1. Danh mục bảng
 
 Tổng cộng **64 bảng** trong DBML nguồn.
