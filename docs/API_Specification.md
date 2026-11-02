@@ -84,6 +84,8 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 ### 3.3 Question bank
 
+**Trạng thái Q-01:** [Domain/mapping/repository đã triển khai](Q01_Question_Domain.md), chưa tạo endpoint của mục này. Prompt DTO allowlist không có isCorrect/explanation; API Q-02 sau này vẫn phải kiểm tra quyền/status/thời điểm trả lời và media ACL. Không coi mapper nội bộ là API đã triển khai hay bằng chứng phân quyền.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
