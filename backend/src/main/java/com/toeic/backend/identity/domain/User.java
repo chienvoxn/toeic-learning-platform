@@ -5,9 +5,11 @@ import java.util.Set;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
 @Table(name = "users")
+@DynamicUpdate
 public class User {
 
     @Id
@@ -105,6 +107,14 @@ public class User {
         this.emailVerifiedAt = OffsetDateTime.now();
         this.status = "ACTIVE";
         this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void recordLogin(OffsetDateTime now) {
+        if (!"ACTIVE".equals(status)) {
+            throw new IllegalStateException("Only active accounts can log in");
+        }
+        this.lastLoginAt = now;
+        this.updatedAt = now;
     }
     public Set<Role> getRoles() {
         return Set.copyOf(roles);

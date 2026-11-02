@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,12 @@ import jakarta.persistence.LockModeType;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
+
+    @EntityGraph(attributePaths = "roles")
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    @EntityGraph(attributePaths = "roles")
+    Optional<User> findByUserId(UUID userId);
 
     boolean existsByEmail(String email);
 

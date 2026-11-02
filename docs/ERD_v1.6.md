@@ -76,8 +76,21 @@ Tổng cộng **64 bảng** trong DBML nguồn.
 - `question_versions.status` đã tồn tại; `learning_progress.content_id` không còn khai báo trùng trong ERD v1.6.
 - `review_history.rating` là `integer`, trong khi API nhận `AGAIN/HARD/GOOD/EASY` dạng chuỗi: cần mapping chính thức hoặc điều chỉnh schema.
 - `attempt_answers` chưa có `client_sequence` để lưu thứ tự autosave.
-- Chưa có bảng `idempotency_requests` và `auth_sessions` trong DBML v1.6; cơ chế tương đương cần thiết kế trước khi cam kết replay/refresh token.
+- DBML v1.6 gốc chưa có `idempotency_requests` và `auth_sessions`. Triển khai sau đó đã bổ sung `auth_sessions` qua V13 theo [ADR-017](ADR_Auth_Session.md); idempotency và refresh token vẫn OPEN.
 - Published versions, authorization, snapshot membership và idempotent grading cần được enforce tại DB/application; DBML đơn thuần không chứng minh chúng đã được thực thi.
+
+### 2.1 Bổ sung runtime — V13 auth_sessions
+
+| Cột | Kiểu / ràng buộc |
+|---|---|
+| session_id | UUID PK |
+| user_id | UUID NOT NULL, FK users(user_id) |
+| token_hash | VARCHAR(64) NOT NULL UNIQUE, SHA-256 hex; không lưu raw token |
+| created_at | TIMESTAMPTZ NOT NULL |
+| expires_at | TIMESTAMPTZ NOT NULL, CHECK > created_at |
+| revoked_at | TIMESTAMPTZ NULL, CHECK NULL hoặc >= created_at |
+
+Index user_id và expires_at. Quan hệ users 1:N auth_sessions. Logout thu hồi một phiên; expiry mặc định 900 giây. V1–V12 không đổi. DBML gốc bên dưới giữ nguyên để truy vết và không đại diện toàn bộ schema runtime sau V13.
 
 ## 3. DBML gốc (đính kèm nguyên văn để truy vết)
 
