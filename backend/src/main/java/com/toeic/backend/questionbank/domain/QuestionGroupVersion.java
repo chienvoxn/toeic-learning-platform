@@ -12,6 +12,9 @@ public class QuestionGroupVersion {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "group_id", nullable = false) private QuestionGroup group;
     @Column(name = "version_number", nullable = false) private int versionNumber;
+    @Column(nullable = false, length = 20) private String status;
+    @Column(name = "published_at") private OffsetDateTime publishedAt;
+    @Column(name = "archived_at") private OffsetDateTime archivedAt;
     @Column(columnDefinition = "TEXT") private String instruction;
     @Column(name = "passage_text", columnDefinition = "TEXT") private String passageText;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
@@ -22,6 +25,7 @@ public class QuestionGroupVersion {
     protected QuestionGroupVersion() { }
     public QuestionGroupVersion(QuestionGroup group, int versionNumber, String instruction, String passageText) {
         this.groupVersionId = UUID.randomUUID();
+        this.status = "DRAFT";
         this.group = QuestionValues.required(group, "group");
         this.versionNumber = QuestionValues.positive(versionNumber, "versionNumber");
         this.instruction = instruction;
@@ -41,6 +45,9 @@ public class QuestionGroupVersion {
     public UUID getGroupVersionId() { return groupVersionId; }
     public QuestionGroup getGroup() { return group; }
     public int getVersionNumber() { return versionNumber; }
+    public String getStatus() { return status; }
+    public OffsetDateTime getPublishedAt() { return publishedAt; }
+    public OffsetDateTime getArchivedAt() { return archivedAt; }
     public String getInstruction() { return instruction; }
     public String getPassageText() { return passageText; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

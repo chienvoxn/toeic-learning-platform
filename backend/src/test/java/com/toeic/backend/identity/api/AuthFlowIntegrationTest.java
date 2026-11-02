@@ -346,7 +346,9 @@ class AuthFlowIntegrationTest {
                 account.getUserId(), roles.findByName(role).orElseThrow().getRoleId());
         var token = token();
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
-        assertEquals(List.of("content:read", "user:read:self"), authentication.authenticate(token).permissions());
+        var expected = role.equals("LEARNER") ? List.of("content:read", "user:read:self")
+                : List.of("content:read", "question:read", "user:read:self");
+        assertEquals(expected, authentication.authenticate(token).permissions());
     }
 
     private int assignIsolatedRole() {

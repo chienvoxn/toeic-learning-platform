@@ -2,6 +2,8 @@
 
 Ngày: 2026-11-02. Nhánh: feat/question-domain. Chỉ domain, mapping, repository và dữ liệu DTO an toàn cho bước Q-02 sau này; không tạo API, Teacher CRUD, workflow publish, attempt hoặc grading.
 
+**Cập nhật Q-02:** [Quyết định mới của người dùng](Q02_Question_Read_API.md) đã chốt quyền Teacher/Admin + question:read và V16 bổ sung pointer/publication group cho hai API GET. Nội dung Q-01 dưới đây giữ làm lịch sử triển khai; các giới hạn schema/policy tại thời điểm Q-01 cần đọc cùng cập nhật Q-02. Không có workflow publish/Teacher CRUD mới.
+
 ## Căn cứ và giới hạn đối chiếu
 
 Không tìm thấy backlog/Acceptance Criteria riêng mang mã Q-01/TV2 trong repo. Đối chiếu theo phạm vi người dùng giao, SRS UC-13/BR-01/BR-14/BR-24, HLD Phần B ưu tiên, LLD §2.3, ERD v1.6 và migration V4/V10. Không tuyên bố đáp ứng AC chưa được cung cấp.
