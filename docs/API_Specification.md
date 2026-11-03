@@ -49,7 +49,11 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `GET` | `/users/me` | Authenticated + user:read:self, own user | — | 200 UserProfile | 401; 403 FORBIDDEN |
 
-| `PATCH` | `/users/me` | Authenticated | UpdateProfileRequest | 200 UserProfile | 422 |
+| `PATCH` | `/users/me` | Authenticated + user:read:self + user:update:self, own user | UpdateProfileRequest: fullName?, targetScore? | 200 UserProfile | 400 VALIDATION_ERROR; 401; 403 |
+
+| `POST` | `/users/me/password` | Authenticated + user:password:change:self, own user/session | currentPassword, newPassword | 204, thu hồi mọi phiên; đăng nhập lại | 400 VALIDATION_ERROR; 401; 403; 422 CURRENT_PASSWORD_INVALID |
+
+**AUTH-04 — chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). PATCH allowlist fullName/targetScore, chỉ sửa actor; không nhận email/avatar/role/permission hoặc trường hệ thống. Validation identity trả 400. targetScore là mục tiêu Listening + Reading tổng 10–990, nguyên và bội số 5 theo quy tắc sản phẩm; bỏ qua giữ nguyên, null xóa; chưa có ngày mục tiêu. Đổi mật khẩu/hash và thu hồi mọi phiên trong cùng transaction, không cấp token mới.
 
 | `GET` | `/admin/users` | Admin | page,size,status | 200 Page<UserSummary> | 403 |
 
@@ -251,7 +255,13 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 // POST /auth/login
 {"email":"learner@example.com","password":"<user-provided-secret>"}
 // 200 LoginResponse (opaque session; no refresh token)
-{"accessToken":"<opaque-token>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","email":"learner@example.com","fullName":"Learner","avatarUrl":null,"status":"ACTIVE","emailVerifiedAt":"2026-11-01T00:00:00Z","lastLoginAt":"2026-11-01T00:01:00Z","roles":["LEARNER"]}}
+{"accessToken":"<opaque-token>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","email":"learner@example.com","fullName":"Learner","avatarUrl":null,"status":"ACTIVE","emailVerifiedAt":"2026-11-01T00:00:00Z","lastLoginAt":"2026-11-01T00:01:00Z","roles":["LEARNER"],"targetScore":null}}
+// PATCH /users/me: có ít nhất một trường; bỏ qua trường nào thì giữ nguyên
+{"fullName":"Learner Updated","targetScore":750}
+// PATCH /users/me: xóa mục tiêu, giữ nguyên tên
+{"targetScore":null}
+// POST /users/me/password; 204, không body/token mới; phải login lại
+{"currentPassword":"<current-secret>","newPassword":"<new-secret>"}
 ```
 
 Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Current-session revocation uses V13 and [ADR-017](ADR_Auth_Session.md).
@@ -262,6 +272,8 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 - Private requests dùng `Authorization: Bearer <accessToken>`; thời hạn mặc định 900 giây (đọc expiresIn thực tế). Không nhận token qua cookie/query/body. Public auth bỏ qua bearer cũ.
 - Logout không có body, thu hồi phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Dùng lại token/logout lần hai trả `401 INVALID_TOKEN`.
 - `GET /api/v1/users/me` trả chính object user trong ví dụ login, với dữ liệu và role hiện tại; không chứa password, passwordHash hay tokenHash. Actor lấy từ principal.
+- PATCH me chỉ nhận fullName (chuỗi không blank, tối đa 150 ký tự trước strip, không null) và targetScore (JSON integer 10–990, bội số 5 hoặc null). Từ chối payload rỗng/trường lạ và ép kiểu chuỗi/boolean/số thực thành điểm. Tên và mục tiêu ghi cùng transaction; không sửa estimatedScore/skill levels.
+- POST me/password chỉ nhận currentPassword/newPassword dạng chuỗi. NewPassword không blank, 8–72 ký tự và <=72 byte UTF-8 như đăng ký; currentPassword không blank, <=72 ký tự/byte. Không strip mật khẩu. Sai mật khẩu cũ trả 422 CURRENT_PASSWORD_INVALID, validation trả 400; cả hai không ghi hash/thu hồi phiên. Thành công thu hồi mọi phiên user (kể cả phiên gọi), không ảnh hưởng user khác; dùng lại phiên cũ trả 401. Login/đổi mật khẩu khóa cùng user để không tạo phiên còn hiệu lực bằng mật khẩu cũ sau đổi.
 - `/users/me` yêu cầu permission DB `user:read:self` ở API và service, kèm ownership ở service. V14 cấp cho ba role; thu hồi grant/role có hiệu lực từ request sau khi commit, trả 403 dù session còn hợp lệ. Logout vẫn cho phép thu hồi chính session khi không còn permission nghiệp vụ. Payload role/permission trong register/login không được áp dụng; không có API tự cấp quyền.
 - Thiếu token: `401 UNAUTHENTICATED`; sai/không tồn tại/đã thu hồi hoặc tài khoản bị khóa: `401 INVALID_TOKEN`; tại hoặc sau expiresAt: `401 TOKEN_EXPIRED`. Lỗi auth có `{code,message,traceId,details:[]}` và `WWW-Authenticate: Bearer`.
 - `/api/v1/admin/**` yêu cầu ADMIN: phiên hợp lệ thiếu role trả `403 FORBIDDEN`, thiếu phiên trả 401. API admin trong catalogue vẫn là đề xuất; rule route không đồng nghĩa nghiệp vụ admin đã triển khai.

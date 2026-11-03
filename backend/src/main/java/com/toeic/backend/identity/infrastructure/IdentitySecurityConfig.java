@@ -48,6 +48,11 @@ public class IdentitySecurityConfig {
                         // Optional bearer auth is still processed; content service filters public/member visibility.
                         .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasAuthority("user:read:self"),
+                                AuthorityAuthorizationManager.hasAuthority("user:update:self")))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/password")
+                        .hasAuthority("user:password:change:self")
                         .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
                                 AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
                                         AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
