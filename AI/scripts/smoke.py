@@ -1,4 +1,4 @@
-"""Start the real ASGI server and check local HTTP without making any Gemini calls."""
+"""Start the real ASGI server and check local HTTP without making any provider calls."""
 
 import json
 import socket

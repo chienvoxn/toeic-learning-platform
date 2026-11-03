@@ -5,7 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", hide_input_in_errors=True
+    )
 
     google_api_key: SecretStr = SecretStr("")
     ai_service_key: SecretStr
@@ -13,7 +15,7 @@ class Settings(BaseSettings):
     gemini_chat_model: str = "gemini-3.5-flash-lite"
     gemini_embedding_model: str = "models/gemini-embedding-001"
     embedding_dimensions: int = Field(default=768, ge=128, le=3072)
-    database_url: str = "sqlite:///./data/ai.db"
+    database_url: str = "sqlite:///./data/ai-gemini.db"
     chunk_size: int = Field(default=1200, ge=200, le=4000)
     chunk_overlap: int = Field(default=180, ge=0)
     retrieval_top_k: int = Field(default=5, ge=1, le=10)
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     def embedding_signature(self) -> str:
         # Refuse to mix vector spaces or chunk pipelines after changing configuration.
         return (
-            f"{self.gemini_embedding_model}:{self.embedding_dimensions}:"
+            f"google:{self.gemini_embedding_model}:{self.embedding_dimensions}:"
             f"{self.chunk_size}:{self.chunk_overlap}:v1"
         )
 
