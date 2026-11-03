@@ -116,6 +116,22 @@ public class User {
         this.lastLoginAt = now;
         this.updatedAt = now;
     }
+
+    public void updateFullName(String fullName, OffsetDateTime now) {
+        if (fullName == null || fullName.isBlank() || fullName.length() > 150) {
+            throw new IllegalArgumentException("Invalid full name");
+        }
+        this.fullName = fullName.strip();
+        this.updatedAt = now;
+    }
+
+    public void changePasswordHash(String hash, OffsetDateTime now) {
+        if (hash == null || !hash.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}") || now == null) {
+            throw new IllegalArgumentException("Invalid password hash");
+        }
+        this.passwordHash = hash;
+        this.updatedAt = now;
+    }
     public Set<Role> getRoles() {
         return Set.copyOf(roles);
     }

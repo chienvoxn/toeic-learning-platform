@@ -64,6 +64,8 @@
 
 **Quyết định triển khai identity 2026-11-01:** theo [ADR-017](ADR_Auth_Session.md), login chỉ cho ACTIVE, phát opaque Bearer session mặc định 15 phút; mỗi request kiểm phiên/trạng thái/role từ DB. Logout thu hồi phiên hiện tại; GET /api/v1/users/me trả tài khoản và role không lộ passwordHash. Chưa xác thực trả 401, thiếu role trả 403. Đăng ký–OTP hiện hữu giữ nguyên; refresh token vẫn OPEN.
 
+**AUTH-04 — quyết định người dùng chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). Cập nhật tên và mục tiêu Listening + Reading tổng của chính actor; targetScore 10–990, nguyên và bội số 5 là validation mục tiêu sản phẩm, chưa có ngày mục tiêu. Đổi mật khẩu cần mật khẩu cũ đúng, ghi hash và thu hồi mọi phiên cùng transaction, 204 không token mới; sai/validation lỗi không thay đổi dữ liệu hoặc phiên. Login đồng thời không được để phiên dùng mật khẩu cũ còn hiệu lực sau đổi.
+
 **Ngoại lệ:** đầu vào không hợp lệ; thiếu quyền; bản ghi không tồn tại; trạng thái không cho phép; lỗi mạng. Giao dịch phải an toàn, không phát sinh dữ liệu nửa chừng.
 
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.

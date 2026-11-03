@@ -10,7 +10,7 @@
 ## 1. Contract conventions
 
 - Base URL: `/api/v1`; JSON UTF-8; `Content-Type: application/json`; HTTPS mandatory.
-- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; public content cần cấp phép riêng khi triển khai.
+- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; [CONTENT-01](CONTENT01_Read_API.md) mở hai GET content, chỉ trả published PUBLIC cho Guest và thêm AUTHENTICATED khi session có content:read; PRIVATE luôn ẩn.
 - IDs UUID; timestamps ISO-8601 UTC; pagination `page` (0-based), `size` (default 20, max 100), `sort` allowlist.
 - `GET` safe; `PUT` idempotent where possible; `POST` state transition cần idempotency policy.
 - Các API cá nhân lấy actor từ phiên Bearer đã xác thực, không tin userId request. Teacher/Admin permissions theo RBAC, ownership khi sửa draft.
@@ -49,7 +49,11 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `GET` | `/users/me` | Authenticated + user:read:self, own user | — | 200 UserProfile | 401; 403 FORBIDDEN |
 
-| `PATCH` | `/users/me` | Authenticated | UpdateProfileRequest | 200 UserProfile | 422 |
+| `PATCH` | `/users/me` | Authenticated + user:read:self + user:update:self, own user | UpdateProfileRequest: fullName?, targetScore? | 200 UserProfile | 400 VALIDATION_ERROR; 401; 403 |
+
+| `POST` | `/users/me/password` | Authenticated + user:password:change:self, own user/session | currentPassword, newPassword | 204, thu hồi mọi phiên; đăng nhập lại | 400 VALIDATION_ERROR; 401; 403; 422 CURRENT_PASSWORD_INVALID |
+
+**AUTH-04 — chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). PATCH allowlist fullName/targetScore, chỉ sửa actor; không nhận email/avatar/role/permission hoặc trường hệ thống. Validation identity trả 400. targetScore là mục tiêu Listening + Reading tổng 10–990, nguyên và bội số 5 theo quy tắc sản phẩm; bỏ qua giữ nguyên, null xóa; chưa có ngày mục tiêu. Đổi mật khẩu/hash và thu hồi mọi phiên trong cùng transaction, không cấp token mới.
 
 | `GET` | `/admin/users` | Admin | page,size,status | 200 Page<UserSummary> | 403 |
 
@@ -62,9 +66,9 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `GET` | `/contents` | Public/Authenticated | categoryId,part,difficulty,page,size | 200 Page<ContentSummary> | 400 |
+| `GET` | `/contents` | PUBLIC; AUTHENTICATED cần session + content:read | categoryId,difficulty,page,size,sort | 200 Page<ContentSummary> | 400; 401 nếu Bearer gửi lên sai |
 
-| `GET` | `/contents/{id}` | Public/Authenticated | — | 200 PublishedContentVersion | 404 |
+| `GET` | `/contents/{id}` | Theo visibility như list | UUID content id | 200 PublishedContentVersion + media metadata | 400 UUID sai; 404 không tồn tại/không được phép; 401 Bearer sai |
 
 | `POST` | `/teacher/contents` | Teacher | CreateContentRequest | 201 ContentDraft | 422 |
 
@@ -80,12 +84,18 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/teacher/media` | Teacher | UploadMetadata / multipart (separate contract) | 201 MediaResource | 413 |
 
+**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET trên đã triển khai; các API ghi trong §3.2 vẫn là đề xuất. page=0, size=20 mặc định, size 1–100; sort một trường trong title/publishedAt/difficulty/contentId với asc|desc, mặc định publishedAt,desc. categoryId dương, difficulty khớp chuỗi thực tế tối đa 20 ký tự; chưa hỗ trợ part vì schema chưa liên kết Part. Unknown/duplicate query parameters bị từ chối 400. List/count/detail dùng cùng điều kiện content + current version PUBLISHED, publishedAt có giá trị không ở tương lai, version chưa archived và đúng visibility. Không fallback legacy hoặc version cũ. Media pin theo version qua V15, lọc visibility; response chỉ metadata, không storage_url/transcript. V15 mặc định PRIVATE cho content/media cũ, không backfill/công khai dữ liệu. Payload DTO và trách nhiệm service được mô tả tại tài liệu CONTENT-01.
+
 ### 3.3 Question bank
+
+**Trạng thái triển khai:** Q-01 cung cấp [domain/mapping/repository](Q01_Question_Domain.md). [Q-02](Q02_Question_Read_API.md) bổ sung hai GET dưới đây theo quyết định người dùng ngày 2026-11-02: chỉ Teacher/Admin có question:read, Bearer bắt buộc, chỉ current published question/group và DTO không đáp án/giải thích/URL/transcript. Các endpoint ghi trong mục này vẫn là đề xuất.
 
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `GET` | `/questions` | Teacher | partId,tagIds,difficulty,status,page,size | 200 Page<QuestionSummary> | 403 |
+| `GET` | `/questions` | Teacher/Admin + question:read | partId,topicId,difficulty,page,size,sort | 200 Page<QuestionSummary> | 400; 401; 403 |
+
+| `GET` | `/questions/{id}` | Teacher/Admin + question:read | UUID question id, không query param | 200 QuestionDetail + choices/passage/asset metadata | 400; 401; 403; 404 không tồn tại/không readable |
 
 | `POST` | `/questions` | Teacher | CreateQuestionRequest | 201 Question | 422 |
 
@@ -104,6 +114,8 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | `POST` | `/tags` | Teacher | CreateTagRequest | 201 Tag | 409 |
 
 | `POST` | `/question-groups/{id}/versions` | Teacher | CreateGroupVersionRequest | 201 QuestionGroupVersion | 422 |
+
+Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionId/partId/topicId/difficulty/publishedAt, mặc định publishedAt,desc, khóa phụ questionId ASC. Unknown/duplicate parameter, status/version tự chọn và sort ngoài allowlist trả 400 VALIDATION_ERROR. V16 thêm pointer đúng identity và trạng thái group/group version (mặc định ẩn, không backfill). List/count/detail dùng cùng predicate tại DB, không latest/fallback; question và group đều phải pin đúng version PUBLISHED với published_at hợp lệ, archived_at NULL. Thiếu/sai token 401, thiếu quyền endpoint 403 FORBIDDEN; có quyền nhưng record ẩn 404 QUESTION_NOT_FOUND. Không có quyền đọc cho Guest/Learner hoặc ADMIN bypass. [Contract DTO và quyết định chi tiết](Q02_Question_Read_API.md).
 
 ### 3.4 Tests/Blueprint/Attempts
 
@@ -243,7 +255,13 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 // POST /auth/login
 {"email":"learner@example.com","password":"<user-provided-secret>"}
 // 200 LoginResponse (opaque session; no refresh token)
-{"accessToken":"<opaque-token>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","email":"learner@example.com","fullName":"Learner","avatarUrl":null,"status":"ACTIVE","emailVerifiedAt":"2026-11-01T00:00:00Z","lastLoginAt":"2026-11-01T00:01:00Z","roles":["LEARNER"]}}
+{"accessToken":"<opaque-token>","tokenType":"Bearer","expiresIn":900,"user":{"userId":"<uuid>","email":"learner@example.com","fullName":"Learner","avatarUrl":null,"status":"ACTIVE","emailVerifiedAt":"2026-11-01T00:00:00Z","lastLoginAt":"2026-11-01T00:01:00Z","roles":["LEARNER"],"targetScore":null}}
+// PATCH /users/me: có ít nhất một trường; bỏ qua trường nào thì giữ nguyên
+{"fullName":"Learner Updated","targetScore":750}
+// PATCH /users/me: xóa mục tiêu, giữ nguyên tên
+{"targetScore":null}
+// POST /users/me/password; 204, không body/token mới; phải login lại
+{"currentPassword":"<current-secret>","newPassword":"<new-secret>"}
 ```
 
 Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Current-session revocation uses V13 and [ADR-017](ADR_Auth_Session.md).
@@ -254,6 +272,8 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 - Private requests dùng `Authorization: Bearer <accessToken>`; thời hạn mặc định 900 giây (đọc expiresIn thực tế). Không nhận token qua cookie/query/body. Public auth bỏ qua bearer cũ.
 - Logout không có body, thu hồi phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Dùng lại token/logout lần hai trả `401 INVALID_TOKEN`.
 - `GET /api/v1/users/me` trả chính object user trong ví dụ login, với dữ liệu và role hiện tại; không chứa password, passwordHash hay tokenHash. Actor lấy từ principal.
+- PATCH me chỉ nhận fullName (chuỗi không blank, tối đa 150 ký tự trước strip, không null) và targetScore (JSON integer 10–990, bội số 5 hoặc null). Từ chối payload rỗng/trường lạ và ép kiểu chuỗi/boolean/số thực thành điểm. Tên và mục tiêu ghi cùng transaction; không sửa estimatedScore/skill levels.
+- POST me/password chỉ nhận currentPassword/newPassword dạng chuỗi. NewPassword không blank, 8–72 ký tự và <=72 byte UTF-8 như đăng ký; currentPassword không blank, <=72 ký tự/byte. Không strip mật khẩu. Sai mật khẩu cũ trả 422 CURRENT_PASSWORD_INVALID, validation trả 400; cả hai không ghi hash/thu hồi phiên. Thành công thu hồi mọi phiên user (kể cả phiên gọi), không ảnh hưởng user khác; dùng lại phiên cũ trả 401. Login/đổi mật khẩu khóa cùng user để không tạo phiên còn hiệu lực bằng mật khẩu cũ sau đổi.
 - `/users/me` yêu cầu permission DB `user:read:self` ở API và service, kèm ownership ở service. V14 cấp cho ba role; thu hồi grant/role có hiệu lực từ request sau khi commit, trả 403 dù session còn hợp lệ. Logout vẫn cho phép thu hồi chính session khi không còn permission nghiệp vụ. Payload role/permission trong register/login không được áp dụng; không có API tự cấp quyền.
 - Thiếu token: `401 UNAUTHENTICATED`; sai/không tồn tại/đã thu hồi hoặc tài khoản bị khóa: `401 INVALID_TOKEN`; tại hoặc sau expiresAt: `401 TOKEN_EXPIRED`. Lỗi auth có `{code,message,traceId,details:[]}` và `WWW-Authenticate: Bearer`.
 - `/api/v1/admin/**` yêu cầu ADMIN: phiên hợp lệ thiếu role trả `403 FORBIDDEN`, thiếu phiên trả 401. API admin trong catalogue vẫn là đề xuất; rule route không đồng nghĩa nghiệp vụ admin đã triển khai.

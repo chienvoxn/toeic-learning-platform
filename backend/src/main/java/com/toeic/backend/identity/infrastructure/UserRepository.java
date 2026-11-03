@@ -28,6 +28,15 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmailIgnoreCase(String email);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.userId = :userId")
+    Optional<User> findForUpdate(@Param("userId") UUID userId);
+
+    // Serialize credential verification/session creation with password changes.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where lower(u.email) = :email")
+    Optional<User> findForLogin(@Param("email") String normalizedEmail);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where lower(u.email) = :email")
     Optional<User> findForVerification(
             @Param("email") String normalizedEmail

@@ -8,6 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationManagers;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -43,7 +45,17 @@ public class IdentitySecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new)).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
+                        // Optional bearer auth is still processed; content service filters public/member visibility.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasAuthority("user:read:self"),
+                                AuthorityAuthorizationManager.hasAuthority("user:update:self")))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/password")
+                        .hasAuthority("user:password:change:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
+                                AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
+                                        AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(config -> config

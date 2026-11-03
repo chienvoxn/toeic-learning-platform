@@ -59,6 +59,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**AUTH-04 — chốt 2026-11-03:** [Phạm vi và quyết định](AUTH04_Profile_Password_Goals.md). UserProfileService kế thừa GET/PATCH me, trả/cập nhật tên và targetScore 10–990 bội số 5, null xóa/bỏ qua giữ nguyên, không ngày mục tiêu. Mapping một phần learning_profiles chỉ ghi mục tiêu và timestamp, giữ nguyên dữ liệu analytics. PasswordChangeService xác minh mật khẩu cũ và cập nhật hash + thu hồi mọi phiên cùng transaction, trả 204 không token mới. Login và đổi mật khẩu khóa cùng user trước xác minh để ngăn tạo phiên bằng credential cũ sau đổi. API/service có permission + ownership, DTO allowlist từ chối trường hệ thống. V17 chỉ seed quyền, không đổi schema mục tiêu.
+
 **AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AdminUserController/AssignRole và quyền nghiệp vụ khác bên trên vẫn là DESIGN, chưa triển khai; không coi ma trận reviewer/publisher OPEN là grant mặc định.
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
@@ -76,6 +78,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Chỉ hiển thị published; progress tham chiếu content version đã học; media soft-delete.
 
+**CONTENT-01 hiện thực (2026-11-02):** [Quyết định và contract](CONTENT01_Read_API.md). ContentReadService + ContentAccessPolicy xử lý hai GET qua ContentRepository/ContentMediaRepository. V15 bổ sung visibility content/media (mặc định PRIVATE), bảng learning_content_version_resources và grant content:read cho ba role. Chỉ current version published, chưa archived và có published_at hợp lệ được đọc; title/summary/body từ version, không legacy. Guest đọc PUBLIC; session + content:read đọc thêm AUTHENTICATED; PRIVATE luôn ẩn. List/count/detail áp dụng cùng predicate ở DB; DTO chuyển trong transaction REPEATABLE_READ. Danh mục trả lồng trong DTO, không thêm endpoint category riêng. content_resources legacy không dùng làm published media vì không pin version. Teacher authoring/publish, progress, bookmark, media download/upload và soft-delete vẫn chưa triển khai.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.3 Question Bank
@@ -90,6 +94,10 @@ backend/src/main/java/com/toeic/platform/
 | Use cases | CreateQuestion, CreateVersion, SubmitReview, Approve, Publish, Archive |
 
 **Invariants:** Choices gắn version; không chỉnh version published; group version khớp question.
+
+**TV2 Q-01 hiện thực:** [Mapping, domain và giới hạn](Q01_Question_Domain.md) bám V4/V10, không thêm migration/API. Answer dùng question_choices.is_correct; explanation là cột question_versions. Aggregate tạo mới cascade PERSIST choice/resource, domain chỉ sửa DRAFT và kiểm tra group version; metadata media đọc qua link version có sẵn, không tạo entity media trùng. QuestionPromptMapper dùng allowlist không có answer key/explanation để Q-02 tích hợp sau; chưa quyết định quyền/publication policy. Trigger immutable, publish workflow, tags/error categories và learner answers vẫn ngoài phạm vi. Nhận định lịch sử “question_versions thiếu status” bên dưới không áp dụng cho V4 hiện có.
+
+**TV2 Q-02 hiện thực:** [Quyết định mới và contract](Q02_Question_Read_API.md) chốt Teacher/Admin + question:read, 401/403/404 theo phạm vi. QuestionReadService bảo vệ method và đọc trong REPEATABLE_READ; QuestionVersionRepository tái sử dụng Q-01, áp dụng chung predicate publication/quyền/filter ở data/count/detail. V16 thêm current pointer question/group với composite FK đúng identity, group/group version status/timestamps mặc định ẩn; không sửa migration cũ, không backfill published. DTO qua mapper allowlist, media metadata/ID đều lọc visibility và link version. Không triển khai workflow publish hoặc làm bài/chấm điểm.
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 

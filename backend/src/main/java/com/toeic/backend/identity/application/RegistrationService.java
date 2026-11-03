@@ -1,6 +1,6 @@
 package com.toeic.backend.identity.application;
 
-import java.nio.charset.StandardCharsets;
+import com.toeic.backend.identity.domain.PasswordPolicy;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,7 +46,7 @@ public class RegistrationService {
             );
         }
 
-        if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (!PasswordPolicy.fitsBcrypt(password)) {
             throw new RegistrationException(
                     "PASSWORD_TOO_LONG",
                     "Mat khau khong duoc vuot 72 byte UTF-8.",
