@@ -59,6 +59,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**AUTH-04 — chốt 2026-11-03:** [Phạm vi và quyết định](AUTH04_Profile_Password_Goals.md). UserProfileService kế thừa GET/PATCH me, trả/cập nhật tên và targetScore 10–990 bội số 5, null xóa/bỏ qua giữ nguyên, không ngày mục tiêu. Mapping một phần learning_profiles chỉ ghi mục tiêu và timestamp, giữ nguyên dữ liệu analytics. PasswordChangeService xác minh mật khẩu cũ và cập nhật hash + thu hồi mọi phiên cùng transaction, trả 204 không token mới. Login và đổi mật khẩu khóa cùng user trước xác minh để ngăn tạo phiên bằng credential cũ sau đổi. API/service có permission + ownership, DTO allowlist từ chối trường hệ thống. V17 chỉ seed quyền, không đổi schema mục tiêu.
+
 **AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AdminUserController/AssignRole và quyền nghiệp vụ khác bên trên vẫn là DESIGN, chưa triển khai; không coi ma trận reviewer/publisher OPEN là grant mặc định.
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
