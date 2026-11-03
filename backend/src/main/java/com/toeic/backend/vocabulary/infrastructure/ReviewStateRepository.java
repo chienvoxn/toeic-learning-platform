@@ -28,4 +28,21 @@ public interface ReviewStateRepository
             UUID userId,
             OffsetDateTime now
     );
+
+    // LP-01: Vocabularies reviewed at least once
+    long countByUserIdAndLastReviewedAtIsNotNull(
+            UUID userId
+    );
+
+    // LP-01: Reviewed vocabularies due for review
+    long countByUserIdAndLastReviewedAtIsNotNullAndNextReviewAtLessThanEqual(
+            UUID userId,
+            OffsetDateTime now
+    );
+
+    // LP-01: Vocabularies reaching mastery threshold
+    long countByUserIdAndLastReviewedAtIsNotNullAndRepetitionCountGreaterThanEqual(
+            UUID userId,
+            int repetitionCount
+    );
 }

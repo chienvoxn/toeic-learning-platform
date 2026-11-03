@@ -2,13 +2,11 @@
 package com.toeic.backend.vocabulary.infrastructure;
 
 import com.toeic.backend.vocabulary.domain.Vocabulary;
-
-import org.springframework.data.jpa.repository.Lock;
 import jakarta.persistence.LockModeType;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,6 +31,9 @@ public interface VocabularyRepository
             UUID vocabularyId,
             UUID createdBy
     );
+
+    // LP-01: Total vocabularies owned by the user
+    long countByCreatedBy(UUID createdBy);
 
     /**
      * Lock the vocabulary row while processing an SRS review.
