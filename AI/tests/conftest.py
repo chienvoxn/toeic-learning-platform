@@ -15,7 +15,7 @@ PRIVATE_ID = "ef71841f-9549-456d-a801-835836c1befd"
 
 
 class FakeProvider:
-    """Deterministic retrieval vectors; never calls Gemini or requires a real API key."""
+    """Deterministic retrieval vectors; never calls a provider or requires a real API key."""
 
     def __init__(self):
         self.embedded = []

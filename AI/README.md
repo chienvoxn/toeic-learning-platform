@@ -30,7 +30,10 @@ python -m venv .venv
 ```
 
 Điền `GOOGLE_API_KEY` vào `.env`. Có thể lấy key tại [Google AI Studio](https://aistudio.google.com/apikey).
-`init_env.py` tạo sẵn hai khóa gọi API nội bộ và giữ nguyên file `.env` nếu đã có.
+`init_env.py` bổ sung cấu hình Gemini, tạo hai khóa nội bộ nếu thiếu/không hợp lệ và giữ
+các key hợp lệ đã có. Nếu database là SQLite mặc định cũ `data/ai.db` hoặc `data/ai-openai.db`,
+script chuyển cấu hình sang `data/ai-gemini.db`, không xóa file index cũ. Với PostgreSQL
+hoặc database tùy chỉnh, cần chọn index mới và nạp lại tài liệu nếu chữ ký cấu hình khác.
 Không đưa `.env` lên Git hoặc gửi các khóa này xuống frontend.
 
 ```powershell
@@ -49,6 +52,16 @@ Mở terminal khác, vẫn ở thư mục `AI`, để nạp học liệu mẫu v
 
 Demo gọi Gemini thật và dùng quota của API key. Học liệu mẫu chỉ có phần hiện tại hoàn thành;
 cần nạp thêm tài liệu cho những chủ đề khác.
+
+Để kiểm tra trọn luồng độc lập, không cần bật Spring Boot/frontend hoặc uvicorn:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.verify_rag --live
+```
+
+Lệnh này gọi Gemini thật: nạp học liệu mẫu → tìm đoạn liên quan → hỏi đáp → đối chiếu ID
+nguồn → kiểm tra fallback khi danh sách quyền rỗng. Cần `GOOGLE_API_KEY` hợp lệ và quota.
+Đây là kiểm tra pipeline; vẫn cần đọc câu trả lời và nguồn để đánh giá độ đúng ngữ nghĩa.
 
 ## Các chế độ hỗ trợ
 
@@ -134,7 +147,7 @@ không ghi nội dung câu hỏi hay khóa API.
 
 ## Database
 
-Mặc định dùng SQLite tại `data/ai.db` để chạy local. Vector lưu dạng JSON, tìm kiếm bằng cosine
+Mặc định dùng SQLite tại `data/ai-gemini.db` để chạy local. Vector lưu dạng JSON, tìm kiếm bằng cosine
 trên các đoạn được phép truy cập. Cách này phù hợp với lượng học liệu nhỏ.
 
 Để dùng PostgreSQL + pgvector, mở Docker Desktop, thêm `POSTGRES_PASSWORD` vào `.env` rồi chạy:

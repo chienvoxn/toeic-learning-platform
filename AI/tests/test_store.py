@@ -24,6 +24,24 @@ def test_index_persists_across_restart_and_rejects_different_vector_space(option
         VectorStore(changed)
 
 
+def test_index_rejects_openai_vectors_after_switch_to_gemini(options):
+    from sqlalchemy import text
+
+    store = VectorStore(options)
+    old_signature = (
+        f"openai:text-embedding-3-small:{options.embedding_dimensions}:"
+        f"{options.chunk_size}:{options.chunk_overlap}:v1"
+    )
+    with store.engine.begin() as connection:
+        connection.execute(
+            text("UPDATE rag_index_config SET signature = :signature WHERE id = 1"),
+            {"signature": old_signature},
+        )
+    store.close()
+    with pytest.raises(IndexConfigurationError):
+        VectorStore(options)
+
+
 @pytest.mark.parametrize("vector", [[0.0] * 128, [1.0], [math.nan] * 128, [math.inf] * 128])
 def test_invalid_vectors_are_rejected(vector):
     with pytest.raises(ValueError):
