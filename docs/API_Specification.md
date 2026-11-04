@@ -66,7 +66,7 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `GET` | `/contents` | PUBLIC; AUTHENTICATED cần session + content:read | categoryId,difficulty,page,size,sort | 200 Page<ContentSummary> | 400; 401 nếu Bearer gửi lên sai |
+| `GET` | `/contents` | PUBLIC; AUTHENTICATED cần session + content:read | q,categoryId,difficulty,page,size,sort | 200 Page<ContentSummary> | 400; 401 nếu Bearer gửi lên sai |
 
 | `GET` | `/contents/{id}` | Theo visibility như list | UUID content id | 200 PublishedContentVersion + media metadata | 400 UUID sai; 404 không tồn tại/không được phép; 401 Bearer sai |
 
@@ -78,13 +78,25 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/contents/{id}/progress` | Learner | UpdateProgressRequest | 200 LearningProgress | 422 |
 
-| `POST` | `/contents/{id}/bookmarks` | Learner | — | 201 Bookmark | 409 |
+| `POST` | `/contents/{id}/bookmarks` | Authenticated + content:bookmark:self | — | 201 {contentId,createdAt} | 400; 401; 403; 404 CONTENT_NOT_FOUND; 409 BOOKMARK_EXISTS |
 
-| `DELETE` | `/contents/{id}/bookmarks` | Learner | — | 204 | 404 |
+| `DELETE` | `/contents/{id}/bookmarks` | Authenticated + content:bookmark:self, own bookmark | — | 204 | 400; 401; 403; 404 BOOKMARK_NOT_FOUND |
+
+| `GET` | `/users/me/bookmarks` | Authenticated + content:bookmark:self | page,size,sort | 200 Page<{content:ContentSummary,createdAt}> | 400; 401; 403 |
+
+| `POST` | `/contents/{id}/history` | Authenticated + content:history:self | — | 204 (create/update) | 400; 401; 403; 404 CONTENT_NOT_FOUND |
+
+| `GET` | `/users/me/content-history` | Authenticated + content:history:self | page,size,sort | 200 Page<{content:ContentSummary,lastAccessedAt}> | 400; 401; 403 |
 
 | `POST` | `/teacher/media` | Teacher | UploadMetadata / multipart (separate contract) | 201 MediaResource | 413 |
 
-**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET trên đã triển khai; các API ghi trong §3.2 vẫn là đề xuất. page=0, size=20 mặc định, size 1–100; sort một trường trong title/publishedAt/difficulty/contentId với asc|desc, mặc định publishedAt,desc. categoryId dương, difficulty khớp chuỗi thực tế tối đa 20 ký tự; chưa hỗ trợ part vì schema chưa liên kết Part. Unknown/duplicate query parameters bị từ chối 400. List/count/detail dùng cùng điều kiện content + current version PUBLISHED, publishedAt có giá trị không ở tương lai, version chưa archived và đúng visibility. Không fallback legacy hoặc version cũ. Media pin theo version qua V15, lọc visibility; response chỉ metadata, không storage_url/transcript. V15 mặc định PRIVATE cho content/media cũ, không backfill/công khai dữ liệu. Payload DTO và trách nhiệm service được mô tả tại tài liệu CONTENT-01.
+**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET kế thừa page=0, size=20, max 100; sort allowlist title/publishedAt/difficulty/contentId, mặc định publishedAt,desc và contentId phụ. Filter categoryId/difficulty theo schema. List/count/detail dùng cùng điều kiện current version PUBLISHED, thời gian hợp lệ, chưa archived và đúng visibility. Không fallback legacy/version cũ. Media pin version và lọc quyền, không storage_url/transcript. Teacher CRUD/publish, progress và media upload vẫn chưa triển khai.
+
+**CONTENT-02 — quyết định sản phẩm chốt 2026-11-04:** [Contract và transaction](CONTENT02_Search_Bookmarks_History.md). q tìm chuỗi con title/summary/body của current version; không phân biệt hoa/thường, không bỏ dấu, trim/gộp whitespace, rỗng không lọc, tối đa 200 Unicode code point sau chuẩn hóa; %, _ và backslash literal. Quyền + tìm kiếm áp dụng cùng predicate DB cho data/count. Personal endpoints lấy actor từ Bearer principal, không nhận userId; không nhận body/query ở POST/DELETE. V18 chỉ cấp mặc định content:bookmark:self/content:history:self cho LEARNER; Teacher/Admin có permission hợp lệ vẫn được dùng. Không có role bypass. Content:read bổ sung phạm vi AUTHENTICATED; PUBLIC vẫn đọc được khi không có content:read.
+
+List bookmark/history mặc định page=0,size=20,max=100; envelope `{content,page,size,totalElements,totalPages}`. Bookmark sort createdAt hoặc contentId; history sort lastAccessedAt hoặc contentId, cú pháp field,asc|desc, mặc định timestamp desc rồi contentId asc. Unknown/duplicate/invalid parameters trả 400 VALIDATION_ERROR với code/message/traceId/details; thiếu/sai xác thực 401, thiếu permission endpoint 403. Summary không chứa body/media/creator hoặc thông tin identity nhạy cảm.
+
+POST bookmark 201, đã tồn tại 409; DELETE own bookmark 204 hoặc 404 không tồn tại, kể cả bài bị ẩn/không còn content:read. DELETE không lookup/trả trạng thái bài. GET không ghi lịch sử. POST history 204 cho cả tạo/cập nhật một hàng user/content, pin đúng current version + giờ server trong transaction; không cập nhật progress/completion. List/count chỉ hiện pin còn trùng current và còn được đọc; publish mới ẩn entry cũ nhưng giữ hàng, POST tiếp chuyển pin. Bookmark list luôn trả current published version được phép.
 
 ### 3.3 Question bank
 

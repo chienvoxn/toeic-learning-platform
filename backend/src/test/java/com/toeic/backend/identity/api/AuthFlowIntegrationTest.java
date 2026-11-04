@@ -347,7 +347,7 @@ class AuthFlowIntegrationTest {
         var token = token();
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
         var expected = role.equals("LEARNER")
-                ? List.of("content:read", "user:password:change:self", "user:read:self", "user:update:self")
+                ? List.of("content:bookmark:self", "content:history:self", "content:read", "user:password:change:self", "user:read:self", "user:update:self")
                 : List.of("content:read", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
         assertEquals(expected, authentication.authenticate(token).permissions());
     }
@@ -394,7 +394,7 @@ class AuthFlowIntegrationTest {
         jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)", account.getUserId(), learnerId);
         var token = token();
         assertEquals(2, authentication.authenticate(token).roles().size());
-        assertEquals(List.of("content:read", "user:password:change:self", "user:read:self", "user:update:self"),
+        assertEquals(List.of("content:bookmark:self", "content:history:self", "content:read", "user:password:change:self", "user:read:self", "user:update:self"),
                 authentication.authenticate(token).permissions());
         jdbc.update("delete from user_roles where user_id = ? and role_id = ?", account.getUserId(), roleId);
         me(token).andExpect(status().isOk());
@@ -467,7 +467,7 @@ class AuthFlowIntegrationTest {
                         .header("X-Role", "ADMIN").header("X-Permissions", "user:manage")
                         .param("roles", "ADMIN").param("permissions", "user:manage"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("LEARNER"));
-        assertEquals(List.of("content:read", "user:password:change:self", "user:read:self", "user:update:self"),
+        assertEquals(List.of("content:bookmark:self", "content:history:self", "content:read", "user:password:change:self", "user:read:self", "user:update:self"),
                 authentication.authenticate(token).permissions());
         mvc.perform(put("/api/v1/admin/users/" + registered.getUserId() + "/roles")
                         .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)

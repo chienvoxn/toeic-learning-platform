@@ -47,6 +47,11 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
                         // Optional bearer auth is still processed; content service filters public/member visibility.
                         .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/history").hasAuthority("content:history:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/content-history").hasAuthority("content:history:self")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me").access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasAuthority("user:read:self"),

@@ -6,33 +6,57 @@ import java.util.Set;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-public record ContentQuery(Integer categoryId, String difficulty, int page, int size, String sort) {
-    private static final Set<String> PARAMETERS = Set.of("categoryId", "difficulty", "page", "size", "sort");
+public record ContentQuery(Integer categoryId, String difficulty, int page, int size, String sort, String q) {
+    private static final Set<String> PARAMETERS = Set.of("categoryId", "difficulty", "page", "size", "sort", "q");
     private static final Map<String, String> SORT_FIELDS = Map.of(
             "title", "currentPublishedVersion.title", "publishedAt", "currentPublishedVersion.publishedAt",
             "difficulty", "difficulty", "contentId", "contentId");
 
+    public ContentQuery(Integer categoryId, String difficulty, int page, int size, String sort) {
+        this(categoryId, difficulty, page, size, sort, null);
+    }
+
     public ContentQuery {
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE
-                || categoryId != null && categoryId < 1
+        validatePage(page, size);
+        if (categoryId != null && categoryId < 1
                 || difficulty != null && (difficulty.isBlank() || difficulty.length() > 20)) {
             throw ContentException.invalidQuery();
         }
         validateSort(sort);
+        if (q != null) {
+            q = q.replaceAll("(?U)\\s+", " ").strip();
+            if (q.indexOf(0) >= 0 || q.codePointCount(0, q.length()) > 200) { throw ContentException.invalidQuery(); }
+            if (q.isEmpty()) { q = null; }
+        }
     }
 
     public static ContentQuery parse(Map<String, List<String>> params) {
-        if (!PARAMETERS.containsAll(params.keySet()) || params.values().stream().anyMatch(values -> values.size() != 1)) {
-            throw ContentException.invalidQuery();
-        }
+        validateParameters(params, PARAMETERS);
         try {
             String category = value(params, "categoryId", null);
             return new ContentQuery(category == null ? null : Integer.valueOf(category),
                     value(params, "difficulty", null), Integer.parseInt(value(params, "page", "0")),
-                    Integer.parseInt(value(params, "size", "20")), value(params, "sort", "publishedAt,desc"));
+                    Integer.parseInt(value(params, "size", "20")), value(params, "sort", "publishedAt,desc"),
+                    value(params, "q", null));
         } catch (NumberFormatException exception) {
             throw ContentException.invalidQuery();
         }
+    }
+
+    static void validatePage(int page, int size) {
+        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE) {
+            throw ContentException.invalidQuery();
+        }
+    }
+
+    static void validateParameters(Map<String, List<String>> params, Set<String> allowed) {
+        if (!allowed.containsAll(params.keySet()) || params.values().stream().anyMatch(values -> values.size() != 1)) {
+            throw ContentException.invalidQuery();
+        }
+    }
+
+    public String searchPattern() {
+        return q == null ? null : "%" + q.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
     }
 
     private static String value(Map<String, List<String>> params, String name, String fallback) {

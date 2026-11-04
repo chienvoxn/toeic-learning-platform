@@ -28,7 +28,7 @@ public class ContentReadService {
 
     public ContentDtos.ContentPage list(ContentQuery query) {
         var page = contents.findReadable(access.canReadMemberContent(), OffsetDateTime.now(clock),
-                query.categoryId(), query.difficulty(), query.pageable());
+                query.categoryId(), query.difficulty(), query.searchPattern(), query.pageable());
         return new ContentDtos.ContentPage(page.getContent().stream().map(ContentDtos.Summary::from).toList(),
                 page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
     }
