@@ -11,6 +11,10 @@
 
 ## 1. Mục tiêu, phạm vi và ranh giới
 
+**CONTENT-03 media runtime:** ContentMediaReuseService (transaction MANDATORY, permission + actor) khóa mọi media FOR SHARE theo UUID rồi grant row FOR SHARE; owner hoặc active grant và visibility/read permission đều bắt buộc, không content:manage:any bypass. ContentAssetRepository đọc mọi link nguồn kể cả PRIVATE và ghi tập links của draft sau khi validate toàn bộ; clone sai một nguồn 409 rollback, ID gắn mới sai 404 chung, retained invalid 409 nhưng cho bỏ. Existing content write khóa content→versions→media→grants, giữ tới commit; writer nhiều loại row phải cùng thứ tự. CREATE chưa có shared parent/version nên validate media trước insert. V20 nullable owner, grants có audit và revoked state; không backfill, không created_by media. Thu hồi grant không đổi published links/quyền xem. [Contract và kiểm thử cạnh tranh](CONTENT03_Requirement_Check.md).
+
+**CONTENT-03 CRUD runtime — quyết định sản phẩm chốt, không phải AC backlog:** ContentManagementService bảo vệ permission + actor, DB own/any data/count/detail, transaction parent→version locks. POST DRAFT/PRIVATE; PATCH tạo/reuse draft từ đúng pointer, text/assets published bất biến, validate toàn bộ trước ghi. Metadata parent category/difficulty chưa version hóa: chỉ sửa khi content DRAFT, trên PUBLISHED 409 cho cả PATCH; text-only vẫn kiểm lại quyền retained media. DELETE archive parent idempotent, giữ tham chiếu và ẩn Learner data/count. V19 seed category và self/any permission; V20 thêm ownership/grant media. Các ghi chú lịch sử Teacher CRUD/media binding chưa triển khai phía dưới được thay bằng runtime này; upload, quản trị grant/ownership, publish/restore/progress vẫn ngoài phạm vi.
+
 LLD cụ thể hóa controller, application service, domain service, repository, DTO, transaction, state machine, authorization, consistency, background job, event và testing. Không thay thế ERD, SRS hay HLD. Spring Boot modular monolith là nguồn sự thật cho nghiệp vụ; FastAPI chỉ xử lý RAG/LLM. Client React/React Native không chấm điểm và không quyết định thời gian thi.
 
 ### 1.1 Nguyên tắc kỹ thuật

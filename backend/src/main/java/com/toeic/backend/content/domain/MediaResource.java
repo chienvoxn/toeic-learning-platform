@@ -9,6 +9,8 @@ public class MediaResource {
     @Id
     @Column(name = "resource_id")
     private UUID resourceId;
+    @Column(name = "owner_id", updatable = false)
+    private UUID ownerId;
     @Column(name = "resource_type", nullable = false, length = 30)
     private String resourceType;
     @Column(name = "mime_type", length = 100)
@@ -22,6 +24,7 @@ public class MediaResource {
 
     protected MediaResource() { }
     public UUID getResourceId() { return resourceId; }
+    public UUID getOwnerId() { return ownerId; }
     public String getResourceType() { return resourceType; }
     public String getMimeType() { return mimeType; }
     public Long getFileSize() { return fileSize; }
