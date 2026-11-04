@@ -1,0 +1,88 @@
+// Dữ liệu minh họa theo bản export; không thay đổi contract hoặc lịch SRS backend.
+const decks = [
+  {
+    id: "common-1000",
+    title: "1000 từ tiếng Anh thông dụng",
+    englishTitle: "1000 common English words",
+    total: 992,
+    groups: 20,
+    category: "Từ Vựng Tiếng Anh Thông Dụng",
+    imageId: "vocabulary.cover-1",
+  },
+  {
+    id: "conversation",
+    title: "Từ vựng tiếng Anh giao tiếp",
+    englishTitle: "Conversational English Vocabulary",
+    total: 326,
+    groups: 10,
+    category: "Từ Vựng Tiếng Anh Thông Dụng",
+    imageId: "vocabulary.cover-2",
+  },
+  ...["A1", "A2", "B1", "B2", "C1", "C2"].map((level, i) => ({
+    id: `oxford-${level}`,
+    title: i === 0 ? "Từ Vựng Oxford\n3000 A1" : `3000 Từ Vựng\nOxford ${level}`,
+    englishTitle: `3000 Oxford Vocabulary ${level}`,
+    total: [759, 827, 739, 715, 610, 535][i],
+    groups: 20,
+    category: "Từ Vựng Oxford",
+    imageId: `vocabulary.cover-${i + 3}`,
+  })),
+];
+const groups = [
+  ["Gia đình", 49, "people", "#B9DDE1"],
+  ["Trường học", 50, "school", "#A5E7E8"],
+  ["Công việc", 50, "briefcase", "#D1E4C6"],
+  ["Nghề nghiệp", 50, "person", "#C5E6C5"],
+  ["Đồ ăn & Thức uống", 51, "fast-food", "#B5EAC3"],
+  ["Hoạt động hằng ngày", 49, "tablet-landscape", "#FFCEB5"],
+  ["Thể thao", 50, "football", "#A6E6E5"],
+  ["Nghệ thuật & Giải trí", 49, "color-palette", "#D7EC9C"],
+  ["Động vật", 51, "paw", "#B1E9DB"],
+  ["Môi trường", 50, "cloud", "#A6EBDF"],
+].map(([title, total, icon, color], i) => ({
+  id: `group-${i + 1}`,
+  title,
+  total,
+  icon,
+  color,
+}));
+const cards = [
+  {
+    id: "parents",
+    word: "parents",
+    phonetic: "/ˈperənt/",
+    phoneticUk: "/ˈpeərənt/",
+    type: "danh từ",
+    meaningVi: "cha mẹ",
+    definition: "Mẹ và cha của một người. Những người nuôi dưỡng một đứa trẻ.",
+    exampleEn: "My parents taught me to be kind.",
+    exampleVi: "Cha mẹ tôi đã dạy tôi phải tử tế.",
+    imageId: "vocabulary.parents",
+  },
+  {
+    id: "family",
+    word: "family",
+    phonetic: "/ˈfæməli/",
+    type: "danh từ",
+    meaningVi: "gia đình",
+    definition: "Một nhóm người có quan hệ huyết thống hoặc cùng chung sống.",
+    exampleEn: "I love spending time with my family.",
+    exampleVi: "Tôi thích dành thời gian với gia đình.",
+  },
+  {
+    id: "mother",
+    word: "mother",
+    phonetic: "/ˈmʌðər/",
+    type: "danh từ",
+    meaningVi: "mẹ",
+    definition: "Người mẹ trong gia đình.",
+    exampleEn: "My mother is a teacher.",
+    exampleVi: "Mẹ tôi là một giáo viên.",
+  },
+];
+export const vocabularyRepository = {
+  getDecks: () => decks.map((d) => ({ ...d })),
+  getGroups: () => groups.map((g) => ({ ...g })),
+  getWords: () => cards.map((c) => ({ ...c })),
+  getReviewCards: () => cards.map((c) => ({ ...c })),
+};
