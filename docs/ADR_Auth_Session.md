@@ -14,6 +14,7 @@ HLD §9 cho phép JWT hoặc session; API/LLD trước đây đề xuất JWT nh
 - User dùng DynamicUpdate: login chỉ ghi lastLoginAt/updatedAt, tránh ghi lại status/password cũ nếu có thay đổi đồng thời sau khi đọc tài khoản.
 - Logout ghi revoked_at cho phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Phát lại token/logout lại trả 401. Request đã được xác thực trước lúc logout có thể hoàn tất.
 - HTTP session, HTTP Basic và form login bị tắt. CSRF tắt vì credential chỉ nhận qua Authorization, không tự gửi bằng cookie. Không mở rộng CORS. Public POST: register, verify-email, resend-otp, login; public GET: hai health endpoint hiện hữu. Public auth bỏ qua bearer cũ để vẫn login/xác minh lại được.
+- CONTENT-01 mở thêm GET /api/v1/contents và /api/v1/contents/{id} theo [visibility và permission content:read](CONTENT01_Read_API.md). Hai GET này vẫn xác thực Bearer nếu được gửi, không bỏ qua token sai; không gửi token chỉ đọc PUBLIC. Các endpoint authoring/publish không được mở.
 - `/api/v1/admin/**` yêu cầu ADMIN; route khác yêu cầu xác thực trừ allowlist và ERROR dispatch nội bộ. Permission/ownership nghiệp vụ khác vẫn cần triển khai riêng.
 - Lỗi auth có code/message/traceId/details; 401 có WWW-Authenticate: Bearer. Response nhạy cảm ngăn cache. Contract lỗi đăng ký–OTP giữ nguyên. Tắt SQL logging mặc định và auto user mặc định của Spring Security.
 
