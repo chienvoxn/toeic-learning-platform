@@ -14,46 +14,46 @@ import java.util.UUID;
 public interface ReviewStateRepository
         extends JpaRepository<ReviewState, UUID> {
 
-    // TV3-03: Find review state of a vocabulary
+    // Find review state of a vocabulary
     Optional<ReviewState> findByUserIdAndVocabularyId(
             UUID userId,
             UUID vocabularyId
     );
 
-    // TV3-03: Find vocabularies due for review
+    // Find vocabularies due for review
     List<ReviewState> findByUserIdAndNextReviewAtLessThanEqual(
             UUID userId,
             OffsetDateTime now
     );
 
-    // TV3-03: Count all review states of a user
+    //  Count all review states of a user
     long countByUserId(UUID userId);
 
-    // TV3-03: Count review states due for review
+    //  Count review states due for review
     long countByUserIdAndNextReviewAtLessThanEqual(
             UUID userId,
             OffsetDateTime now
     );
 
-    // TV3-04 (LP-01): Count reviewed vocabularies
+    //  Count reviewed vocabularies
     long countByUserIdAndLastReviewedAtIsNotNull(
             UUID userId
     );
 
-    // TV3-04 (LP-01): Count reviewed vocabularies due for review
+    //  Count reviewed vocabularies due for review
     long countByUserIdAndLastReviewedAtIsNotNullAndNextReviewAtLessThanEqual(
             UUID userId,
             OffsetDateTime now
     );
 
-    // TV3-04 (LP-01): Count mastered vocabularies
+    //  Count mastered vocabularies
     long countByUserIdAndLastReviewedAtIsNotNullAndRepetitionCountGreaterThanEqual(
             UUID userId,
             int repetitionCount
     );
 
     /**
-     * TV3-06: Find reviewed vocabularies due for review.
+     *  Find reviewed vocabularies due for review.
      *
      * Only includes review states that have been reviewed
      * at least once.
@@ -69,4 +69,12 @@ public interface ReviewStateRepository
             OffsetDateTime now,
             Pageable pageable
     );
+
+    /**
+     *  Find all review states belonging to a user.
+     *
+     * Used to collect review histories for building
+     * personalized vocabulary training datasets.
+     */
+    List<ReviewState> findByUserId(UUID userId);
 }
