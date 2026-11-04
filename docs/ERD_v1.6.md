@@ -6,6 +6,8 @@
 
 > **Cập nhật runtime Q-02 (2026-11-02):** V16 thêm questions.current_published_version_id và question_groups.current_published_version_id, composite FK cùng question/group; question_groups.status và question_group_versions.status/published_at/archived_at, default DRAFT/pointer NULL. Thêm unique (group_version_id,group_id) phục vụ FK, không backfill published. Đây là metadata cho API đọc, không phải publish workflow; [Q02_Question_Read_API.md](Q02_Question_Read_API.md). V1–V15 và DBML lịch sử giữ nguyên.
 
+> **Cập nhật runtime CONTENT-02 (2026-11-04):** V18 thêm learning_content_history(user_id,content_id,content_version_id,last_accessed_at), PK(user_id,content_id), FK user/content và composite FK content/version tới V10; index user/time/content và version. Bookmark tái sử dụng bảng/PK V3, thêm index user/created_at/content. Hai permission content:bookmark:self/content:history:self chỉ grant mặc định LEARNER; lịch sử là truy cập, không ghi learning_progress/completion. [Quyết định sản phẩm](CONTENT02_Search_Bookmarks_History.md). DBML nguồn và V1–V17 giữ nguyên.
+
 ## 1. Danh mục bảng
 
 Tổng cộng **64 bảng** trong DBML nguồn.

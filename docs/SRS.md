@@ -83,6 +83,8 @@
 
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
+**CONTENT-02 — sản phẩm chốt 2026-11-04:** [Tìm kiếm/bookmark/lịch sử](CONTENT02_Search_Bookmarks_History.md). Tìm trên title/summary/body current published, không phân biệt hoa/thường, không bỏ dấu, whitespace chuẩn hóa/max 200, ký tự wildcard literal; lọc quyền và search cùng data/count tại DB. Bookmark/history mặc định LEARNER qua permission, own actor; bookmark 201/409, bỏ own bookmark 204/404 cả khi bài ẩn. Lịch sử truy cập được ghi bằng POST rõ ràng, GET không ghi; một hàng gần nhất user/content, pin version và giờ server, chỉ hiện khi pin còn current và được đọc. Publish mới ẩn entry cũ đến lần ghi tiếp, không xóa lịch sử và không coi truy cập là hoàn thành bài.
+
 ### UC-04 — Luyện tập TOEIC theo Part
 
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.

@@ -82,6 +82,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
+**CONTENT-02 — sản phẩm chốt 2026-11-04:** [Contract và kiểm thử](CONTENT02_Search_Bookmarks_History.md). ContentReadService mở rộng q trên title/summary/body current published, literal/case-insensitive Unicode, chuẩn hóa whitespace/max 200; cùng predicate DB cho data/count. ContentPersonalService bảo vệ API/service bằng permission + own SessionPrincipal, bookmark dùng PK V3/ON CONFLICT (201/409), DELETE own row 204/404 cả khi bài ẩn. V18 thêm learning_content_history một hàng user/content, composite FK pin version đúng content, timestamp server, index và hai permission chỉ grant mặc định LEARNER. Không hard-code cấm Teacher/Admin đã có permission. Ghi khóa riêng content rồi version đến commit; list RR lọc current/readable (history thêm pin=current). GET không ghi, POST history 204 create/update, không gán progress/completion. Nhận định bookmark chưa triển khai trong đoạn lịch sử CONTENT-01 phía trên không áp dụng sau CONTENT-02; publish/media/progress vẫn ngoài phạm vi.
+
 ### 2.3 Question Bank
 
 **Tables:** `questions`, `question_versions`, `question_choices`, `question_groups`, `question_group_versions`, `question_group_version_resources`, `question_resources`, `tags`, `question_tags`, `error_categories`, `question_error_categories`.
