@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
-@RestControllerAdvice(assignableTypes = {ContentController.class, PersonalContentController.class})
+@RestControllerAdvice(assignableTypes = {ContentController.class, PersonalContentController.class, TeacherContentController.class})
 public class ContentExceptionHandler {
     @ExceptionHandler(ContentException.class)
     public ResponseEntity<Error> content(ContentException exception) {

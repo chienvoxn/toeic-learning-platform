@@ -30,6 +30,8 @@
 
 **Permission granularity [DESIGN]:** `content:write`, `content:publish`, `question:review`, `question:publish`, `test:publish`, `user:manage`, `score_conversion:manage`, `ai:usage:read`, `audit:read`. Seed in `permissions` and `role_permissions`.
 
+**CONTENT-03 runtime:** quản lý CRUD text/category dùng `content:manage:self`/`content:manage:any` thay cho tên `content:write` DESIGN; không cấp `content:publish` hoặc triển khai publish workflow.
+
 **AUTH-03 hiện thực:** [Ma trận và phạm vi kiểm chứng](AUTH03_RBAC.md). V14 chỉ seed `user:read:self` cho LEARNER/TEACHER/ADMIN để bảo vệ hồ sơ hiện có; các permission nghiệp vụ DESIGN ở trên chưa seed/grant, ma trận reviewer/publisher vẫn OPEN. Không có ADMIN bypass hoặc kế thừa role ngầm.
 
 ## 3. Endpoint catalogue
@@ -70,9 +72,17 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `GET` | `/contents/{id}` | Theo visibility như list | UUID content id | 200 PublishedContentVersion + media metadata | 400 UUID sai; 404 không tồn tại/không được phép; 401 Bearer sai |
 
-| `POST` | `/teacher/contents` | Teacher | CreateContentRequest | 201 ContentDraft | 422 |
+| `POST` | `/teacher/contents` | content:manage:self hoặc content:manage:any + owner/grant media | title,body,categoryCode; summary,difficulty,assets tùy chọn | 201 ManagementDetail | 400; 401; 403; 404 MEDIA_NOT_FOUND |
 
-| `POST` | `/teacher/contents/{id}/versions` | Teacher | CreateContentVersionRequest | 201 ContentVersion | 409 |
+| `GET` | `/teacher/contents` | Permission quản lý + DB own/any | categoryCode,status,page,size,sort | 200 Page<ManagementSummary> | 400; 401; 403 |
+
+| `GET` | `/teacher/contents/{id}` | Permission quản lý + DB own/any | UUID, không query | 200 ManagementDetail | 400; 401; 403; 404 |
+
+| `PATCH` | `/teacher/contents/{id}` | Permission quản lý + DB own/any + owner/grant media | Partial title,summary,body,categoryCode,difficulty,assets | 200 ManagementDetail | 400; 401; 403; 404 content/media; 409 state/metadata/media reuse |
+
+| `DELETE` | `/teacher/contents/{id}` | Permission quản lý + DB own/any | Không body/query | 204 archive, kể cả lặp lại | 400; 401; 403; 404 |
+
+| `POST` | `/teacher/contents/{id}/versions` (DESIGN, chưa triển khai; runtime PATCH tự xử lý working draft) | Teacher | CreateContentVersionRequest | 201 ContentVersion | 409 |
 
 | `POST` | `/teacher/content-versions/{id}/publish` | Teacher + content:publish | PublishRequest | 200 ContentVersion | 409 |
 
@@ -90,7 +100,15 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/teacher/media` | Teacher | UploadMetadata / multipart (separate contract) | 201 MediaResource | 413 |
 
-**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET kế thừa page=0, size=20, max 100; sort allowlist title/publishedAt/difficulty/contentId, mặc định publishedAt,desc và contentId phụ. Filter categoryId/difficulty theo schema. List/count/detail dùng cùng điều kiện current version PUBLISHED, thời gian hợp lệ, chưa archived và đúng visibility. Không fallback legacy/version cũ. Media pin version và lọc quyền, không storage_url/transcript. Teacher CRUD/publish, progress và media upload vẫn chưa triển khai.
+**CONTENT-01 hiện thực:** [Contract, quyết định schema và giới hạn](CONTENT01_Read_API.md). Hai GET kế thừa page=0, size=20, max 100; sort allowlist title/publishedAt/difficulty/contentId, mặc định publishedAt,desc và contentId phụ. Filter categoryId/difficulty theo schema. List/count/detail dùng cùng điều kiện content và current version PUBLISHED, thời gian hợp lệ, chưa archived và đúng visibility. Không fallback legacy/version cũ. Media pin version và lọc quyền, không storage_url/transcript. Teacher CRUD text/category có ở CONTENT-03 bên dưới; publish, progress và media upload vẫn chưa triển khai.
+
+**CONTENT-03 — quyết định sản phẩm chốt 2026-11-04, không phải AC tìm thấy trong backlog:** [Contract, transaction và kiểm thử](CONTENT03_Requirement_Check.md). V19 seed sáu category code GRAMMAR/VOCAB/LISTENING/READING/STRATEGIES/DOCS; content:manage:self mặc định Teacher/Admin, content:manage:any chỉ Admin. V20 thêm media_resources.owner_id nullable và media_reuse_grants theo media/user có audit cấp/thu hồi; không backfill owner/grant hoặc thay published links. Không hard-code role/bypass. Principal quyết định owner/creator content, DB own/any cho data/count; 401/403/404 theo xác thực/quyền/phạm vi.
+
+POST tạo DRAFT/PRIVATE; PATCH phân biệt omitted/null, sửa hoặc tạo working draft từ đúng published pointer, giữ published text/assets/pointer. Category/difficulty chỉ sửa khi content DRAFT vì chưa version hóa; published có hai trường này trả 409 CONTENT_METADATA_IMMUTABLE cho toàn bộ PATCH. DELETE archive content, giữ versions/pointer/bookmark/history; 204 idempotent, archived chỉ đọc quản lý, PATCH 409 CONTENT_STATE_CONFLICT. Learner read/search/bookmark/history/count vẫn xét content.status.
+
+**Binding media CONTENT-03 — quyết định sản phẩm đã chốt:** assets là mảng object chỉ có mediaId UUID, ví dụ `{"assets":[{"mediaId":"40000000-0000-0000-0000-000000000001"}]}`. Thứ tự mảng thành display_order 1..N. Omitted giữ links draft, [] bỏ hết, null/duplicate ID/field lạ/URL/path trả 400. Actor cần quyền quản lý content và owner_id của media là actor hoặc có grant chưa revoked; đồng thời PUBLIC hoặc AUTHENTICATED + content:read, PRIVATE luôn từ chối. content:manage:any không bypass. ID gắn mới không tồn tại/không được dùng trả chung 404 MEDIA_NOT_FOUND, không metadata. Mỗi lần sửa phải kiểm lại mọi link cuối còn giữ; retained media không đủ quyền trả 409 CONTENT_MEDIA_REUSE_CONFLICT, nhưng có thể bỏ link đó. Clone kiểm tất cả published links trước khi tạo draft; bất kỳ link sai trả 409 và rollback toàn bộ, kể cả khi payload assets=[]; không clone thiếu hoặc bỏ âm thầm. Grant chỉ cho reuse, không đổi quyền xem Learner hoặc tự gỡ published link khi revoked. Chưa có upload/API cấp-thu hồi grant/chuyển ownership hoặc luồng quản trị quyền media.
+
+Management list page=0,size=20,max=100; filter categoryCode/status; sort createdAt/updatedAt/contentId/status asc/desc, mặc định updatedAt,desc rồi contentId asc. Summary gồm category,title draft duy nhất hoặc đúng pointer,status/visibility content,publishedVersionId/workingDraftVersionId và timestamps. Detail `{content:Summary,versions:[...]}` chứa text/status/timestamps và media metadata đúng version đã lọc; media output vẫn dùng resourceId, input mediaId tham chiếu media_resources.resource_id. Không owner/grant/storage URL/path/transcript/identity nhạy cảm. Allowlist title,summary,body,categoryCode,difficulty,assets; unknown/duplicate/type/query sai 400 VALIDATION_ERROR. title/body/categoryCode không null; summary/difficulty null xóa, omitted giữ. Link chỉ ghi draft trong cùng transaction; khóa content→version→media UUID→grant tới commit để serialize revoke/visibility. Không publish/unpublish/restore.
 
 **CONTENT-02 — quyết định sản phẩm chốt 2026-11-04:** [Contract và transaction](CONTENT02_Search_Bookmarks_History.md). q tìm chuỗi con title/summary/body của current version; không phân biệt hoa/thường, không bỏ dấu, trim/gộp whitespace, rỗng không lọc, tối đa 200 Unicode code point sau chuẩn hóa; %, _ và backslash literal. Quyền + tìm kiếm áp dụng cùng predicate DB cho data/count. Personal endpoints lấy actor từ Bearer principal, không nhận userId; không nhận body/query ở POST/DELETE. V18 chỉ cấp mặc định content:bookmark:self/content:history:self cho LEARNER; Teacher/Admin có permission hợp lệ vẫn được dùng. Không có role bypass. Content:read bổ sung phạm vi AUTHENTICATED; PUBLIC vẫn đọc được khi không có content:read.
 

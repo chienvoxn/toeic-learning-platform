@@ -14,6 +14,29 @@ import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
 public interface ContentRepository extends Repository<LearningContent, UUID> {
+    LearningContent saveAndFlush(LearningContent content);
+
+    String MANAGEMENT = " where (c.authorId=:actorId or :any=true)";
+    String MANAGEMENT_FILTERS = " and (:category is null or cat.code=:category)"
+            + " and (:state is null or c.status=:state)";
+
+    @Query(value = "select c from LearningContent c join fetch c.category cat left join fetch c.currentPublishedVersion"
+            + MANAGEMENT + MANAGEMENT_FILTERS,
+            countQuery = "select count(c) from LearningContent c join c.category cat" + MANAGEMENT + MANAGEMENT_FILTERS)
+    Page<LearningContent> findManaged(@Param("actorId") UUID actorId, @Param("any") boolean any,
+            @Param("category") String category, @Param("state") String state, Pageable pageable);
+
+    @Query("select c from LearningContent c join fetch c.category left join fetch c.currentPublishedVersion"
+            + MANAGEMENT + " and c.contentId=:id")
+    Optional<LearningContent> findManagedById(@Param("id") UUID id, @Param("actorId") UUID actorId,
+            @Param("any") boolean any);
+
+    // Same parent-before-version order as CONTENT-02; acquire the write lock before inspecting drafts.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from LearningContent c" + MANAGEMENT + " and c.contentId=:id")
+    Optional<LearningContent> lockManaged(@Param("id") UUID id, @Param("actorId") UUID actorId,
+            @Param("any") boolean any);
+
     String VISIBLE = """
              where c.status = 'PUBLISHED' and v.status = 'PUBLISHED'
                and v.contentId = c.contentId and v.archivedAt is null
