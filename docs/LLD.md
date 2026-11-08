@@ -169,6 +169,10 @@ backend/src/main/java/com/toeic/platform/
 
 ### 2.8 AI Tutor & RAG
 
+**Python RAG runtime:** [Hai luồng ingestion/querying](RAG_Tutor.md) dùng LangChain và index
+pgvector `rag_*` do Alembic quản lý; backend Java vẫn dùng Flyway. Các service/controller Java bên dưới vẫn là DESIGN;
+không ánh xạ chunk ID Python vào FK nghiệp vụ khi chưa có mapping tương ứng.
+
 **Tables:** `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_request_logs`, `ai_configs`, `knowledge_documents`, `knowledge_chunks`.
 
 | Layer | Thành phần |

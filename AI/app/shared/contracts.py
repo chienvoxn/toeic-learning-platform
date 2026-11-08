@@ -1,0 +1,9 @@
+from typing import Protocol
+
+from app.providers import Generation
+
+
+class Provider(Protocol):
+    def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
+    def embed_query(self, query: str) -> list[float]: ...
+    def generate(self, system_prompt: str, user_prompt: str) -> Generation: ...

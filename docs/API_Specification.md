@@ -243,6 +243,11 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.8 AI Tutor
 
+**RAG internal runtime:** Python tách Knowledge ingestion và Tutor querying, LangChain + pgvector,
+khóa admin/service riêng; [contract, migration và giới hạn](RAG_Tutor.md).
+Các route `/internal/v1/*` không mở public, không thay thế auth/quota/history của Spring Boot.
+Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần triển khai Python này hiện thực.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 

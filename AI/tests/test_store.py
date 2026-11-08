@@ -7,13 +7,14 @@ from langchain_core.documents import Document
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 
-from app.service import DocumentRejected, RagService
-from app.store import IndexConfigurationError, VectorStore, validate_vector
+from app.infrastructure.vector_store import IndexConfigurationError, VectorStore, validate_vector
+from app.knowledge.errors import DocumentRejected
+from app.knowledge.service import KnowledgeService
 
 
 def test_index_persists_across_restart_and_rejects_different_vector_space(options, provider):
     store = VectorStore(options)
-    service = RagService(options, store, provider)
+    service = KnowledgeService(options, store, provider)
     service.ingest(UUID(DOC_ID), "Grammar", [Document(page_content="Present perfect")], None)
     store.close()
     reopened = VectorStore(options)
@@ -59,7 +60,7 @@ def test_postgres_column_supports_cosine_distance_operator(options):
 
 def test_chunking_keeps_page_and_rejects_empty_text(options, provider):
     store = VectorStore(options)
-    service = RagService(options, store, provider)
+    service = KnowledgeService(options, store, provider)
     service.ingest(
         UUID(DOC_ID),
         "Grammar",

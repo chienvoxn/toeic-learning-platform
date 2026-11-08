@@ -1,3 +1,4 @@
+from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 from uuid import UUID
@@ -84,7 +85,7 @@ class Usage(ApiModel):
     total_tokens: int = 0
     # Embedding token usage is not exposed by LangChain's Embeddings interface.
     embedding_tokens: int | None = None
-    estimated_cost: float | None = None
+    estimated_cost: Decimal | None = None
     latency_ms: int = 0
 
 
@@ -137,4 +138,8 @@ class TutorResponse(ApiModel):
     def grounding_contract(self):
         if self.grounded and not self.citations:
             raise ValueError("A grounded response must have verified source IDs")
+        if not self.grounded and (self.citations or self.exercises):
+            raise ValueError("Ungrounded responses cannot contain citations or exercises")
+        if not self.grounded and self.warning != NO_SOURCE_WARNING:
+            raise ValueError("Ungrounded responses require the exact fallback warning")
         return self
