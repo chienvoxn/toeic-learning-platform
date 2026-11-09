@@ -1,0 +1,9 @@
+# Generated Python files
+__pycache__/
+*.pyc
+
+# Generated training datasets
+data/
+
+# Trained model artifact
+vocabulary_model.json
