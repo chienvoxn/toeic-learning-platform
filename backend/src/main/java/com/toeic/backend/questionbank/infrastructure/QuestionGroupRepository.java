@@ -4,6 +4,7 @@ import com.toeic.backend.questionbank.domain.QuestionGroup;
 import com.toeic.backend.questionbank.domain.QuestionGroupVersion;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,5 +24,13 @@ public class QuestionGroupRepository {
         return entityManager.createQuery("""
                 select v from QuestionGroupVersion v join fetch v.group where v.groupVersionId = :id
                 """, QuestionGroupVersion.class).setParameter("id", versionId).getResultList().stream().findFirst();
+    }
+
+    /** Exact group history, without selecting latest/fallback or inferring ownership. */
+    public List<QuestionGroupVersion> findAllVersions(UUID groupId) {
+        return entityManager.createQuery("""
+                select v from QuestionGroupVersion v join fetch v.group
+                where v.group.groupId = :id order by v.versionNumber
+                """, QuestionGroupVersion.class).setParameter("id", groupId).getResultList();
     }
 }

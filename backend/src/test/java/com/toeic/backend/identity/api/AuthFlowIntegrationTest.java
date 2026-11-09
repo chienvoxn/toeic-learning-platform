@@ -348,8 +348,8 @@ class AuthFlowIntegrationTest {
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
         var expected = switch (role) {
             case "LEARNER" -> List.of("content:bookmark:self", "content:history:self", "content:read", "user:password:change:self", "user:read:self", "user:update:self");
-            case "TEACHER" -> List.of("content:manage:self", "content:read", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
-            case "ADMIN" -> List.of("content:manage:any", "content:manage:self", "content:read", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
+            case "TEACHER" -> List.of("content:manage:self", "content:read", "question:manage:self", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
+            case "ADMIN" -> List.of("content:manage:any", "content:manage:self", "content:read", "question:manage:any", "question:manage:self", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
             default -> throw new AssertionError("Unexpected seeded role");
         };
         assertEquals(expected, authentication.authenticate(token).permissions());
