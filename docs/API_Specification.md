@@ -118,7 +118,9 @@ POST bookmark 201, đã tồn tại 409; DELETE own bookmark 204 hoặc 404 khô
 
 ### 3.3 Question bank
 
-**Trạng thái triển khai:** Q-01 cung cấp [domain/mapping/repository](Q01_Question_Domain.md). [Q-02](Q02_Question_Read_API.md) bổ sung hai GET dưới đây theo quyết định người dùng ngày 2026-11-02: chỉ Teacher/Admin có question:read, Bearer bắt buộc, chỉ current published question/group và DTO không đáp án/giải thích/URL/transcript. Các endpoint ghi trong mục này vẫn là đề xuất.
+**Q-03 runtime — quyết định sản phẩm chốt 2026-11-09 (không phải AC trong ảnh backlog):** [Teacher CRUD/API, payload, khóa và kiểm thử](Q03_Question_Authoring.md). Hai resource `/teacher/questions` và `/teacher/question-groups` có POST/GET list/GET detail/PATCH/DELETE và GET `/{id}/history`; question:manage:self mặc định Teacher/Admin, question:manage:any chỉ Admin. Principal quyết định creator; API/service kiểm permission, DB own/any lọc data/count, 401/403/404 theo scope. POST DRAFT; PATCH published tạo/reuse một working draft, giữ snapshot/pointer; DELETE archive parent idempotent 204, giữ FK/history, group archive làm Q-02 ẩn câu hỏi liên quan. Pin groupVersionId tường minh, không tự repin; metadata identity chỉ sửa DRAFT. SINGLE_CHOICE đúng một đáp án, Part 2 A–C, Part khác A–D; group bắt buộc 3/4/6/7. V21 thêm creator group nullable và transcript trên link version–media; owner/grant + visibility/type kiểm độc lập với manage:any. Assets omitted/[]/null theo contract tài liệu Q-03; không URL/path hoặc upload. Các endpoint review/publish bên dưới vẫn DESIGN; GET Q-02 giữ contract an toàn.
+
+**Trạng thái triển khai:** Q-01 cung cấp [domain/mapping/repository](Q01_Question_Domain.md). [Q-02](Q02_Question_Read_API.md) bổ sung hai GET dưới đây theo quyết định người dùng ngày 2026-11-02: chỉ Teacher/Admin có question:read, Bearer bắt buộc, chỉ current published question/group và DTO không đáp án/giải thích/URL/transcript. CRUD quản lý hiện thực theo Q-03 ở trên; các endpoint review/approve/publish/tag bên dưới còn DESIGN.
 
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
@@ -127,9 +129,9 @@ POST bookmark 201, đã tồn tại 409; DELETE own bookmark 204 hoặc 404 khô
 
 | `GET` | `/questions/{id}` | Teacher/Admin + question:read | UUID question id, không query param | 200 QuestionDetail + choices/passage/asset metadata | 400; 401; 403; 404 không tồn tại/không readable |
 
-| `POST` | `/questions` | Teacher | CreateQuestionRequest | 201 Question | 422 |
+| `POST` | `/questions` (DESIGN; runtime dùng `/teacher/questions`) | Teacher | CreateQuestionRequest | 201 Question | 422 |
 
-| `POST` | `/questions/{id}/versions` | Teacher | CreateQuestionVersionRequest | 201 QuestionVersion | 422 |
+| `POST` | `/questions/{id}/versions` (DESIGN; runtime PATCH tự tạo/reuse working draft) | Teacher | CreateQuestionVersionRequest | 201 QuestionVersion | 422 |
 
 | `POST` | `/question-versions/{id}/submit-review` | Teacher | — | 200 QuestionVersion | 409 |
 
@@ -143,7 +145,7 @@ POST bookmark 201, đã tồn tại 409; DELETE own bookmark 204 hoặc 404 khô
 
 | `POST` | `/tags` | Teacher | CreateTagRequest | 201 Tag | 409 |
 
-| `POST` | `/question-groups/{id}/versions` | Teacher | CreateGroupVersionRequest | 201 QuestionGroupVersion | 422 |
+| `POST` | `/question-groups/{id}/versions` (DESIGN; runtime dùng PATCH `/teacher/question-groups/{id}`) | Teacher | CreateGroupVersionRequest | 201 QuestionGroupVersion | 422 |
 
 Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionId/partId/topicId/difficulty/publishedAt, mặc định publishedAt,desc, khóa phụ questionId ASC. Unknown/duplicate parameter, status/version tự chọn và sort ngoài allowlist trả 400 VALIDATION_ERROR. V16 thêm pointer đúng identity và trạng thái group/group version (mặc định ẩn, không backfill). List/count/detail dùng cùng predicate tại DB, không latest/fallback; question và group đều phải pin đúng version PUBLISHED với published_at hợp lệ, archived_at NULL. Thiếu/sai token 401, thiếu quyền endpoint 403 FORBIDDEN; có quyền nhưng record ẩn 404 QUESTION_NOT_FOUND. Không có quyền đọc cho Guest/Learner hoặc ADMIN bypass. [Contract DTO và quyết định chi tiết](Q02_Question_Read_API.md).
 

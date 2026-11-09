@@ -71,6 +71,24 @@ public class QuestionVersion {
         choices.add(choice);
         return choice;
     }
+    /** Validate the whole structural batch before mutating this draft. No publish-time policy is inferred. */
+    public List<QuestionChoice> addChoices(List<QuestionChoiceDraft> input) {
+        requireDraft();
+        if (input == null || input.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("Invalid choice batch");
+        }
+        var labels = choices.stream().map(QuestionChoice::getLabel).collect(Collectors.toCollection(HashSet::new));
+        var orders = choices.stream().map(QuestionChoice::getDisplayOrder).collect(Collectors.toCollection(HashSet::new));
+        var additions = new ArrayList<QuestionChoice>();
+        for (var item : input) {
+            if (!labels.add(item.label()) || !orders.add(item.displayOrder())) {
+                throw new IllegalArgumentException("Duplicate choice label/order in version");
+            }
+            additions.add(new QuestionChoice(this, item.label(), item.content(), item.correct(), item.displayOrder()));
+        }
+        choices.addAll(additions);
+        return List.copyOf(additions);
+    }
     public void addResource(UUID resourceId) {
         requireDraft();
         if (resources.stream().anyMatch(resource -> resource.getResourceId().equals(resourceId))) {

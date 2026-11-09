@@ -1,5 +1,7 @@
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **Q-03 V21 — schema authoring runtime:** question_groups.created_by UUID nullable FK users(user_id), index creator; không suy owner cho legacy. Thêm transcript TEXT nullable trên question_resources và question_group_version_resources, pin theo đúng version/media; không sửa/fallback/backfill media_resources.transcript. Tái sử dụng V20 owner/grant và V16 published pointers; seed SINGLE_CHOICE và question:manage:self/any, mặc định Teacher/Admin self, chỉ Admin any. Không backfill publication, owner/grant hoặc thay published links. [API, transaction và giới hạn](Q03_Question_Authoring.md). DBML lịch sử và V1–V20 giữ nguyên.
+
 > **Trạng thái:** Logical schema từ DBML v1.6 được cung cấp; chưa xác nhận import, migration, constraints hay JPA mapping.
 
 > **CONTENT-03 V20 — schema media runtime:** media_resources.owner_id UUID nullable FK users(user_id), index owner; không created_by/default owner/backfill. media_reuse_grants(media_id UUID FK media_resources.resource_id,user_id UUID FK users,granted_by UUID FK users,granted_at timestamptz NOT NULL,revoked_by UUID FK users nullable,revoked_at timestamptz nullable), PK(media_id,user_id), index user. Revocation identity/time cùng null hoặc cùng có; revoked_at>=granted_at. Active khi revoked_at null. Grant chỉ authoring/reuse, không thay Learner visibility; không đổi published links. Chưa có API cấp/thu hồi hoặc chuyển owner. [Contract, mapping/repository và khóa DB](CONTENT03_Requirement_Check.md). DBML lịch sử và V1–V19 giữ nguyên.
