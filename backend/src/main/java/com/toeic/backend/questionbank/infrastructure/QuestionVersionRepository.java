@@ -3,6 +3,7 @@ package com.toeic.backend.questionbank.infrastructure;
 import com.toeic.backend.questionbank.domain.QuestionVersion;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -61,6 +62,12 @@ public class QuestionVersionRepository {
                         + " where q.questionId = :id and v.versionNumber = :number", QuestionVersion.class)
                 .setParameter("id", questionId).setParameter("number", versionNumber)
                 .getResultList().stream().findFirst();
+    }
+
+    /** Ordered history for an already-authorized question; never guesses a published or working version. */
+    public List<QuestionVersion> findAllForQuestion(UUID questionId) {
+        return entityManager.createQuery(WITH_CONTEXT + " where q.questionId = :id order by v.versionNumber",
+                QuestionVersion.class).setParameter("id", questionId).getResultList();
     }
 
     public Page<QuestionVersion> findReadable(boolean readAllowed, OffsetDateTime now,

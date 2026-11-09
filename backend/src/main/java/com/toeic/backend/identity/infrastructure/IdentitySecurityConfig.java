@@ -49,6 +49,9 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
                         .requestMatchers("/api/v1/teacher/contents", "/api/v1/teacher/contents/**")
                         .hasAnyAuthority("content:manage:self", "content:manage:any")
+                        .requestMatchers("/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
+                                "/api/v1/teacher/question-groups", "/api/v1/teacher/question-groups/**")
+                        .hasAnyAuthority("question:manage:self", "question:manage:any")
                         .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me/bookmarks").hasAuthority("content:bookmark:self")
