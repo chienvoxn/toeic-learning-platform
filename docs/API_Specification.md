@@ -151,6 +151,8 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.4 Tests/Blueprint/Attempts
 
+**Runtime PRAC-01:** chỉ POST `/attempts` và GET `/attempts/{id}` cho PRACTICE_SNAPSHOT theo §4.3 và [tài liệu PRAC-01](PRAC01_Practice_Sessions.md). Các Test/Blueprint/answer/submit/result/list trong bảng còn DESIGN.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
@@ -170,9 +172,9 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 | `POST` | `/teacher/test-versions/{id}/retire` | Teacher + test:publish | — | 200 TestVersion | 409 |
 
-| `POST` | `/attempts` | Learner | StartAttemptRequest | 201 AttemptSession | 409 MAX_ATTEMPTS_REACHED |
+| `POST` | `/attempts` | practice:manage:self | StartPracticeRequest | 201 PracticeSession | 400/401/403/409 PRACTICE_QUESTIONS_INSUFFICIENT hoặc PRACTICE_SOURCE_CHANGED |
 
-| `GET` | `/attempts/{id}` | Owner | — | 200 AttemptSession | 403/404 |
+| `GET` | `/attempts/{id}` | practice:manage:self + Owner | — | 200 PracticeSession, gồm expired | 400/401/403/404; 409 snapshot hỏng |
 
 | `PUT` | `/attempts/{id}/answers/{questionVersionId}` | Owner | SaveAnswerRequest | 200 SavedAnswer | 409 ATTEMPT_NOT_EDITABLE |
 
@@ -332,13 +334,17 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 
 ### 4.3 Start Attempt
 
+Thứ tự nội bộ group lấy từ question_versions.group_question_order (V23), không thời gian tạo/UUID. Group legacy thiếu hoặc trùng vị trí current members không được chọn; không backfill/suy vị trí, chưa thêm API authoring vị trí. Snapshot lưu thứ tự và không đổi khi reload.
+
+**PRAC-01 runtime — quyết định sản phẩm chốt 2026-11-10, không phải AC backlog:** POST `/attempts` và GET `/attempts/{id}` hiện thực theo [contract, payload, transaction và kiểm thử](PRAC01_Practice_Sessions.md). Chỉ sourceType=PRACTICE_SNAPSHOT, request practice.partNumbers là Part 1–7 (không trùng), questionCount integer 1–200, optional topicId/difficulty; partIds trong DESIGN cũ không là alias runtime. Tìm tổ hợp chính xác nguyên nhóm, mỗi Part có câu, tổng đúng yêu cầu hoặc 409 PRACTICE_QUESTIONS_INSUFFICIENT; không tham lam. Permission practice:manage:self mặc định chỉ LEARNER, grant hợp lệ cho role khác được dùng; 401/403/own 404. Snapshot pin version/group/order, đọc lại sau archive/republish không repin/fallback; media visibility kiểm lại, không đáp án/lời giải/transcript/URL/path. Server expiry 24h, hết hạn vẫn GET với expired=true; PRAC-02 phải chặn ghi sau expiresAt. TEST_VERSION, answer/submit/result/list endpoints còn DESIGN.
+
 ```json
-// Mock test
+// Mock test — DESIGN, chưa triển khai trong PRAC-01
 {"sourceType":"TEST_VERSION","testVersionId":"<uuid>"}
 // Dynamic practice
-{"sourceType":"PRACTICE_SNAPSHOT","practice":{"partIds":[5],"questionCount":20,"difficulty":"MEDIUM"}}
-// 201 AttemptSession
-{"attemptId":"<uuid>","sourceType":"TEST_VERSION","status":"IN_PROGRESS","startedAt":"2026-10-28T01:00:00Z","expiresAt":"2026-10-28T03:00:00Z","questions":[{"questionVersionId":"<uuid>","order":1,"questionText":"...","choices":[{"choiceId":"<uuid>","label":"A","content":"..."}]}]}
+{"sourceType":"PRACTICE_SNAPSHOT","practice":{"partNumbers":[5],"questionCount":20,"difficulty":"MEDIUM"}}
+// 201 PracticeSession (trích một phần)
+{"attemptId":"<uuid>","sourceType":"PRACTICE_SNAPSHOT","status":"IN_PROGRESS","startedAt":"2026-11-10T12:00:00Z","expiresAt":"2026-11-11T12:00:00Z","expired":false,"totalQuestions":20,"questions":[{"questionVersionId":"<uuid>","order":1,"questionText":"...","choices":[{"choiceId":"<uuid>","label":"A","content":"..."}]}]}
 ```
 
 Response questions không chứa `isCorrect`, explanation hoặc hidden grading data. `expiresAt` do server xác định; `testVersionId` chỉ hợp lệ với `TEST_VERSION`.
