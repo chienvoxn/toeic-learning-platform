@@ -69,14 +69,15 @@ export class FakeAuthRepository {
 
   async getCurrentUser() {
     await delay(200);
+    const token = localStorage.getItem('auth_token');
     const stored = localStorage.getItem('auth_user');
-    if (stored) {
+    // Chỉ khôi phục phiên mock sau khi người dùng thực sự đăng nhập.
+    if (!token || !stored) return null;
+    try {
       return JSON.parse(stored);
+    } catch {
+      return null;
     }
-    // Mặc định cung cấp user mẫu để dev không bị chặn màn hình
-    const defaultUser = toClientUser(MOCK_LEARNER_DTO);
-    localStorage.setItem('auth_user', JSON.stringify(defaultUser));
-    return defaultUser;
   }
 
   async logout() {

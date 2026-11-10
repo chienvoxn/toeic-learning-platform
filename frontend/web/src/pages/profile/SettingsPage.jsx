@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import PasswordChangeForm from '@/components/organisms/PasswordChangeForm';
+import { useMock } from '@/lib/runtime-config';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -40,6 +42,7 @@ export default function SettingsPage() {
     <LearnerTemplate variant="catalog">
       <div className="max-w-md mx-auto px-4 py-4 pb-24 md:pb-12 space-y-5">
         <h1 className="text-xl font-extrabold text-gray-900">Cài Đặt & Tài Khoản</h1>
+        {!useMock && <PasswordChangeForm />}
 
         {savedMessage && (
           <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold rounded-xl text-center animate-fade-in">
@@ -57,7 +60,7 @@ export default function SettingsPage() {
               <strong className="text-sm font-extrabold text-gray-900 block">{user?.fullName || 'Học viên'}</strong>
               <span className="text-xs text-gray-400">{user?.email || 'learner@example.com'}</span>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-blue-600">
-                <Target size={12} /> Mục tiêu: {user?.targetScore || 850}+ TOEIC
+                <Target size={12} /> Mục tiêu: {user?.targetScore ? user.targetScore + '+ TOEIC' : 'Chưa đặt'}
               </div>
             </div>
           </div>

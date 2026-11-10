@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '').replace(/\/api$/, '/api/v1');
 
 export class ApiError extends Error {
   constructor(status, body) {
@@ -12,21 +12,27 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(path, { token, headers = {}, body, ...options } = {}) {
-  const url = path.startsWith('http')
+  const url = path.startsWith('http') || path.startsWith('/api/')
     ? path
     : `${API_BASE.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 
-  const storedToken = token || localStorage.getItem('auth_token');
+  const storedToken = token === null ? null : token || localStorage.getItem('auth_token');
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
-      ...headers,
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
+        ...headers,
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') throw error;
+    throw new ApiError(0, { code: 'NETWORK_ERROR', message: 'Không kết nối được máy chủ. Vui lòng kiểm tra backend và thử lại.' });
+  }
 
   if (!response.ok) {
     let errorBody;
@@ -34,6 +40,11 @@ export async function apiRequest(path, { token, headers = {}, body, ...options }
       errorBody = await response.json();
     } catch {
       errorBody = { message: response.statusText };
+    }
+    if (response.status === 401 && storedToken && localStorage.getItem('auth_token') === storedToken) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      window.dispatchEvent(new Event('auth:expired'));
     }
     throw new ApiError(response.status, errorBody);
   }
@@ -44,5 +55,6 @@ export async function apiRequest(path, { token, headers = {}, body, ...options }
 }
 
 export const healthApi = {
-  check: () => apiRequest('/health', { baseURL: '/api' }),
+  check: (options = {}) => apiRequest('/api/health', { ...options, token: null }),
+  database: (options = {}) => apiRequest('/api/health/database', { ...options, token: null }),
 };

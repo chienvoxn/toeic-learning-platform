@@ -1,3 +1,4 @@
+import { useMock } from '@/lib/runtime-config';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Save, X, Camera, ImagePlus, Lock } from 'lucide-react';
@@ -10,10 +11,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 function ProfileContent({ user, updateProfile }) {
-  const mock = import.meta.env.VITE_USE_MOCK !== 'false';
+  const mock = useMock;
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName || '');
-  const [targetScore, setTargetScore] = useState(user?.targetScore || 850);
+  const [targetScore, setTargetScore] = useState(user?.targetScore ?? '');
   const [bio, setBio] = useState(user?.bio || '');
   const [avatar, setAvatar] = useState(user?.avatarUrl || '');
   const [cover, setCover] = useState(user?.coverUrl || '');
@@ -24,7 +25,7 @@ function ProfileContent({ user, updateProfile }) {
   const [error, setError] = useState('');
   async function save(e) {
     e.preventDefault(); setLoading(true); setError('');
-    try { await updateProfile({ fullName, targetScore: Number(targetScore), ...(mock ? { bio, avatarUrl: avatar, coverUrl: cover, privateProfile } : {}) }); setEditing(false); setMessage('Đã lưu hồ sơ.'); }
+    try { await updateProfile({ fullName, targetScore: targetScore === '' ? null : Number(targetScore), ...(mock ? { bio, avatarUrl: avatar, coverUrl: cover, privateProfile } : {}) }); setEditing(false); setMessage('Đã lưu hồ sơ.'); }
     catch (err) { setError(err.message || 'Không thể lưu hồ sơ.'); }
     finally { setLoading(false); }
   }
@@ -34,7 +35,7 @@ function ProfileContent({ user, updateProfile }) {
     if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) { setError('Chọn ảnh PNG, JPEG hoặc WebP nhỏ hơn 2 MB.'); return; }
     const reader = new FileReader(); reader.onload = () => setter(reader.result); reader.readAsDataURL(file);
   }
-  function cancel() { setFullName(user?.fullName || ''); setTargetScore(user?.targetScore || 850); setBio(user?.bio || ''); setAvatar(user?.avatarUrl || ''); setCover(user?.coverUrl || ''); setPrivateProfile(!!user?.privateProfile); setEditing(false); setError(''); }
+  function cancel() { setFullName(user?.fullName || ''); setTargetScore(user?.targetScore ?? ''); setBio(user?.bio || ''); setAvatar(user?.avatarUrl || ''); setCover(user?.coverUrl || ''); setPrivateProfile(!!user?.privateProfile); setEditing(false); setError(''); }
   return <div className="profile-grid"><section className="profile-card surface">
     {message && <p className="profile-message" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}
     <button type="button" className="pill-button profile-edit-button" onClick={() => { setEditing(true); setMessage(''); }}><Pencil size={13} />CHỈNH SỬA</button>
@@ -45,9 +46,9 @@ function ProfileContent({ user, updateProfile }) {
       <label className="sr-only" htmlFor="profile-bio">Mô tả bản thân</label><textarea id="profile-bio" disabled={!mock} maxLength={300} placeholder="Nhập mô tả về bản thân" value={bio} onChange={e => setBio(e.target.value)} /><small>{bio.length}/300</small>
       <label>Quyền riêng tư hồ sơ</label><div className="privacy-control"><Lock size={16} /><div><strong>{privateProfile ? 'Riêng tư' : 'Công khai'}</strong><p>Khi được bật, người khác sẽ không thể xem hồ sơ của bạn</p></div><button type="button" role="switch" aria-label="Hồ sơ riêng tư" aria-checked={privateProfile} disabled={!mock} className={privateProfile ? 'on' : ''} onClick={() => setPrivateProfile(!privateProfile)}><span /></button></div>
       {!mock && <p className="profile-contract-note">Ảnh, mô tả và quyền riêng tư chưa được máy chủ hỗ trợ.</p>}
-      <details className="profile-target"><summary>Mục tiêu học tập</summary><label htmlFor="target-score">Điểm TOEIC mục tiêu</label><select id="target-score" value={targetScore} onChange={e => setTargetScore(e.target.value)}>{[550,650,750,800,850,900,990].map(n => <option key={n} value={n}>{n}+</option>)}</select></details>
+      <details className="profile-target"><summary>Mục tiêu học tập</summary><label htmlFor="target-score">Điểm TOEIC mục tiêu</label><select id="target-score" value={targetScore} onChange={e => setTargetScore(e.target.value)}><option value="">Chưa đặt mục tiêu</option>{[550,650,750,800,850,900,990].map(n => <option key={n} value={n}>{n}+</option>)}</select></details>
       <div className="profile-form-actions"><Button type="submit" className="navy-button" disabled={loading}><Save size={15} />{loading ? 'ĐANG LƯU...' : 'LƯU'}</Button><Button variant="outline" type="button" onClick={cancel} aria-label="Hủy chỉnh sửa"><X size={18} /></Button></div>
-    </form> : <><h1>{user?.fullName || 'Học viên'} <small>Lv.1</small></h1>{user?.bio && <p className="profile-bio">{user.bio}</p>}<div className="profile-privacy"><Lock size={14} />Quyền riêng tư hồ sơ<strong>{user?.privateProfile ? 'Riêng tư' : 'Công khai'}</strong></div><div className="profile-streak">🔥 {user?.streakDays ?? 0} <span>Chuỗi dài nhất: {user?.streakDays ?? 0}</span></div><div className="profile-stat-row"><div><span>🎯</span><p>Mục tiêu TOEIC<strong>{user?.targetScore || 850}+</strong></p></div><div><span>📧</span><p>Tài khoản<strong>{user?.email || 'Chưa đăng nhập'}</strong></p></div></div><div className="profile-stat-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div><div className="profile-stat-line"><span>🎓 Tổng số bài học</span><strong>0</strong></div><div className="profile-stat-line"><span>📖 Tổng số câu</span><strong>0</strong></div><div className="profile-rank"><small>Cấp độ hiện tại</small><p>🛡 Chưa có hạng</p></div></>}
+    </form> : <><h1>{user?.fullName || 'Học viên'} <small>Lv.1</small></h1>{user?.bio && <p className="profile-bio">{user.bio}</p>}<div className="profile-privacy"><Lock size={14} />Quyền riêng tư hồ sơ<strong>{user?.privateProfile ? 'Riêng tư' : 'Công khai'}</strong></div><div className="profile-streak">🔥 {user?.streakDays ?? 0} <span>Chuỗi dài nhất: {user?.streakDays ?? 0}</span></div><div className="profile-stat-row"><div><span>🎯</span><p>Mục tiêu TOEIC<strong>{user?.targetScore ?? 'Chưa đặt'}</strong></p></div><div><span>📧</span><p>Tài khoản<strong>{user?.email || 'Chưa đăng nhập'}</strong></p></div></div><div className="profile-stat-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div><div className="profile-stat-line"><span>🎓 Tổng số bài học</span><strong>0</strong></div><div className="profile-stat-line"><span>📖 Tổng số câu</span><strong>0</strong></div><div className="profile-rank"><small>Cấp độ hiện tại</small><p>🛡 Chưa có hạng</p></div></>}
   </section><div className="profile-right"><section className="profile-ranking surface"><div className="profile-ranking-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}</div><p>Chưa có lịch sử xếp hạng.</p></section><section className="profile-lessons surface"><h2>Tiến độ bài học</h2><div className="progress-status"><span>✓ Đã hoàn thành</span><span>◷ Đang học</span></div><p className="profile-empty">Chưa có tiến độ bài học.</p><Link to="/listening?mode=shadowing" className="pill-button">Khám phá bài học</Link></section></div></div>;
 }
 
