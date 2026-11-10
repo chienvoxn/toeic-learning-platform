@@ -87,6 +87,13 @@
 
 ### UC-04 — Luyện tập TOEIC theo Part
 
+**Cập nhật yêu cầu guest:** Người dùng có thể thi thử mà không đăng nhập. Bản web
+hiện mở luồng công khai với một đề Reading mẫu, lưu/chấm trên trình duyệt, không
+ghi lịch sử tài khoản và không quy đổi điểm TOEIC. Đây là ngoại lệ cho phần luyện
+thử local; luồng thi lưu trên server dưới đây vẫn chưa được hiện thực. Khi triển
+khai guest server cần đặc tả định danh khách, ownership, snapshot và thời gian
+server; không tự suy bỏ auth cho API dữ liệu cá nhân.
+
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

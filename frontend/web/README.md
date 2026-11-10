@@ -1,5 +1,37 @@
 # React + Vite
 
+## Local preview and entry pages
+
+Run `npm ci` and `npm run dev` in `frontend/web`, then open `http://localhost:5173`.
+The development server proxies `/api` to the backend at `http://localhost:8080`.
+
+- `/`: ENGLINGO landing page for visitors; learning dashboard for authenticated users.
+- `/dashboard`: existing learning dashboard.
+- `/login` and `/register`: existing authentication pages, linked from the landing page.
+
+To preview the visitor landing page while signed in, use a private browser window.
+The real backend is enabled by default (`VITE_USE_MOCK=false`). API requests use
+`/api/v1`; legacy `VITE_API_BASE_URL=/api` is normalized to `/api/v1`.
+Set `VITE_USE_MOCK=true` only to preview demo data, and restart Vite after changing
+environment variables. There is no automatic fallback to mock on API failure.
+Registration continues at `/verify-email`; it does not establish a login session.
+Private pages redirect unauthenticated visitors to `/login` and return them to
+their requested page after login. `/health` checks backend and database publicly.
+The sample exam routes `/tests`, `/tests/:testId/overview`, `/attempts/:attemptId`
+and `/attempts/:attemptId/result` are public. In the default mode they provide a
+local Reading sample with browser storage, raw grading and no account sync.
+This is explicitly labelled local practice, not a backend exam integration.
+
+Run `npm test`, `npm run lint` and `npm run build` for frontend checks.
+See [integration setup and supported flows](../../docs/Frontend_Backend_Integration.md).
+Tests exercise adapters with HTTP response fixtures, not a live backend/database.
+Landing styles are scoped to `.landing-page`. The Vietnamese landing includes
+a photo collage, dictation, shadowing, practice review and learning progress
+sections. The footer introduces ENGLINGO and links to learning and account pages.
+The feature illustrations are presentation graphics, not live session data.
+Photos are stored locally in `public/assets/landing`; source URLs are listed
+in that directory's `SOURCES.md`.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

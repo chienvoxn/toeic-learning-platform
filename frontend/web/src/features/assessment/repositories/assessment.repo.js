@@ -1,14 +1,14 @@
 import { FakeAssessmentRepository } from './assessment.fake';
-import { RemoteAssessmentRepository } from './assessment.api';
+import { GuestAssessmentRepository } from './assessment.guest';
 
-const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
+import { useMock as isMock } from '@/lib/runtime-config';
 
 class AssessmentRepositoryFactory {
   static instance = null;
 
   static getInstance() {
     if (!this.instance) {
-      this.instance = isMock ? new FakeAssessmentRepository() : new RemoteAssessmentRepository();
+      this.instance = isMock ? new FakeAssessmentRepository() : new GuestAssessmentRepository();
     }
     return this.instance;
   }

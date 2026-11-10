@@ -4,8 +4,10 @@ import { Search, Bookmark, Play, Volume2, BookOpen, Clock, Eye, Sparkles } from 
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { useContentCatalog } from '@/features/content/hooks/useContentCatalog';
+import ConnectedContentCatalog from './ConnectedContentCatalog';
+import { useMock } from '@/lib/runtime-config';
 
-export default function ContentCatalogPage() {
+function MockContentCatalogPage() {
   const {
     contents,
     categories,
@@ -226,4 +228,8 @@ export default function ContentCatalogPage() {
       </div>
     </LearnerTemplate>
   );
+}
+
+export default function ContentCatalogPage() {
+  return useMock ? <MockContentCatalogPage /> : <ConnectedContentCatalog />;
 }
