@@ -136,6 +136,7 @@ PostgreSQL 17 riêng: data_directory D:/toeic-learning-platform/backend/target/q
 - **Full suite trước review V23: 794 test đạt, 0 failures/errors/skipped, BUILD SUCCESS**, 07:35 phút, 2026-11-10. Gồm 693 test đã commit từ Q-03 + 10 AuthServiceTest có sẵn + 91 test PRAC-01. Log ignored: backend/target/prac01-handoff-full-tests.log. Đây là bằng chứng trước sửa thứ tự.
 - Review bàn giao sửa tối thiểu thứ tự group bằng V23. **4 test trực tiếp đạt**, log target/prac01-order-targeted-tests.log: vị trí đảo thứ tự tạo/UUID, reload ổn định, NULL/trùng loại cả nhóm và working draft không ảnh hưởng. Không chạy lại HTTP smoke.
 - **Full suite cuối từ nguồn staged: 787 test đạt, 0 failures/errors/skipped, BUILD SUCCESS**, 07:42 phút. Chỉ chạy full một lần sau sửa. Tổng 693 test nền đã commit + **94 test PRAC-01**, không gồm 10 AuthServiceTest ngoài commit; không xóa/skip test để khớp số. Nguồn export từ index tree a26be0ed7c4bca104605ee83e03b0241bb0e151d trong thư mục build ignored backend/target/prac01-staged-a26be0ed7c4b, chỉ backend/ml, không có web-auth hoặc AuthServiceTest chưa commit. Backend tree b203bbc6f880883d1d47255e4cface482989db09 đã kiểm thử, khớp staged backend; Mockito config có sẵn trong cây Git. Không tạo repository/branch/worktree mới. Log ignored backend/target/prac01-staged-full-tests.log; Surefire XML tại thư mục build đó. Chạy Maven Wrapper -o test với cùng datasource/JVM/temp D: bên dưới, resource classpath trỏ vào nguồn export, không nguồn ngoài commit. Auth/OTP/session/profile/RBAC, Q-02/Q-03/content/vocabulary đạt.
+- CI đầu của e25612b lỗi PostgreSQL too many clients: nhiều Spring context cache giữ pool mặc định. Job backend CI được bổ sung đúng hai env Hikari max=6/minIdle=1 như cấu hình full local đã đạt; không sửa production/test behavior hoặc skip test. Backend tree không đổi, không chạy lại full local/HTTP; GitHub CI xác minh lại trên SHA follow-up. Log lỗi ignored target/prac01-ci-e25612b-backend.log.
 
 Từ backend, khởi động cluster test nếu đã dừng, không initdb/reset:
 ~~~powershell
@@ -174,9 +175,11 @@ Script dùng psql 17, Q03FixtureHash.java và spring-security-crypto 7.1.1 từ 
 
 Chưa protected media playback/download/signed URL; chỉ metadata được phép, chưa tự tạo URL công khai. Có cột vị trí version-specific V23, chưa có API authoring vị trí: group legacy NULL không được suy thứ tự hoặc dùng để practice. Chưa taxonomy authoring, upload, publish/unpublish/import, frontend, lưu đáp án/submit/grading/explanation PRAC-02 hoặc EXAM-01. Không scheduler chỉ cho expired, không xóa attempt và không seed ngân hàng đề thật Part 1–7.
 
-## Manifest PRAC-01 — 35 file
+## Manifest PRAC-01 — 36 file
 
-30 file mới và 5 file shared; không gồm 38 file web-auth/test/api-tests/tatus và AGENTS.md ngoài phạm vi. Shared hunk gồm matcher attempts, expected permission LEARNER và API/ERD/LLD.
+30 file mới và 6 file shared; không gồm 38 file web-auth/test/api-tests/tatus và AGENTS.md ngoài phạm vi. Shared hunk gồm matcher attempts, expected permission LEARNER, API/ERD/LLD và hai env pool của job backend CI.
+
+- .github/workflows/ci.yml
 
 - backend/scripts/prac01-http-smoke.ps1
 - backend/src/main/java/com/toeic/backend/assessment/api/PracticeAttemptController.java
