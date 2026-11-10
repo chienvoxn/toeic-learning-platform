@@ -54,7 +54,7 @@ class LearningProfileServiceTest {
                 .thenReturn(80L);
 
         when(reviewStateRepository
-                .countByUserIdAndLastReviewedAtIsNotNullAndNextReviewAtLessThanEqual(
+                .countByUserIdAndNextReviewAtLessThanEqual(
                         eq(userId), any(OffsetDateTime.class)))
                 .thenReturn(15L);
 
