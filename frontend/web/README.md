@@ -1,5 +1,10 @@
 # React + Vite
 
+Google sign-in is implemented with Google Identity Services and backend ID token
+verification. Set `GOOGLE_CLIENT_ID` on the backend; see the Vietnamese
+[Google OAuth2 setup guide](../../docs/Google_OAuth2.md). Existing email accounts
+require password confirmation before linking. No Client Secret is needed.
+
 ## Local preview and entry pages
 
 Run `npm ci` and `npm run dev` in `frontend/web`, then open `http://localhost:5173`.
@@ -14,7 +19,9 @@ The real backend is enabled by default (`VITE_USE_MOCK=false`). API requests use
 `/api/v1`; legacy `VITE_API_BASE_URL=/api` is normalized to `/api/v1`.
 Set `VITE_USE_MOCK=true` only to preview demo data, and restart Vite after changing
 environment variables. There is no automatic fallback to mock on API failure.
-Registration continues at `/verify-email`; it does not establish a login session.
+Registration creates an ACTIVE account without OTP and returns to `/login`.
+OTP is used only at `/forgot-password` for recovery. See
+[password recovery policy](../../docs/Password_Recovery.md).
 Private pages redirect unauthenticated visitors to `/login` and return them to
 their requested page after login. `/health` checks backend and database publicly.
 The sample exam routes `/tests`, `/tests/:testId/overview`, `/attempts/:attemptId`

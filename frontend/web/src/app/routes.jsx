@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { AppProviders } from './providers';
 import HomePage from '../pages/HomePage';
 import HomeEntry from '../pages/HomeEntry';
@@ -20,7 +20,7 @@ import WordMatchGamePage from '../pages/games/WordMatchGamePage';
 import OnboardingPage from '../pages/onboarding/OnboardingPage';
 import ListeningHubPage from '../pages/listening/ListeningHubPage';
 import NotFoundPage from '../pages/NotFoundPage';
-import VerifyEmailPage from '../pages/auth/VerifyEmailPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import RequireAuth from '../components/templates/RequireAuth';
 import UnavailablePage from '../pages/UnavailablePage';
 import { useMock } from '../lib/runtime-config';
@@ -41,7 +41,8 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomeEntry /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
-      { path: '/verify-email', element: <VerifyEmailPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/verify-email', element: <Navigate to="/login" replace /> },
       { path: '/health', element: <HealthPage /> },
       // Thi thử công khai, không nằm trong RequireAuth.
       { path: '/tests', element: <TestCatalogPage /> },

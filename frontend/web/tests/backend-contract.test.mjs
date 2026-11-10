@@ -28,44 +28,35 @@ afterEach(() => {
 function reply(body, status = 200) { queue.push({ body, status }); }
 function bodyAt(index) { return JSON.parse(requests[index].body); }
 
-test('register -> verify -> login -> reload -> logout matches the backend identity contract', async () => {
+test('registration creates an active account and login works without OTP', async () => {
   const repo = new RemoteAuthRepository();
-  const password = randomUUID();
-  const token = randomUUID();
-  reply({ userId: user.userId, email: user.email, status: 'PENDING' }, 201);
-  const registered = await repo.register({ email: user.email, fullName: user.fullName, password });
-  assert.equal(registered.status, 'PENDING');
-  assert.equal(storage.size, 0, 'registration must not create a session');
+  const password = randomUUID(), token = randomUUID();
+  reply({ userId: user.userId, email: user.email, status: 'ACTIVE' }, 201);
+  assert.equal((await repo.register({ email: user.email, fullName: user.fullName, password })).status, 'ACTIVE');
+  assert.equal(storage.size, 0);
   assert.deepEqual(bodyAt(0), { email: user.email, fullName: user.fullName, password });
   assert.equal(requests[0].url, '/api/v1/auth/register');
-  reply({ message: 'verified' });
-  await repo.verifyEmail(user.email, '123456');
-  assert.deepEqual(bodyAt(1), { email: user.email, otp: '123456' });
   reply({ accessToken: token, expiresIn: 900, user });
   const result = await repo.login({ email: user.email, password });
-  assert.equal(result.user.id, user.userId);
-  assert.equal(result.user.targetScore, null);
-  assert.equal(result.user.streakDays, 0);
-  assert.equal(storage.get('auth_token'), token);
+  assert.equal(result.user.id, user.userId); assert.equal(storage.get('auth_token'), token);
   reply(user);
-  assert.equal((await new RemoteAuthRepository().getCurrentUser()).id, user.userId);
-  assert.equal(requests[3].headers.Authorization, `Bearer ${token}`);
-  reply(null, 204);
-  await repo.logout();
-  assert.equal(storage.size, 0);
-  assert.equal(await repo.getCurrentUser(), null);
-  assert.equal(requests.length, 5, 'anonymous startup must not call private me');
+  assert.equal((await repo.getCurrentUser()).id, user.userId);
+  assert.equal(requests[2].headers.Authorization, `Bearer ${token}`);
+  reply(null, 204); await repo.logout();
+  assert.equal(storage.size, 0); assert.equal(await repo.getCurrentUser(), null);
+  assert.equal(requests.length, 4, 'no verification or resend request during registration/login');
 });
-test('public login and resend OTP never attach a stale bearer', async () => {
+test('forgot-password and reset-password are public and do not send old bearer tokens', async () => {
   storage.set('auth_token', randomUUID());
-  const repo = new RemoteAuthRepository();
-  reply({ accessToken: randomUUID(), user });
-  await repo.login({ email: user.email, password: randomUUID() });
-  assert.equal(requests[0].headers.Authorization, undefined);
-  reply({ message: 'sent' });
-  await repo.resendOtp(user.email);
-  assert.equal(requests[1].url, '/api/v1/auth/resend-otp');
-  assert.equal(requests[1].headers.Authorization, undefined);
+  const repo = new RemoteAuthRepository(), newPassword = randomUUID();
+  reply({ message: 'If the account exists, a code will be sent.' });
+  await repo.forgotPassword(user.email);
+  assert.equal(requests[0].url, '/api/v1/auth/forgot-password');
+  assert.deepEqual(bodyAt(0), { email: user.email });
+  reply(null, 204); await repo.resetPassword(user.email, '123456', newPassword);
+  assert.equal(requests[1].url, '/api/v1/auth/reset-password');
+  assert.deepEqual(bodyAt(1), { email: user.email, otp: '123456', newPassword });
+  assert.ok(requests.every(request => !request.headers.Authorization));
 });
 test('401 clears the expired session; 403 keeps it', async () => {
   const token = randomUUID(); storage.set('auth_token', token);
@@ -187,4 +178,41 @@ test('flashcard permission errors are not treated as new words', async () => {
   reply([{ vocabularyId: 'v-1', word: 'learn', meaning: 'học' }]);
   reply({ code: 'FORBIDDEN', message: 'Forbidden' }, 403);
   await assert.rejects(new RemoteVocabularyRepository().getDeckCards('d-1'), error => error.status === 403);
+});
+
+test('Google challenge and login use browser cookies and never send a stale app bearer', async () => {
+  storage.set('auth_token', randomUUID());
+  const repo = new RemoteAuthRepository();
+  const challengeId = randomUUID(), credential = randomUUID(), accessToken = randomUUID();
+  reply({ challengeId, clientId: 'test-client.apps.googleusercontent.com', nonce: randomUUID(), expiresIn: 300 });
+  assert.equal((await repo.googleChallenge()).challengeId, challengeId);
+  assert.equal(requests[0].url, '/api/v1/auth/google/challenge');
+  assert.equal(requests[0].credentials, 'same-origin');
+  assert.equal(requests[0].headers.Authorization, undefined);
+  reply({ accessToken, user: { ...user, localLoginEnabled: false } });
+  const result = await repo.loginWithGoogle({ credential, challengeId });
+  assert.equal(requests[1].url, '/api/v1/auth/google');
+  assert.deepEqual(bodyAt(1), { credential, challengeId });
+  assert.equal(requests[1].credentials, 'same-origin');
+  assert.equal(requests[1].headers.Authorization, undefined);
+  assert.equal(result.user.localLoginEnabled, false);
+  assert.equal(storage.get('auth_token'), accessToken);
+});
+
+test('Google account linking requires explicit password proof and keeps existing session on failure', async () => {
+  const repo = new RemoteAuthRepository();
+  const challengeId = randomUUID(), credential = randomUUID(), currentPassword = randomUUID();
+  const previousToken = randomUUID(); storage.set('auth_token', previousToken);
+  reply({ code: 'GOOGLE_LINK_REQUIRED', message: 'Confirm account password' }, 409);
+  await assert.rejects(repo.loginWithGoogle({ credential, challengeId }), error => error.code === 'GOOGLE_LINK_REQUIRED');
+  assert.equal(storage.get('auth_token'), previousToken);
+  reply({ accessToken: randomUUID(), user });
+  await repo.loginWithGoogle({ credential, challengeId, currentPassword });
+  assert.deepEqual(bodyAt(1), { credential, challengeId, currentPassword });
+});
+
+test('unconfigured Google auth does not create a browser session', async () => {
+  reply({ code: 'GOOGLE_NOT_CONFIGURED', message: 'Not configured' }, 503);
+  await assert.rejects(new RemoteAuthRepository().googleChallenge(), error => error.code === 'GOOGLE_NOT_CONFIGURED');
+  assert.equal(storage.size, 0);
 });

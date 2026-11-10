@@ -126,7 +126,7 @@ class TeacherQuestionIntegrationTest extends QuestionAuthoringTestSupport {
     @Test void equalTimestampSortAndPaginationUseStableQuestionId() throws Exception {
         var token=token(ACTOR);var first=create(token,1,null);var second=create(token,1,null);
         jdbc.update("update questions set updated_at='2026-01-01T00:00:00Z' where created_by=?",ACTOR);
-        var ids=List.of(qid(first),qid(second)).stream().sorted(Comparator.comparing(UUID::toString)).toList();
+        var ids=List.of(qid(first),qid(second)).stream().sorted(Comparator.comparing((UUID id) -> id.toString())).toList();
         call(get(Q).param("size","1"),token).andExpect(jsonPath("$.content[0].questionId").value(ids.get(0).toString()));
         call(get(Q).param("size","1").param("page","1"),token).andExpect(jsonPath("$.content[0].questionId").value(ids.get(1).toString()));
         call(get(Q).param("sort","questionId,desc"),token).andExpect(jsonPath("$.content[0].questionId").value(ids.get(1).toString()));

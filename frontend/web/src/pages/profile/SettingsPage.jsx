@@ -42,7 +42,8 @@ export default function SettingsPage() {
     <LearnerTemplate variant="catalog">
       <div className="max-w-md mx-auto px-4 py-4 pb-24 md:pb-12 space-y-5">
         <h1 className="text-xl font-extrabold text-gray-900">Cài Đặt & Tài Khoản</h1>
-        {!useMock && <PasswordChangeForm />}
+        {!useMock && user?.localLoginEnabled !== false && <PasswordChangeForm />}
+        {user?.localLoginEnabled === false && <p className="text-sm text-slate-500">Tài khoản này đăng nhập bằng Google và chưa có mật khẩu riêng.</p>}
 
         {savedMessage && (
           <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold rounded-xl text-center animate-fade-in">

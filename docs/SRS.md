@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
+> **Chính sách tài khoản mới 2026-11-11:** đăng ký ACTIVE ngay, đăng nhập không OTP;
+> OTP chỉ dùng quên mật khẩu theo [Password_Recovery.md](Password_Recovery.md).
+> Chính sách này thay thế các mô tả xác minh đăng ký cũ bên dưới. Google OAuth2 vẫn
+> yêu cầu ID token hợp lệ và xác nhận mật khẩu khi link email trùng, không thêm OTP.
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** SRS là nguồn yêu cầu nghiệp vụ; HLD/LLD/API là thiết kế đề xuất triển khai. BR-02, BR-07–10, BR-15–18 và BR-22 là các điểm giao cắt quan trọng. ERD v1.6 đã bổ sung `question_versions.status`, nhưng `review_history.rating` vẫn là `integer`, chưa tương thích trực tiếp với API rating dạng chuỗi. Không coi các quyết định còn [OPEN] là yêu cầu đã phê duyệt.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -54,6 +59,11 @@
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
 ### UC-02 — Đăng nhập và phân quyền
+
+**Google OAuth2/OIDC:** bổ sung đăng nhập Google cho web theo [contract và policy](Google_OAuth2.md).
+Google subject là định danh; email local trùng không tự link, cần mật khẩu hiện tại;
+Đăng ký ACTIVE ngay; OTP chỉ dùng quên mật khẩu. Google-only mới chỉ nhận LEARNER và dùng session opaque.
+Nonce một lần/cookie binding bảo vệ callback; không mở quyền Google APIs.
 
 **Actor chính:** Learner. **Tiền điều kiện:** tài khoản tồn tại.
 
