@@ -6,19 +6,19 @@ import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class EmailVerificationOtpTest {
+class PasswordResetOtpTest {
 
     private final OffsetDateTime issuedAt =
             OffsetDateTime.parse("2026-10-31T15:00:00Z");
 
-    private EmailVerificationOtp createOtp() {
+    private PasswordResetOtp createOtp() {
         User user = new User(
                 "learner@example.com",
                 "test-password-hash",
                 "Learner"
         );
 
-        return new EmailVerificationOtp(
+        return new PasswordResetOtp(
                 user,
                 "test-otp-hash",
                 issuedAt,
@@ -28,7 +28,7 @@ class EmailVerificationOtpTest {
 
     @Test
     void validOtpCanBeUsed() {
-        EmailVerificationOtp otp = createOtp();
+        PasswordResetOtp otp = createOtp();
 
         assertTrue(otp.canUse(issuedAt.plusMinutes(1), 5));
         assertEquals(0, otp.getFailedAttempts());
@@ -37,7 +37,7 @@ class EmailVerificationOtpTest {
 
     @Test
     void otpExpiresAtExactExpiryTime() {
-        EmailVerificationOtp otp = createOtp();
+        PasswordResetOtp otp = createOtp();
         OffsetDateTime expiry = issuedAt.plusMinutes(5);
 
         assertTrue(otp.canUse(expiry.minusNanos(1), 5));
@@ -53,7 +53,7 @@ class EmailVerificationOtpTest {
 
     @Test
     void usedOtpCannotBeUsedAgain() {
-        EmailVerificationOtp otp = createOtp();
+        PasswordResetOtp otp = createOtp();
         OffsetDateTime verifiedAt = issuedAt.plusMinutes(1);
 
         otp.markUsed(verifiedAt, 5);
@@ -69,7 +69,7 @@ class EmailVerificationOtpTest {
 
     @Test
     void otpIsBlockedAfterMaximumFailedAttempts() {
-        EmailVerificationOtp otp = createOtp();
+        PasswordResetOtp otp = createOtp();
         OffsetDateTime now = issuedAt.plusMinutes(1);
 
         for (int i = 0; i < 5; i++) {
@@ -94,7 +94,7 @@ class EmailVerificationOtpTest {
 
     @Test
     void equivalentTimezoneOffsetsGiveSameExpiryResult() {
-        EmailVerificationOtp otp = createOtp();
+        PasswordResetOtp otp = createOtp();
 
         assertTrue(otp.canUse(
                 OffsetDateTime.parse("2026-10-31T22:04:00+07:00"),

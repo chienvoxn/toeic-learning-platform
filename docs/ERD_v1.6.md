@@ -1,5 +1,14 @@
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **V25:** tạo `password_reset_otps`, không tái sử dụng OTP xác minh cũ; chuyển user
+> PENDING có local password sang ACTIVE mà không giả lập email proof, giữ tài khoản
+> bị khóa. Không sửa migration cũ. [Policy mới](Password_Recovery.md).
+
+> **V24 Google OIDC:** `google_identities` dùng Google subject làm PK, unique user FK;
+> `google_login_challenges` lưu hash nonce/binding, TTL và thời điểm consume. Cho phép
+> users.password_hash NULL với Google-only; không đổi credential user hiện hữu.
+> V1–V23 giữ nguyên. [Policy và contract](Google_OAuth2.md).
+
 > **PRAC-01 V22/V23 runtime:** tái sử dụng attempts và attempt_question_snapshots V5/V10; PRACTICE_SNAPSHOT, test_version_id NULL, pin version/group/order nguyên tử, expires_at 24h server. V22 seed practice:manage:self cho LEARNER. V23 thêm question_versions.group_question_order nullable/positive; không backfill hoặc sửa V1–V22. Group cần đủ vị trí unique giữa current members; history/draft có thể cùng vị trí. Không suy thứ tự từ created_at/UUID, chưa có API authoring vị trí. Snapshot giữ tham chiếu/order sau archive/republish; media visibility không bị bypass. Chưa answer/submit/grading. [Contract và quyết định](PRAC01_Practice_Sessions.md).
 
 > **Q-03 V21 — schema authoring runtime:** question_groups.created_by UUID nullable FK users(user_id), index creator; không suy owner cho legacy. Thêm transcript TEXT nullable trên question_resources và question_group_version_resources, pin theo đúng version/media; không sửa/fallback/backfill media_resources.transcript. Tái sử dụng V20 owner/grant và V16 published pointers; seed SINGLE_CHOICE và question:manage:self/any, mặc định Teacher/Admin self, chỉ Admin any. Không backfill publication, owner/grant hoặc thay published links. [API, transaction và giới hạn](Q03_Question_Authoring.md). DBML lịch sử và V1–V20 giữ nguyên.

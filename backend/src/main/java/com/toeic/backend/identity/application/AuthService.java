@@ -1,9 +1,6 @@
 package com.toeic.backend.identity.application;
 
-import com.toeic.backend.identity.domain.AuthSession;
-import com.toeic.backend.identity.domain.LearningProfile;
 import com.toeic.backend.identity.domain.PasswordPolicy;
-import com.toeic.backend.identity.infrastructure.LearningProfileRepository;
 import com.toeic.backend.identity.infrastructure.AuthSessionRepository;
 import com.toeic.backend.identity.infrastructure.UserRepository;
 import java.time.Clock;
@@ -19,23 +16,18 @@ public class AuthService {
     private final UserRepository users;
     private final AuthSessionRepository sessions;
     private final PasswordEncoder encoder;
-    private final SessionToken tokens;
-    private final AuthProperties properties;
     private final Clock clock;
     private final String dummyPasswordHash;
-    private final LearningProfileRepository learningProfiles;
+    private final SessionIssuer issuer;
 
     public AuthService(UserRepository users, AuthSessionRepository sessions, PasswordEncoder encoder,
-                       SessionToken tokens, AuthProperties properties, Clock clock,
-                       LearningProfileRepository learningProfiles) {
+                       Clock clock, SessionIssuer issuer) {
         this.users = users;
         this.sessions = sessions;
         this.encoder = encoder;
-        this.tokens = tokens;
-        this.properties = properties;
         this.clock = clock;
         this.dummyPasswordHash = encoder.encode(UUID.randomUUID().toString());
-        this.learningProfiles = learningProfiles;
+        this.issuer = issuer;
     }
 
     @Transactional
@@ -43,21 +35,13 @@ public class AuthService {
         if (!PasswordPolicy.fitsBcrypt(password)) {
             throw AuthException.invalidCredentials();
         }
-        var user = users.findForLogin(EmailVerificationService.normalizeEmail(email));
+        var user = users.findForLogin(com.toeic.backend.identity.domain.EmailAddress.normalize(email));
         boolean matches = encoder.matches(password,
-                user.isPresent() ? user.get().getPasswordHash() : dummyPasswordHash);
+                user.isPresent() && user.get().getPasswordHash() != null ? user.get().getPasswordHash() : dummyPasswordHash);
         if (!matches || user.isEmpty() || !"ACTIVE".equals(user.get().getStatus())) {
             throw AuthException.invalidCredentials();
         }
-        var now = OffsetDateTime.now(clock);
-        var rawToken = tokens.generate();
-        var session = new AuthSession(user.get(), tokens.hash(rawToken), now,
-                now.plusSeconds(properties.sessionTtlSeconds()));
-        sessions.save(session);
-        user.get().recordLogin(now);
-        var targetScore = learningProfiles.findByUserId(user.get().getUserId())
-                .map(LearningProfile::getTargetScore).orElse(null);
-        return new LoginResult(rawToken, "Bearer", properties.sessionTtlSeconds(), UserProfile.from(user.get(), targetScore));
+        return issuer.issue(user.get());
     }
 
     @Transactional

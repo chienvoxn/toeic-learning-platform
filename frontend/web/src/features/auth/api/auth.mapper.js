@@ -9,5 +9,6 @@ export function toClientUser(dto) {
     roles: dto.roles || ['LEARNER'],
     streakDays: dto.streak_days ?? dto.streakDays ?? 0,
     status: dto.status,
+    localLoginEnabled: dto.localLoginEnabled ?? true,
   };
 }

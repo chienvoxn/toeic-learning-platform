@@ -54,7 +54,14 @@ export function AuthProvider({ children }) {
     generation.current++;
     setUser(null);
   }
-  return <AuthContext.Provider value={{ user, loading, sessionError, login, loginWithGoogle, register, logout, updateProfile, changePassword, verifyEmail: (email, otp) => authRepo.verifyEmail(email, otp), resendOtp: email => authRepo.resendOtp(email) }}>{children}</AuthContext.Provider>;
+  async function resetPassword(email, otp, newPassword) {
+    await authRepo.resetPassword(email, otp, newPassword);
+    if (user?.email?.toLowerCase() === email.trim().toLowerCase()) {
+      generation.current++; setUser(null); setSessionError('');
+      localStorage.removeItem('auth_token'); localStorage.removeItem('auth_user');
+    }
+  }
+  return <AuthContext.Provider value={{ user, loading, sessionError, login, loginWithGoogle, register, logout, updateProfile, changePassword, resetPassword, forgotPassword: email => authRepo.forgotPassword(email) }}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -1,5 +1,12 @@
 # SOFTWARE ARCHITECTURE DOCUMENT (SAD / HLD v1.0)
 
+> **Policy mới:** đăng ký/login không OTP; chỉ recovery dùng OTP riêng. V25 và
+> `PasswordResetService` thay xác minh đăng ký cũ. [Contract](Password_Recovery.md).
+
+> **Google OIDC runtime:** Web GIS → backend verify ID token + one-use browser-bound
+> nonce → session opaque hiện hữu. Không dùng Google token làm Bearer nghiệp vụ hoặc
+> auto-link email trùng. [Thiết kế, policy và cấu hình](Google_OAuth2.md).
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** Phần B (HLD v1.1) có ưu tiên khi xung đột với Phần A (v1.0). Tên module code chuẩn hóa theo LLD là `content` (thay cho `learning` ở các đoạn HLD cũ); `notification` là module riêng. Chuẩn lỗi API là `code`, `message`, `traceId`, `details` (thay cho `requestId`/`timestamp` trong đề xuất cũ). Baseline dữ liệu tham chiếu hiện tại là ERD v1.6, không còn v1.2/v1.3. Chưa có bằng chứng migration chạy thành công.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).

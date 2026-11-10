@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "email_verification_otps")
-public class EmailVerificationOtp {
+@Table(name = "password_reset_otps")
+public class PasswordResetOtp {
 
     @Id
     @Column(name = "otp_id", nullable = false)
@@ -32,10 +32,10 @@ public class EmailVerificationOtp {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
-    protected EmailVerificationOtp() {
+    protected PasswordResetOtp() {
     }
 
-    public EmailVerificationOtp(
+    public PasswordResetOtp(
             User user,
             String otpHash,
             OffsetDateTime createdAt,

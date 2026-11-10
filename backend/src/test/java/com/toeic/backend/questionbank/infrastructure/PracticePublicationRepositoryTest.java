@@ -38,7 +38,7 @@ class PracticePublicationRepositoryTest {
         var first = question(null, null, 1, null); publish(first);
         var newer = question(null, null, 2, first.getQuestion());
         var rows = candidates.findPublished(Set.of(910001), OffsetDateTime.now());
-        assertEquals(List.of(first.getQuestionVersionId()), rows.stream().map(PracticePublicationRepository.Candidate::questionVersionId).toList());
+        assertEquals(List.of(first.getQuestionVersionId()), rows.stream().map(element -> element.questionVersionId()).toList());
         jdbc.update("update questions set current_published_version_id=null where question_id=?", first.getQuestion().getQuestionId());
         assertTrue(candidates.findPublished(Set.of(910001), OffsetDateTime.now()).isEmpty());
         assertNotEquals(first.getQuestionVersionId(), newer.getQuestionVersionId());

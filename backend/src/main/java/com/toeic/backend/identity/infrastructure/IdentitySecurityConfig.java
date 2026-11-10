@@ -22,7 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableConfigurationProperties(AuthProperties.class)
 public class IdentitySecurityConfig {
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
-            "/api/v1/auth/register", "/api/v1/auth/verify-email", "/api/v1/auth/resend-otp", "/api/v1/auth/login");
+            "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password", "/api/v1/auth/login",
+            "/api/v1/auth/google/challenge", "/api/v1/auth/google");
     private static final Set<String> PUBLIC_GET_PATHS = Set.of("/api/health", "/api/health/database");
 
     static boolean isPublicRequest(String method, String path) {

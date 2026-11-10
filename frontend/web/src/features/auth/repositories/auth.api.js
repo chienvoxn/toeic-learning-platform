@@ -27,16 +27,27 @@ export class RemoteAuthRepository {
     return data;
   }
 
-  verifyEmail(email, otp) {
-    return apiRequest('/auth/verify-email', { method: 'POST', token: null, body: { email, otp } });
+  forgotPassword(email) {
+    return apiRequest('/auth/forgot-password', { method: 'POST', token: null, body: { email } });
   }
 
-  resendOtp(email) {
-    return apiRequest('/auth/resend-otp', { method: 'POST', token: null, body: { email } });
+  resetPassword(email, otp, newPassword) {
+    return apiRequest('/auth/reset-password', { method: 'POST', token: null, body: { email, otp, newPassword } });
   }
 
-  async loginWithGoogle() {
-    throw new Error('Đăng nhập Google chưa được hỗ trợ. Vui lòng đăng nhập bằng email.');
+  googleChallenge() {
+    return apiRequest('/auth/google/challenge', { method: 'POST', token: null, credentials: 'same-origin' });
+  }
+
+  async loginWithGoogle({ credential, challengeId, currentPassword }) {
+    const data = await apiRequest('/auth/google', {
+      method: 'POST', token: null, credentials: 'same-origin',
+      body: { credential, challengeId, ...(currentPassword ? { currentPassword } : {}) },
+    });
+    const user = toClientUser(data.user);
+    localStorage.setItem('auth_token', data.accessToken);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    return { user, token: data.accessToken };
   }
 
   async getCurrentUser() {
