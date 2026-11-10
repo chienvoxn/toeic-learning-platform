@@ -111,6 +111,10 @@ backend/src/main/java/com/toeic/platform/
 
 ### 2.4 Assessment & Blueprint
 
+**PRAC-01 review thứ tự:** V23 thêm group_question_order trên question version, không backfill. Catalog chỉ nhận group có vị trí positive/unique giữa current members, sort theo vị trí và revalidate cả membership lẫn thứ tự sau khóa. Snapshot question_order giữ nguyên sau reload. Không dùng created_at/UUID làm thứ tự nghiệp vụ; working draft/history không tham gia current membership. Chưa mở API authoring vị trí.
+
+**PRAC-01 runtime — quyết định sản phẩm 2026-11-10:** [API và kiểm thử](PRAC01_Practice_Sessions.md). PracticeSessionService bảo vệ permission/actor và ownership DB; tạo READ_COMMITTED, selector subset-sum mỗi Part + DP phân bổ tổng, không cắt nhóm/greedy false shortage. PracticeQuestionCatalog dùng query publication/type/choices/filter giữ toàn bộ group members, khóa group parents→group versions→question parents→question versions→media theo ID ổn định rồi revalidate. Attempts/snapshots ghi nguyên tử; GET REPEATABLE_READ exact pin, archive/republish không đổi nguồn. PracticeQuestionViewMapper tái sử dụng Q-01 safe mapper/metadata visibility, không question:read/owner grant cho Learner. V22 chỉ seed practice:manage:self mặc định LEARNER. 24h server, expired tính khi đọc, không scheduler, chưa answer/submit/grading/test workflow. Contract mẫu phía dưới cho phần này còn lại là DESIGN.
+
 **Tables:** `tests`, `test_versions`, `test_questions`, `test_blueprints`, `test_blueprint_items`, `attempts`, `attempt_question_snapshots`, `attempt_answers`, `attempt_part_results`, `score_conversion_tables`, `score_conversion_rules`.
 
 | Layer | Thành phần |
