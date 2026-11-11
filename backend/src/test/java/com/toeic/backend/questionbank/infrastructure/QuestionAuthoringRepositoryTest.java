@@ -29,7 +29,7 @@ class QuestionAuthoringRepositoryTest {
     @Autowired QuestionGroupRepository groups;
 
     private Question question(UUID author) {
-        var question = new Question(entityManager.find(ToeicPart.class, 910001),
+        var question = new Question(entityManager.createQuery("select p from ToeicPart p where p.partNumber=1", ToeicPart.class).getSingleResult(),
                 entityManager.find(QuestionTopic.class, 910001), entityManager.find(QuestionType.class, 910001), null, author);
         ReflectionTestUtils.setField(question, "updatedAt", OffsetDateTime.parse("2026-01-01T00:00:00Z"));
         questions.persistNew(question);

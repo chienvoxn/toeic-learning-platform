@@ -1,0 +1,203 @@
+{
+  "title": "[Mẫu] Part 5 nhanh — 12 câu ngữ pháp",
+  "description": "Đề tự biên soạn trải nghiệm hệ thống; audio giọng tổng hợp, không phải đề ETS. Không quy đổi điểm.",
+  "testType": "PRACTICE",
+  "durationSeconds": 720,
+  "maxAttempts": null,
+  "conversionId": null,
+  "groups": [],
+  "questions": [
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The meeting starts ___ nine o’clock.",
+      "choices": [
+        "at",
+        "on",
+        "in",
+        "for"
+      ],
+      "answer": "A",
+      "explanation": "At dùng với giờ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Please submit the report ___ Friday.",
+      "choices": [
+        "during",
+        "between",
+        "throughout",
+        "by"
+      ],
+      "answer": "D",
+      "explanation": "By chỉ hạn chót.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "All employees must wear ___ identification badges.",
+      "choices": [
+        "they",
+        "themselves",
+        "their",
+        "them"
+      ],
+      "answer": "C",
+      "explanation": "Trước danh từ cần tính từ sở hữu their.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The new software is ___ than the previous version.",
+      "choices": [
+        "fastly",
+        "faster",
+        "fast",
+        "fastest"
+      ],
+      "answer": "B",
+      "explanation": "Than đi với dạng so sánh hơn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Ms. Lee has worked here ___ 2020.",
+      "choices": [
+        "since",
+        "for",
+        "during",
+        "while"
+      ],
+      "answer": "A",
+      "explanation": "Since đi với mốc thời gian.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The package will ___ tomorrow morning.",
+      "choices": [
+        "arriving",
+        "arrived",
+        "arrival",
+        "arrive"
+      ],
+      "answer": "D",
+      "explanation": "Sau will là động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "We look forward to ___ you at the conference.",
+      "choices": [
+        "seen",
+        "saw",
+        "seeing",
+        "see"
+      ],
+      "answer": "C",
+      "explanation": "Look forward to đi với V-ing.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The manager spoke ___ about the new policy.",
+      "choices": [
+        "clearing",
+        "clearly",
+        "clear",
+        "clarity"
+      ],
+      "answer": "B",
+      "explanation": "Trạng từ bổ nghĩa động từ spoke.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "___ the heavy rain, the delivery arrived on time.",
+      "choices": [
+        "Despite",
+        "Although",
+        "Because",
+        "Unless"
+      ],
+      "answer": "A",
+      "explanation": "Despite đi trước cụm danh từ.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "A receipt is required ___ you request a refund.",
+      "choices": [
+        "during",
+        "despite",
+        "because of",
+        "when"
+      ],
+      "answer": "D",
+      "explanation": "When nối mệnh đề thời gian.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The documents ___ by the supervisor yesterday.",
+      "choices": [
+        "approving",
+        "are approve",
+        "were approved",
+        "approve"
+      ],
+      "answer": "C",
+      "explanation": "Quá khứ bị động: were + phân từ.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Please contact us if you need ___ information.",
+      "choices": [
+        "add",
+        "additional",
+        "addition",
+        "additionally"
+      ],
+      "answer": "B",
+      "explanation": "Tính từ additional bổ nghĩa information.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    }
+  ]
+}

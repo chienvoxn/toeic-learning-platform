@@ -10,7 +10,7 @@ API Specification trước đây chỉ đề xuất `PATCH /users/me` với DTO 
 
 ## Contract và quyền
 
-- Kế thừa đăng ký–OTP, login/logout, opaque Bearer session và `GET /api/v1/users/me` hiện hữu.
+- Kế thừa đăng ký ACTIVE không OTP theo [policy V25](Password_Recovery.md), login/logout, opaque Bearer session và `GET /api/v1/users/me` hiện hữu.
 - `GET /api/v1/users/me`: kế thừa endpoint, thêm `targetScore` nullable vào UserProfile. Khi chưa có learning_profiles hoặc chưa đặt mục tiêu, trả null, không tự tạo hàng/default điểm. Login cũng trả UserProfile với mục tiêu hiện tại.
 - `PATCH /api/v1/users/me`: allowlist `fullName`, `targetScore`. Phải có ít nhất một trường; chỉ cập nhật actor từ `SessionPrincipal`. Bỏ qua một trường thì giữ nguyên; fullName không null/trống, tối đa 150 ký tự trước khi strip, lưu tên đã strip, thống nhất đăng ký. Hai trường cùng payload được ghi trong một transaction.
 - DTO allowlist từ chối trường lạ, kể cả email, avatarUrl, userId, role/permission, status, passwordHash và timestamp hệ thống. Không cập nhật một phần nếu payload lỗi.

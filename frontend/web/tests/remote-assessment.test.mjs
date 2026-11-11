@@ -1,0 +1,12 @@
+import { test, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
+import { loadBrowserModule } from './load-browser-module.mjs';
+const { RemoteAssessmentRepository, remoteAttempt } = await loadBrowserModule('features/assessment/repositories/assessment.api.js');
+const originalFetch = globalThis.fetch;
+let requests, queue;
+const dto = { id: 'attempt', serverNow: '2026-11-11T00:00:00Z', expiresAt: '2026-11-11T00:10:00Z', questions: [{ id: 'q', partNumber: 5, clientSequence: 7, options: [{ key: 'A', text: 'at' }] }] };
+beforeEach(() => { requests = []; queue = []; const storage = new Map(); globalThis.localStorage = { getItem: () => 'session', removeItem() {} }; globalThis.sessionStorage = { getItem: k => storage.get(k), setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) }; globalThis.fetch = async (url, options) => { requests.push({ url, ...options }); const response = queue.shift(); if (response instanceof Error) throw response; return new Response(JSON.stringify(response ?? dto)); }; });
+afterEach(() => { globalThis.fetch = originalFetch; delete globalThis.localStorage; delete globalThis.sessionStorage; });
+test('remote attempt maps server time and persisted answer sequence', () => { const result = remoteAttempt(dto); assert.equal(result.parts[0].partNumber, 5); assert.equal(result.clientSequence, 7); assert.ok(Math.abs(result.expiresAt - Date.now() - 600000) < 100); });
+test('retry after lost start response uses the same idempotency key', async () => { const repo = new RemoteAssessmentRepository(); queue.push(new Error('network')); await assert.rejects(repo.startAttempt('version')); await repo.startAttempt('version'); assert.equal(requests[0].url, '/api/v1/exam-attempts'); assert.deepEqual(JSON.parse(requests[0].body), JSON.parse(requests[1].body)); await repo.startAttempt('version'); assert.notEqual(JSON.parse(requests[1].body).startKey, JSON.parse(requests[2].body).startKey); });
+test('remote autosave uses camelCase contract and a server request', async () => { const repo = new RemoteAssessmentRepository(); queue.push({ confirmedOption: 'A', serverSequence: 8 }); await repo.saveAnswer({ attemptId: 'attempt', questionId: 'q', selectedOption: 'A', clientSeq: 8 }); assert.equal(requests[0].method, 'PUT'); assert.equal(requests[0].url, '/api/v1/exam-attempts/attempt/answers'); assert.deepEqual(JSON.parse(requests[0].body), { questionId: 'q', selectedOption: 'A', clientSeq: 8 }); });

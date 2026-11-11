@@ -1,5 +1,8 @@
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
+> **EXAM-01 hiện hành:** Đã có quản lý/import đề, Teacher gửi duyệt → Admin duyệt/xuất bản, media upload/playback, thi server, autosave/submit/chấm, lịch sử và điểm ước tính. [Contract và phạm vi](EXAM01_End_To_End.md) thay các ghi chú lịch sử “chưa có” cho những luồng này; các mục DESIGN/OPEN khác không tự được chốt.
+
+
 > **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
 > consume và revoke sessions cùng transaction. [Thiết kế V25](Password_Recovery.md).
 
@@ -59,7 +62,7 @@ backend/src/main/java/com/toeic/platform/
 
 ### 2.1 Identity & Authorization
 
-**Cập nhật triển khai 2026-11-01:** [ADR-017](ADR_Auth_Session.md) chọn opaque Bearer session có thu hồi trong PostgreSQL (V13). AuthService xử lý login/logout; SessionAuthenticationService xác thực mỗi request; UserProfileService trả hồ sơ an toàn. Đăng ký–OTP hiện hữu được kế thừa. DBML v1.6 và danh mục bên dưới chưa mô tả bảng auth_sessions mới.
+**Cập nhật triển khai 2026-11-01:** [ADR-017](ADR_Auth_Session.md) chọn opaque Bearer session có thu hồi trong PostgreSQL (V13). AuthService xử lý login/logout; SessionAuthenticationService xác thực mỗi request; UserProfileService trả hồ sơ an toàn. Đăng ký ACTIVE ngay không OTP; PasswordResetService xử lý OTP khôi phục riêng theo [policy V25](Password_Recovery.md). DBML v1.6 và danh mục bên dưới chưa mô tả bảng auth_sessions mới.
 
 **Tables:** `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `learning_profiles`.
 

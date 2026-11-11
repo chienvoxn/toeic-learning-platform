@@ -22,7 +22,7 @@ class PracticeAttemptRepositoryTest {
     @Autowired PracticeAttemptRepository attempts;
 
     private QuestionVersion question(QuestionGroup group, QuestionGroupVersion gv) {
-        var q = new Question(em.find(ToeicPart.class, 910001), null, em.find(QuestionType.class, 910001), group, ACTOR);
+        var q = new Question(em.createQuery("select p from ToeicPart p where p.partNumber=1", ToeicPart.class).getSingleResult(), null, em.find(QuestionType.class, 910001), group, ACTOR);
         em.persist(q);
         var version = new QuestionVersion(q, 1, gv, "Fixture", "SECRET", null); em.persist(version);
         return version;

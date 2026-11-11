@@ -1,5 +1,8 @@
 # PRAC-01 — Luyện tập Part 1–7 và kết hợp nhiều Part
 
+> **EXAM-01 hiện hành:** Đã có quản lý/import đề, Teacher gửi duyệt → Admin duyệt/xuất bản, media upload/playback, thi server, autosave/submit/chấm, lịch sử và điểm ước tính. [Contract và phạm vi](EXAM01_End_To_End.md) thay các ghi chú lịch sử “chưa có” cho những luồng này; các mục DESIGN/OPEN khác không tự được chốt.
+
+
 ## Nguồn yêu cầu và quyết định sản phẩm
 
 Backlog do người dùng giao TV2: luyện tập Part 1–7 và kết hợp nhiều Part. Không tìm thấy backlog/AC PRAC-01 chi tiết trong repo. Đã đối chiếu SRS UC-04, BR-07/AC-07; HLD phần B/§7.1; API Specification §3.4/4.3; ERD v1.6; LLD §2.4 và schema V5/V10/V16/V21. Q-03 đã merge qua PR #43 tại d49c7bf. Nhánh hiện tại feat/web-auth-integration được fast-forward trong lượt nền trước, không tạo nhánh/worktree/repository mới hoặc stash/reset/commit.

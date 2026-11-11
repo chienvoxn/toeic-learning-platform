@@ -48,6 +48,11 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
                         // Optional bearer auth is still processed; content service filters public/member visibility.
                         .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tests", "/api/v1/tests/*").permitAll()
+                        .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**").hasAnyAuthority("test:manage:self", "test:manage:any")
+                        .requestMatchers("/api/v1/teacher/media").hasAuthority("media:upload")
+                        .requestMatchers("/api/v1/teacher/score-conversions").hasAnyAuthority("test:manage:self", "test:manage:any")
+                        .requestMatchers("/api/v1/exam-attempts", "/api/v1/exam-attempts/**", "/api/v1/users/me/exam-history", "/api/v1/users/me/exam-progress").hasAnyAuthority("test:take", "practice:manage:self")
                         .requestMatchers("/api/v1/teacher/contents", "/api/v1/teacher/contents/**")
                         .hasAnyAuthority("content:manage:self", "content:manage:any")
                         .requestMatchers("/api/v1/teacher/questions", "/api/v1/teacher/questions/**",

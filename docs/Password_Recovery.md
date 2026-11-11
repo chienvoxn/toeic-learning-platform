@@ -4,6 +4,11 @@
 
 Theo yêu cầu người dùng ngày 2026-11-11, thay thế chính sách xác minh đăng ký bằng OTP:
 
+Đây là policy hiện hành cho đăng ký và khôi phục mật khẩu, đối chiếu với
+RegistrationService, PasswordResetService và migration V25. Các mô tả đăng ký
+PENDING rồi verify-email/resend-otp trong tài liệu lịch sử đã được thay thế;
+không coi chúng là yêu cầu cần triển khai lại.
+
 - Đăng ký email tạo tài khoản ACTIVE ngay, không gửi thư, không tạo OTP, không tự login.
 - Sau đăng ký chuyển về login, có thông báo và email điền sẵn. Login email/password không cần OTP.
 - `emailVerifiedAt` vẫn null khi chưa có bằng chứng sở hữu email; không đánh dấu đã xác minh giả.

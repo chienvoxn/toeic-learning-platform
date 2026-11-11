@@ -7,16 +7,19 @@ export function useAttemptSession(attemptId) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [saveStatus, setSaveStatus] = useState('saved');
+  const [saveError, setSaveError] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const sequence = useRef(0);
   const pending = useRef(new Map());
   const failed = useRef(new Set());
   const jobs = useRef(new Set());
   const submitting = useRef(false);
+  const activeAttempt = useRef(attemptId);
   useEffect(() => {
     let active = true;
+    activeAttempt.current = attemptId;
     setIsLoading(true); setLoadError(''); setAttempt(null);
-    pending.current.clear(); failed.current.clear(); sequence.current = 0;
+    pending.current.clear(); failed.current.clear(); jobs.current.clear(); sequence.current = 0;
     assessmentRepo.getAttempt(attemptId).then(data => {
       if (active) { sequence.current = data.clientSequence || 0; setAttempt(data); }
     }).catch(error => { if (active) setLoadError(error.message); })
@@ -28,15 +31,23 @@ export function useAttemptSession(attemptId) {
     pending.current.set(payload.questionId, payload);
     failed.current.delete(payload.questionId);
     setSaveStatus('saving');
+    setSaveError('');
     const job = (async () => {
       try {
-        await assessmentRepo.saveAnswer(payload);
+        const response = await assessmentRepo.saveAnswer(payload);
+        if (activeAttempt.current !== payload.attemptId) return;
+        if (response?.confirmedOption && pending.current.get(payload.questionId)?.clientSeq === payload.clientSeq) {
+          setAttempt(previous => !previous ? previous : { ...previous, parts: previous.parts.map(part => ({ ...part, questions: part.questions.map(q => q.id === payload.questionId ? { ...q, userAnswer: response.confirmedOption } : q) })) });
+        }
         if (pending.current.get(payload.questionId)?.clientSeq === payload.clientSeq) pending.current.delete(payload.questionId);
         setSaveStatus(failed.current.size ? 'error' : pending.current.size ? 'saving' : 'saved');
       } catch (error) {
-        if (['ATTEMPT_EXPIRED', 'ATTEMPT_CLOSED'].includes(error.code)) {
+        if (activeAttempt.current !== payload.attemptId || pending.current.get(payload.questionId)?.clientSeq !== payload.clientSeq) return;
+        setSaveError(error.message);
+        if (['ATTEMPT_EXPIRED', 'ATTEMPT_CLOSED', 'SECTION_CLOSED'].includes(error.code)) {
           if (pending.current.get(payload.questionId)?.clientSeq === payload.clientSeq) pending.current.delete(payload.questionId);
           setSaveStatus(pending.current.size ? 'error' : 'saved');
+          assessmentRepo.getAttempt(payload.attemptId).then(setAttempt).catch(e => setLoadError(e.message));
         } else {
           if (pending.current.get(payload.questionId)?.clientSeq === payload.clientSeq) failed.current.add(payload.questionId);
           setSaveStatus(failed.current.size ? 'error' : pending.current.size ? 'saving' : 'saved');
@@ -56,15 +67,17 @@ export function useAttemptSession(attemptId) {
     if (submitting.current) return;
     setAttempt(previous => !previous ? previous : { ...previous, parts: previous.parts.map(part => ({ ...part, questions: part.questions.map(question => question.id === questionId ? { ...question, isFlagged: !question.isFlagged } : question) })) });
   }, []);
-  const submitExam = useCallback(async () => {
+  const submitExam = useCallback(async ({ expired = false } = {}) => {
     if (submitting.current) throw new Error('Bài thi đang được nộp.');
     submitting.current = true; setIsSubmitting(true);
     try {
-      await Promise.all([...jobs.current]);
-      if (pending.current.size) throw new Error('Còn đáp án chưa lưu. Hãy thử lưu lại trước khi nộp bài.');
+      if (!expired) {
+        await Promise.all([...jobs.current]);
+        if (pending.current.size) throw new Error('Còn đáp án chưa lưu. Hãy thử lưu lại trước khi nộp bài.');
+      }
       return await assessmentRepo.submitAttempt(attemptId);
     } finally { submitting.current = false; setIsSubmitting(false); }
   }, [attemptId]);
-  return { attempt, isLoading, isSubmitting, loadError, saveStatus, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam,
+  return { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam,
     retryLastSave: () => Promise.all([...pending.current.values()].map(persist)) };
 }

@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function CountdownTimer({ expiresAt, onExpire, className }) {
+  const expireCallback = useRef(onExpire);
+  useEffect(() => { expireCallback.current = onExpire; }, [onExpire]);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(() => {
     if (!expiresAt) return 0;
     return Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
@@ -17,12 +19,12 @@ export function CountdownTimer({ expiresAt, onExpire, className }) {
 
       if (remaining <= 0) {
         clearInterval(interval);
-        if (onExpire) onExpire();
+        expireCallback.current?.();
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [expiresAt, onExpire]);
+  }, [expiresAt]);
 
   const hours = Math.floor(timeLeftSeconds / 3600);
   const minutes = Math.floor((timeLeftSeconds % 3600) / 60);

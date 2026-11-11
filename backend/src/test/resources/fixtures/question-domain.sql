@@ -3,7 +3,7 @@ INSERT INTO users (user_id, email, password_hash, full_name, status, created_at,
 VALUES ('51000000-0000-0000-0000-000000000001', 'q01-fixture@example.invalid',
         'unused-fixture-value', 'Q01 fixture', 'PENDING', now(), now());
 INSERT INTO toeic_parts (part_id, part_number, skill, name)
-VALUES (910001, 1, 'LISTENING', 'Q01 fixture part');
+VALUES (910001, 1, 'LISTENING', 'Q01 fixture part') ON CONFLICT (part_number) DO NOTHING;
 INSERT INTO topics (topic_id, name, description)
 VALUES (910001, 'Q01 fixture topic', 'Only test data');
 INSERT INTO question_types (question_type_id, code, name, description)

@@ -46,7 +46,7 @@ Ngày quyết định: 2026-11-02. Nhánh: `feat/content-read-api`. Phạm vi: m
 
 Mappings: ContentCategory, LearningContent, LearningContentVersion, MediaResource tái sử dụng bảng V3/V10; ContentVersionResource map bảng V15 bằng composite embedded ID. Không có cascade write hoặc repository CRUD công khai. Không gọi repository identity từ content; dùng principal application hiện hữu và Clock chung.
 
-AuthService, SessionAuthenticationService, PermissionService, RegistrationService, EmailVerificationService và OtpMailService giữ trách nhiệm AUTH-03. Security config chỉ thêm hai GET permitAll nhưng không đưa vào danh sách bỏ qua Bearer; quyền dữ liệu do service/query quyết định. AuthFlowIntegrationTest cập nhật expected permission list vì V15 thêm content:read, không bỏ bớt test cũ.
+AuthService, SessionAuthenticationService, PermissionService, RegistrationService, PasswordResetService và OtpMailService giữ trách nhiệm identity theo AUTH-03 và [policy V25](Password_Recovery.md): đăng ký ACTIVE không OTP, OTP chỉ dùng khôi phục mật khẩu. Security config chỉ thêm hai GET permitAll nhưng không đưa vào danh sách bỏ qua Bearer; quyền dữ liệu do service/query quyết định. AuthFlowIntegrationTest cập nhật expected permission list vì V15 thêm content:read, không bỏ bớt test cũ.
 
 ## Kiểm thử
 

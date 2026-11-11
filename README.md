@@ -289,6 +289,13 @@ Implementation status should be tracked through GitHub Issues and Pull Requests.
 
 ## 11. Documentation
 
+Local sample data for the implemented web features is available in
+[`backend/sample-data/README.md`](backend/sample-data/README.md).
+Run the bundled `toeic_sample_data.sql` in pgAdmin after Flyway V26; it includes
+published lessons, vocabulary/SRS, original Part 1–7 questions with embedded media,
+test authoring/review states and personal attempt history. This is an opt-in seed,
+not an automatic migration.
+
 Additional project documentation is maintained in:
 
 - `docs/`

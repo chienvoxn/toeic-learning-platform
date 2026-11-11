@@ -1,5 +1,13 @@
 # Tích hợp frontend web và backend
 
+## Dữ liệu mẫu cho giao diện
+
+[Hướng dẫn nạp SQL bằng pgAdmin](../backend/sample-data/README.md): bộ seed tùy chọn
+cho học liệu, từ vựng/SRS, ngân hàng câu hỏi 7 Part, đề thi và lịch sử bài làm.
+Nạp vào `toeic_db` sau V26, đăng nhập lại và tải lại web với API thật để xem dữ liệu.
+Không cần bật mock hoặc chỉnh source; dữ liệu mẫu cá nhân áp dụng cho các tài khoản
+ACTIVE đang tồn tại khi chạy seed.
+
 ## Cấu hình
 
 Frontend `frontend/web` mặc định dùng API thật (`VITE_USE_MOCK=false`), base `/api/v1`.
@@ -86,8 +94,17 @@ Thi thử công khai tại `/tests`, `/tests/:testId/overview`, `/attempts/:atte
 Part 5/7 trên thiết bị, không sync account; chỉ raw count, không quy đổi TOEIC.
 Thời gian/chấm local không có bảo đảm như server. Xóa dữ liệu trình duyệt mất bài.
 
-Backend PRAC-01 có tạo/đọc practice snapshot cho người đã đăng nhập, nhưng web
-chưa nối; chưa có API lưu đáp án/submit/grade/result hoàn chỉnh hoặc thi guest server.
+EXAM-01 đã nối danh mục đề published vào `/tests`; đề server yêu cầu đăng nhập,
+được lưu/chấm và tiếp tục theo tài khoản. Guest Reading mẫu vẫn là luồng riêng.
+Teacher/Admin dùng `/teacher/tests` hoặc `/admin/tests` để soạn, import JSON,
+upload audio/ảnh, xem trước, gửi duyệt và xuất bản theo quyền. `/exam-history`
+hiển thị lịch sử bài làm và tiến độ theo Part. Backend dùng V26; xem
+[EXAM01_End_To_End.md](EXAM01_End_To_End.md) cho contract và giới hạn.
+
+PRAC-01 giữ POST/GET snapshot; answers/submit/result đã được bổ sung. Media của
+đề thi có GET `/api/v1/media/{id}` qua Bearer và kiểm quyền; content API cũ vẫn
+chỉ trả metadata.
+
 Game, dictation/shadowing chưa có backend tương ứng nên chế độ thật báo chưa sẵn sàng.
 Media content chỉ trả metadata, chưa có URL playback. Avatar/bio/privacy chưa được
 server hỗ trợ. Tạo từ và gắn vào bộ là hai API; UI giữ ID nếu bước gắn lỗi để retry

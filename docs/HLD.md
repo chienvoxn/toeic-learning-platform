@@ -1,5 +1,8 @@
 # SOFTWARE ARCHITECTURE DOCUMENT (SAD / HLD v1.0)
 
+> **EXAM-01 hiện hành:** Đã có quản lý/import đề, Teacher gửi duyệt → Admin duyệt/xuất bản, media upload/playback, thi server, autosave/submit/chấm, lịch sử và điểm ước tính. [Contract và phạm vi](EXAM01_End_To_End.md) thay các ghi chú lịch sử “chưa có” cho những luồng này; các mục DESIGN/OPEN khác không tự được chốt.
+
+
 > **Policy mới:** đăng ký/login không OTP; chỉ recovery dùng OTP riêng. V25 và
 > `PasswordResetService` thay xác minh đăng ký cũ. [Contract](Password_Recovery.md).
 

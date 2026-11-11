@@ -41,7 +41,7 @@ class QuestionPersistenceIntegrationTest {
 
     @BeforeEach
     void references() {
-        part = entityManager.find(ToeicPart.class, 910001);
+        part = entityManager.createQuery("select p from ToeicPart p where p.partNumber=1", ToeicPart.class).getSingleResult();
         topic = entityManager.find(QuestionTopic.class, 910001);
         type = entityManager.find(QuestionType.class, 910001);
     }
@@ -172,7 +172,7 @@ class QuestionPersistenceIntegrationTest {
 
     @Test
     void mappedLookupEntitiesCanBePersistedWithIdentityGeneratedIds() {
-        var anotherPart = new ToeicPart(2, "LISTENING", "Second fixture part");
+        var anotherPart = new ToeicPart(99, "LISTENING", "Isolated identity-mapping fixture");
         var anotherTopic = new QuestionTopic("Another Q01 topic", "Description");
         var anotherType = new QuestionType("OTHER_FIXTURE", "Other type", null);
         entityManager.persist(anotherPart);

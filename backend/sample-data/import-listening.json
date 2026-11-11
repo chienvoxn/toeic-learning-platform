@@ -1,0 +1,1794 @@
+{
+  "title": "[Mẫu] Listening 01 — Hội thoại và thông báo",
+  "description": "Đề tự biên soạn trải nghiệm hệ thống; audio giọng tổng hợp, không phải đề ETS. Không quy đổi điểm.",
+  "testType": "LISTENING",
+  "durationSeconds": 2700,
+  "maxAttempts": null,
+  "conversionId": null,
+  "groups": [
+    {
+      "key": "conversation-1",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "da5f7891-6811-a24d-2367-cd92ceab7a25",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Oak meeting room for the customer workshop on Monday. Man: I have reserved the room for 9:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-2",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "aa135d69-2ba5-f2c8-e27d-c7c6d51b107d",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Maple meeting room for the customer workshop on Tuesday. Man: I have reserved the room for 10:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-3",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "81e249c3-712e-06e5-2d63-28bba0a6f052",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Cedar meeting room for the customer workshop on Wednesday. Man: I have reserved the room for 11:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-4",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "4a9265b9-f1bd-5e9c-65fe-762e32d42529",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Pine meeting room for the customer workshop on Thursday. Man: I have reserved the room for 9:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-5",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "458f52f9-9f32-507d-5542-303c317602fe",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Birch meeting room for the customer workshop on Friday. Man: I have reserved the room for 10:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-6",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "03bbd89f-d332-f095-1b15-96fb69ed3367",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Elm meeting room for the customer workshop on Monday. Man: I have reserved the room for 11:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-7",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "c50c8e00-5a9e-f32f-a91d-2f52ebcaa6fa",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Willow meeting room for the customer workshop on Tuesday. Man: I have reserved the room for 9:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-8",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "0735484d-bdc3-5eb1-3356-1871a31c96e8",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Ash meeting room for the customer workshop on Wednesday. Man: I have reserved the room for 10:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-9",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "68f7dacf-8c0f-e89b-24b4-bf86434e6a23",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Cherry meeting room for the customer workshop on Thursday. Man: I have reserved the room for 11:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-10",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "1b8d00c8-8527-e29f-6519-491d1eef695c",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Spruce meeting room for the customer workshop on Friday. Man: I have reserved the room for 9:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-11",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "7ce3c597-1e66-59ef-427c-bfcd61ce8e2d",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Walnut meeting room for the customer workshop on Monday. Man: I have reserved the room for 10:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-12",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "0d91aa81-1db5-5f61-b6c6-56572e99294e",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Beech meeting room for the customer workshop on Tuesday. Man: I have reserved the room for 11:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "conversation-13",
+      "partNumber": 3,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "ecdcaa2a-e8fa-d8ba-bdb3-e0fa4a38ab48",
+      "imageId": null,
+      "transcript": "Woman: We need to prepare the Palm meeting room for the customer workshop on Wednesday. Man: I have reserved the room for 9:30 in the morning. Shall I print the handouts? Woman: Yes, please print twelve copies. I will check the projector before the visitors arrive. Man: All right. I will bring the handouts to reception when they are ready."
+    },
+    {
+      "key": "announcement-1",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "dab398bc-fc7a-12f8-3872-532467c67d3c",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Riverton. The train scheduled to depart at 10:45 will now leave from platform 2. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-2",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "8455b70b-bad4-ea3c-ef3f-c8bc05dcd542",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Lakeside. The train scheduled to depart at 11:45 will now leave from platform 3. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-3",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "97a6541a-976b-c275-1ecc-a1d168b9ab91",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Hillcrest. The train scheduled to depart at 12:45 will now leave from platform 4. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-4",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "8673d09b-c04c-2564-d85b-818386e168c8",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Brookfield. The train scheduled to depart at 13:45 will now leave from platform 5. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-5",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "a1cd37b4-c5cf-93ed-bfb7-2a6ffb4936cd",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Greenwood. The train scheduled to depart at 14:45 will now leave from platform 6. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-6",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "32d851f8-7edb-ea59-8330-786cd49bca3a",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Fairview. The train scheduled to depart at 15:45 will now leave from platform 7. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-7",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "facc1758-0ef5-3bd4-d34c-62b6fc12e62b",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Woodland. The train scheduled to depart at 16:45 will now leave from platform 8. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-8",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "f3244517-8e5a-adfd-f87b-54edaddda596",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Westport. The train scheduled to depart at 10:45 will now leave from platform 9. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-9",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "4a388555-4017-8011-c23c-99e52fe35bd1",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Eastvale. The train scheduled to depart at 11:45 will now leave from platform 10. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    },
+    {
+      "key": "announcement-10",
+      "partNumber": 4,
+      "instruction": "Listen and choose the best answer.",
+      "passageText": null,
+      "audioId": "247084dc-e335-a9a6-881a-46ace3a4170c",
+      "imageId": null,
+      "transcript": "Attention passengers traveling to Meadowpark. The train scheduled to depart at 12:45 will now leave from platform 11. Please follow the signs beside the information desk. Passengers requiring assistance should speak to a member of staff in a blue uniform. Keep your ticket ready for inspection before boarding. Thank you for your cooperation."
+    }
+  ],
+  "questions": [
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "A woman is working at a desk.",
+        "She is swimming in a pool.",
+        "The room is outdoors.",
+        "Several buses are parked outside."
+      ],
+      "answer": "A",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "17cc9904-ebc6-f46a-726b-dd0feecec8c1",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. A woman is working at a desk. B. She is swimming in a pool. C. The room is outdoors. D. Several buses are parked outside."
+    },
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "A suitcase is on the bed.",
+        "A car is being washed.",
+        "A train is leaving the station.",
+        "A computer is on the desk."
+      ],
+      "answer": "D",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "533c1f64-58b2-e1a2-e4f4-9f2c3ef87deb",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. A suitcase is on the bed. B. A car is being washed. C. A train is leaving the station. D. A computer is on the desk."
+    },
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "A man is cooking dinner.",
+        "The shelves are empty.",
+        "A window is behind the desk.",
+        "There is a bicycle on the table."
+      ],
+      "answer": "C",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "11886fa6-0840-ce48-8776-2720da4b87ad",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. A man is cooking dinner. B. The shelves are empty. C. A window is behind the desk. D. There is a bicycle on the table."
+    },
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "A boat is crossing the river.",
+        "Documents are lying on the desk.",
+        "Boxes are falling from a truck.",
+        "People are eating in a restaurant."
+      ],
+      "answer": "B",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "f75448eb-7bdd-4f4e-125e-9bda83569ffd",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. A boat is crossing the river. B. Documents are lying on the desk. C. Boxes are falling from a truck. D. People are eating in a restaurant."
+    },
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "A filing cabinet is beside the work area.",
+        "A ladder is leaning against a tree.",
+        "A customer is buying fruit.",
+        "Workers are painting a bridge."
+      ],
+      "answer": "A",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "66e9415e-7644-4479-aced-ca388736bbcf",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. A filing cabinet is beside the work area. B. A ladder is leaning against a tree. C. A customer is buying fruit. D. Workers are painting a bridge."
+    },
+    {
+      "partNumber": 1,
+      "groupKey": null,
+      "questionText": "Choose the statement that describes the illustration.",
+      "choices": [
+        "The woman is carrying an umbrella.",
+        "A dog is sleeping under a bench.",
+        "The person is standing in a queue.",
+        "The person is facing a computer screen."
+      ],
+      "answer": "D",
+      "explanation": "Đối chiếu chủ thể và vị trí đồ vật trong hình văn phòng; đây là hình minh họa tự tạo.",
+      "audioId": "60a5cf56-43de-ee1d-1fcf-67b142d51763",
+      "imageId": "107b5f0c-b5ad-4625-9b20-cf472db5b1b8",
+      "transcript": "Look at the office illustration. A. The woman is carrying an umbrella. B. A dog is sleeping under a bench. C. The person is standing in a queue. D. The person is facing a computer screen."
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "At nine thirty tomorrow morning.",
+        "At the main office.",
+        "Yes, I bought one."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: When does the workshop begin?",
+      "audioId": "4fde1673-2b62-b790-739c-e11c2aac059b",
+      "imageId": null,
+      "transcript": "When does the workshop begin?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "For two hours.",
+        "I sent it yesterday.",
+        "At the reception desk."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Where can I collect my visitor badge?",
+      "audioId": "78ce2630-f267-f723-584b-10cae69e9e0a",
+      "imageId": null,
+      "transcript": "Where can I collect my visitor badge?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "It costs fifty dollars.",
+        "The department manager did.",
+        "On Friday afternoon."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Who approved the travel request?",
+      "audioId": "ab57dd17-b4b2-f1d1-7dcb-44806cd2da6c",
+      "imageId": null,
+      "transcript": "Who approved the travel request?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "About three business days.",
+        "In the parking lot.",
+        "No, that is my colleague."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: How long will the repairs take?",
+      "audioId": "06465592-8a9a-4f62-b6a3-a9ec350d2723",
+      "imageId": null,
+      "transcript": "How long will the repairs take?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "It is made of wood.",
+        "The train was late.",
+        "Yes, a room for six would be helpful."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Would you like me to reserve a meeting room?",
+      "audioId": "39ea5d98-93f7-7562-50a8-82bad1728d5a",
+      "imageId": null,
+      "transcript": "Would you like me to reserve a meeting room?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "I usually walk to work.",
+        "The delivery truck broke down.",
+        "On the second shelf."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Why was the shipment delayed?",
+      "audioId": "789508d8-c067-a87b-05ef-da525b373fc7",
+      "imageId": null,
+      "transcript": "Why was the shipment delayed?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "The one beside the window.",
+        "At half past eight.",
+        "Because it was raining."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Which printer should I use?",
+      "audioId": "5ffb3eb6-4cc5-6b79-58bb-68e00b6f079d",
+      "imageId": null,
+      "transcript": "Which printer should I use?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "That is a comfortable chair.",
+        "We stayed for a week.",
+        "Certainly, I will send it now."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Could you forward the agenda to everyone?",
+      "audioId": "970c0339-a4a9-a4c0-bf98-d25786ae1bc8",
+      "imageId": null,
+      "transcript": "Could you forward the agenda to everyone?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "It is quite an interesting book.",
+        "They were delivered this morning.",
+        "At the end of the corridor."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Have the new uniforms arrived yet?",
+      "audioId": "a7a478dd-ad0b-0d70-f353-cc9348592b66",
+      "imageId": null,
+      "transcript": "Have the new uniforms arrived yet?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Every three months.",
+        "By the front entrance.",
+        "The tickets sold out."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: How often is the equipment inspected?",
+      "audioId": "56e426da-8690-31ac-b018-3f245f9a60f1",
+      "imageId": null,
+      "transcript": "How often is the equipment inspected?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "I work on the fifth floor.",
+        "The next train leaves at six.",
+        "Yes, the vegetable pasta is available."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Is there a vegetarian option on the menu?",
+      "audioId": "47a18790-0efd-c803-d93b-0459c15cacf4",
+      "imageId": null,
+      "transcript": "Is there a vegetarian option on the menu?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "She speaks two languages.",
+        "Upload it through the staff portal.",
+        "About ten kilometers."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Where should I submit my expense report?",
+      "audioId": "59af0f38-313e-a531-702f-1c444288ee88",
+      "imageId": null,
+      "transcript": "Where should I submit my expense report?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Our marketing director.",
+        "The blue folder.",
+        "A little after lunch."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Who is giving the presentation this afternoon?",
+      "audioId": "6d9e9a19-4bed-3073-995e-81be09022c61",
+      "imageId": null,
+      "transcript": "Who is giving the presentation this afternoon?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "The package is very heavy.",
+        "She has already read it.",
+        "Thursday afternoon works for me."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Can we move our appointment to Thursday?",
+      "audioId": "f7a6fe81-bdd8-7416-347b-08f5d419b289",
+      "imageId": null,
+      "transcript": "Can we move our appointment to Thursday?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "It belongs to my team.",
+        "At seven in the evening.",
+        "Across from the library."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: What time does the store close on Saturdays?",
+      "audioId": "9be5ccf3-8955-5c30-453f-8d17cbf5dada",
+      "imageId": null,
+      "transcript": "What time does the store close on Saturdays?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Thanks, please take the smaller one.",
+        "The recipe is on the table.",
+        "Every other Wednesday."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Do you need help carrying those boxes?",
+      "audioId": "31ded18d-cde7-a2b9-6cad-62950027b1e6",
+      "imageId": null,
+      "transcript": "Do you need help carrying those boxes?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "At the ticket counter.",
+        "It is the green button.",
+        "We need the documents by tomorrow."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Why did you choose the express delivery service?",
+      "audioId": "ee77dc21-48d0-810d-ce27-c12fd1217d78",
+      "imageId": null,
+      "transcript": "Why did you choose the express delivery service?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "The meeting was productive.",
+        "Thirty dollars per person.",
+        "Near the city center."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: How much is the monthly membership?",
+      "audioId": "8e4a363d-17ab-6545-555c-61bf7723de74",
+      "imageId": null,
+      "transcript": "How much is the monthly membership?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Yes, a link will be sent to participants.",
+        "Two more chairs, please.",
+        "I paid with a credit card."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Will the conference be held online?",
+      "audioId": "340d0d0a-d37b-05ae-1301-8f0b10bdd7f3",
+      "imageId": null,
+      "transcript": "Will the conference be held online?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "I am leaving in ten minutes.",
+        "The soup tastes delicious.",
+        "It belongs to the new intern."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Whose laptop is on the reception desk?",
+      "audioId": "636a3f2e-d7bc-76e6-b248-8268238e3366",
+      "imageId": null,
+      "transcript": "Whose laptop is on the reception desk?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "I studied there last year.",
+        "We still have plenty in the cupboard.",
+        "At the airport terminal."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Should we order more stationery?",
+      "audioId": "c2ea16a3-9f49-8207-8b3c-07c2643553ab",
+      "imageId": null,
+      "transcript": "Should we order more stationery?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Not yet; she is reviewing the final page.",
+        "There are six platforms.",
+        "The window is open."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Has the manager signed the contract?",
+      "audioId": "6914ef65-4abd-4d67-67f3-692a78380b85",
+      "imageId": null,
+      "transcript": "Has the manager signed the contract?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "The office is very bright.",
+        "It was an excellent concert.",
+        "Use the live chat on our website."
+      ],
+      "answer": "C",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: What is the fastest way to contact support?",
+      "audioId": "473f14f0-fc49-76e8-2b6f-dd0dd4996603",
+      "imageId": null,
+      "transcript": "What is the fastest way to contact support?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "Only three people attended.",
+        "Of course, it is in the top drawer.",
+        "The hotel serves breakfast."
+      ],
+      "answer": "B",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: May I borrow your calculator for a moment?",
+      "audioId": "d4d5c194-bf5b-627d-3435-4c6d0ff964c4",
+      "imageId": null,
+      "transcript": "May I borrow your calculator for a moment?"
+    },
+    {
+      "partNumber": 2,
+      "groupKey": null,
+      "questionText": "Listen to the question and choose the best response.",
+      "choices": [
+        "A digital copy will be sufficient.",
+        "They painted it last summer.",
+        "I prefer the aisle seat."
+      ],
+      "answer": "A",
+      "explanation": "Chọn câu trả lời phù hợp với từ hỏi hoặc mục đích giao tiếp: Are we supposed to bring a printed copy?",
+      "audioId": "ea0863a5-145c-feec-7d29-27e48765d718",
+      "imageId": null,
+      "transcript": "Are we supposed to bring a printed copy?"
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-1",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A building inspection",
+        "A customer workshop",
+        "A job interview",
+        "A music concert"
+      ],
+      "answer": "B",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-1",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Monday at 9:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m."
+      ],
+      "answer": "A",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-1",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts"
+      ],
+      "answer": "D",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-2",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A music concert",
+        "A building inspection",
+        "A customer workshop",
+        "A job interview"
+      ],
+      "answer": "C",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-2",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Next month at 8 p.m.",
+        "Tuesday at 10:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon"
+      ],
+      "answer": "B",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-2",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi"
+      ],
+      "answer": "A",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-3",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A job interview",
+        "A music concert",
+        "A building inspection",
+        "A customer workshop"
+      ],
+      "answer": "D",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-3",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Wednesday at 11:30 a.m.",
+        "Saturday at 6 p.m."
+      ],
+      "answer": "C",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-3",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room"
+      ],
+      "answer": "B",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-4",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A customer workshop",
+        "A job interview",
+        "A music concert",
+        "A building inspection"
+      ],
+      "answer": "A",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-4",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Thursday at 9:30 a.m."
+      ],
+      "answer": "D",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-4",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector"
+      ],
+      "answer": "C",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-5",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A building inspection",
+        "A customer workshop",
+        "A job interview",
+        "A music concert"
+      ],
+      "answer": "B",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-5",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Friday at 10:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m."
+      ],
+      "answer": "A",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-5",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts"
+      ],
+      "answer": "D",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-6",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A music concert",
+        "A building inspection",
+        "A customer workshop",
+        "A job interview"
+      ],
+      "answer": "C",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-6",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Next month at 8 p.m.",
+        "Monday at 11:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon"
+      ],
+      "answer": "B",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-6",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi"
+      ],
+      "answer": "A",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-7",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A job interview",
+        "A music concert",
+        "A building inspection",
+        "A customer workshop"
+      ],
+      "answer": "D",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-7",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Tuesday at 9:30 a.m.",
+        "Saturday at 6 p.m."
+      ],
+      "answer": "C",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-7",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room"
+      ],
+      "answer": "B",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-8",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A customer workshop",
+        "A job interview",
+        "A music concert",
+        "A building inspection"
+      ],
+      "answer": "A",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-8",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Wednesday at 10:30 a.m."
+      ],
+      "answer": "D",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-8",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector"
+      ],
+      "answer": "C",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-9",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A building inspection",
+        "A customer workshop",
+        "A job interview",
+        "A music concert"
+      ],
+      "answer": "B",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-9",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Thursday at 11:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m."
+      ],
+      "answer": "A",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-9",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts"
+      ],
+      "answer": "D",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-10",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A music concert",
+        "A building inspection",
+        "A customer workshop",
+        "A job interview"
+      ],
+      "answer": "C",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-10",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Next month at 8 p.m.",
+        "Friday at 9:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon"
+      ],
+      "answer": "B",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-10",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi"
+      ],
+      "answer": "A",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-11",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A job interview",
+        "A music concert",
+        "A building inspection",
+        "A customer workshop"
+      ],
+      "answer": "D",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-11",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Monday at 10:30 a.m.",
+        "Saturday at 6 p.m."
+      ],
+      "answer": "C",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-11",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector",
+        "Cancel the room"
+      ],
+      "answer": "B",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-12",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A customer workshop",
+        "A job interview",
+        "A music concert",
+        "A building inspection"
+      ],
+      "answer": "A",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-12",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m.",
+        "Tuesday at 11:30 a.m."
+      ],
+      "answer": "D",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-12",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts",
+        "Repair the projector"
+      ],
+      "answer": "C",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-13",
+      "questionText": "What are the speakers preparing for?",
+      "choices": [
+        "A building inspection",
+        "A customer workshop",
+        "A job interview",
+        "A music concert"
+      ],
+      "answer": "B",
+      "explanation": "Đầu hội thoại nhắc rõ customer workshop.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-13",
+      "questionText": "When will the workshop take place?",
+      "choices": [
+        "Wednesday at 9:30 a.m.",
+        "Saturday at 6 p.m.",
+        "Sunday at noon",
+        "Next month at 8 p.m."
+      ],
+      "answer": "A",
+      "explanation": "Kết hợp ngày trong lời người nữ và giờ trong lời người nam.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 3,
+      "groupKey": "conversation-13",
+      "questionText": "What will the man do next?",
+      "choices": [
+        "Repair the projector",
+        "Cancel the room",
+        "Call a taxi",
+        "Print twelve handouts"
+      ],
+      "answer": "D",
+      "explanation": "Người nam nhận nhiệm vụ in mười hai bản tài liệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-1",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station",
+        "At a hospital"
+      ],
+      "answer": "C",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-1",
+      "questionText": "Which platform should passengers for Riverton use?",
+      "choices": [
+        "Platform 30",
+        "Platform 2",
+        "Platform 21",
+        "Platform 24"
+      ],
+      "answer": "B",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-1",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station",
+        "Telephone the restaurant"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-2",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a hospital",
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station"
+      ],
+      "answer": "D",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-2",
+      "questionText": "Which platform should passengers for Lakeside use?",
+      "choices": [
+        "Platform 24",
+        "Platform 30",
+        "Platform 3",
+        "Platform 21"
+      ],
+      "answer": "C",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-2",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Telephone the restaurant",
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-3",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a railway station",
+        "At a hospital",
+        "At a restaurant",
+        "At a sports center"
+      ],
+      "answer": "A",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-3",
+      "questionText": "Which platform should passengers for Hillcrest use?",
+      "choices": [
+        "Platform 21",
+        "Platform 24",
+        "Platform 30",
+        "Platform 4"
+      ],
+      "answer": "D",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-3",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Wait outside the station",
+        "Telephone the restaurant",
+        "Speak to a staff member in blue",
+        "Buy another ticket online"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-4",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a sports center",
+        "At a railway station",
+        "At a hospital",
+        "At a restaurant"
+      ],
+      "answer": "B",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-4",
+      "questionText": "Which platform should passengers for Brookfield use?",
+      "choices": [
+        "Platform 5",
+        "Platform 21",
+        "Platform 24",
+        "Platform 30"
+      ],
+      "answer": "A",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-4",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Buy another ticket online",
+        "Wait outside the station",
+        "Telephone the restaurant",
+        "Speak to a staff member in blue"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-5",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station",
+        "At a hospital"
+      ],
+      "answer": "C",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-5",
+      "questionText": "Which platform should passengers for Greenwood use?",
+      "choices": [
+        "Platform 30",
+        "Platform 6",
+        "Platform 21",
+        "Platform 24"
+      ],
+      "answer": "B",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-5",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station",
+        "Telephone the restaurant"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-6",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a hospital",
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station"
+      ],
+      "answer": "D",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-6",
+      "questionText": "Which platform should passengers for Fairview use?",
+      "choices": [
+        "Platform 24",
+        "Platform 30",
+        "Platform 7",
+        "Platform 21"
+      ],
+      "answer": "C",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-6",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Telephone the restaurant",
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-7",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a railway station",
+        "At a hospital",
+        "At a restaurant",
+        "At a sports center"
+      ],
+      "answer": "A",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-7",
+      "questionText": "Which platform should passengers for Woodland use?",
+      "choices": [
+        "Platform 21",
+        "Platform 24",
+        "Platform 30",
+        "Platform 8"
+      ],
+      "answer": "D",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-7",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Wait outside the station",
+        "Telephone the restaurant",
+        "Speak to a staff member in blue",
+        "Buy another ticket online"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-8",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a sports center",
+        "At a railway station",
+        "At a hospital",
+        "At a restaurant"
+      ],
+      "answer": "B",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-8",
+      "questionText": "Which platform should passengers for Westport use?",
+      "choices": [
+        "Platform 9",
+        "Platform 21",
+        "Platform 24",
+        "Platform 30"
+      ],
+      "answer": "A",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-8",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Buy another ticket online",
+        "Wait outside the station",
+        "Telephone the restaurant",
+        "Speak to a staff member in blue"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-9",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station",
+        "At a hospital"
+      ],
+      "answer": "C",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-9",
+      "questionText": "Which platform should passengers for Eastvale use?",
+      "choices": [
+        "Platform 30",
+        "Platform 10",
+        "Platform 21",
+        "Platform 24"
+      ],
+      "answer": "B",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-9",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station",
+        "Telephone the restaurant"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-10",
+      "questionText": "Where is this announcement most likely being made?",
+      "choices": [
+        "At a hospital",
+        "At a restaurant",
+        "At a sports center",
+        "At a railway station"
+      ],
+      "answer": "D",
+      "explanation": "Các từ train, platform và boarding xác định bối cảnh nhà ga.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-10",
+      "questionText": "Which platform should passengers for Meadowpark use?",
+      "choices": [
+        "Platform 24",
+        "Platform 30",
+        "Platform 11",
+        "Platform 21"
+      ],
+      "answer": "C",
+      "explanation": "Nghe con số đi sau platform.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 4,
+      "groupKey": "announcement-10",
+      "questionText": "What should passengers needing help do?",
+      "choices": [
+        "Telephone the restaurant",
+        "Speak to a staff member in blue",
+        "Buy another ticket online",
+        "Wait outside the station"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo yêu cầu tìm nhân viên mặc đồng phục xanh.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    }
+  ]
+}

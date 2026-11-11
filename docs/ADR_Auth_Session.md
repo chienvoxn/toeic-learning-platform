@@ -14,10 +14,10 @@ HLD §9 cho phép JWT hoặc session; API/LLD trước đây đề xuất JWT nh
 - User dùng DynamicUpdate: login chỉ ghi lastLoginAt/updatedAt, tránh ghi lại status/password cũ nếu có thay đổi đồng thời sau khi đọc tài khoản.
 - AUTH-04 chốt 2026-11-03: [đổi mật khẩu](AUTH04_Profile_Password_Goals.md) thu hồi mọi phiên, kể cả phiên hiện tại, trong cùng transaction với hash; trả 204 không token mới. Login và đổi mật khẩu khóa cùng hàng user trước kiểm tra hash, tránh tạo phiên hợp lệ bằng mật khẩu cũ sau đổi. Logout thường vẫn chỉ thu hồi phiên hiện tại. Chính sách này không thêm API logout-all/reset password độc lập.
 - Logout ghi revoked_at cho phiên đang dùng trước khi trả 204; phiên khác vẫn hoạt động. Phát lại token/logout lại trả 401. Request đã được xác thực trước lúc logout có thể hoàn tất.
-- HTTP session, HTTP Basic và form login bị tắt. CSRF tắt vì credential chỉ nhận qua Authorization, không tự gửi bằng cookie. Không mở rộng CORS. Public POST: register, verify-email, resend-otp, login; public GET: hai health endpoint hiện hữu. Public auth bỏ qua bearer cũ để vẫn login/xác minh lại được.
+- HTTP session, HTTP Basic và form login bị tắt. CSRF tắt vì credential chỉ nhận qua Authorization, không tự gửi bằng cookie. Không mở rộng CORS. Public POST theo policy V25: register, login, forgot-password, reset-password, google/challenge, google; public GET: hai health endpoint hiện hữu. Public auth bỏ qua bearer cũ để vẫn đăng nhập hoặc khôi phục mật khẩu được.
 - CONTENT-01 mở thêm GET /api/v1/contents và /api/v1/contents/{id} theo [visibility và permission content:read](CONTENT01_Read_API.md). Hai GET này vẫn xác thực Bearer nếu được gửi, không bỏ qua token sai; không gửi token chỉ đọc PUBLIC. Các endpoint authoring/publish không được mở.
 - `/api/v1/admin/**` yêu cầu ADMIN; route khác yêu cầu xác thực trừ allowlist và ERROR dispatch nội bộ. Permission/ownership nghiệp vụ khác vẫn cần triển khai riêng.
-- Lỗi auth có code/message/traceId/details; 401 có WWW-Authenticate: Bearer. Response nhạy cảm ngăn cache. Contract lỗi đăng ký–OTP giữ nguyên. Tắt SQL logging mặc định và auto user mặc định của Spring Security.
+- Lỗi auth có code/message/traceId/details; 401 có WWW-Authenticate: Bearer. Response nhạy cảm ngăn cache. Đăng ký ACTIVE không OTP; contract recovery theo [Password_Recovery.md](Password_Recovery.md). Tắt SQL logging mặc định và auto user mặc định của Spring Security.
 
 ## Trách nhiệm thành phần
 
@@ -28,7 +28,8 @@ HLD §9 cho phép JWT hoặc session; API/LLD trước đây đề xuất JWT nh
 | UserProfileService | Đọc tài khoản bằng userId từ principal, trả DTO chỉ gồm trường được công khai. |
 | SessionToken | Sinh token, kiểm tra định dạng và băm SHA-256; không lưu token gốc. |
 | BearerSessionFilter / IdentitySecurityConfig | Đọc Authorization, tạo SecurityContext, bảo vệ route và trả 401/403 JSON. Filter chỉ gắn vào SecurityFilterChain. |
-| RegistrationService / EmailVerificationService / OtpMailService | Giữ nguyên đăng ký, cấp role LEARNER, tạo/gửi/xác minh/gửi lại OTP. |
+| RegistrationService | Tạo tài khoản ACTIVE, cấp role LEARNER; không gửi OTP hoặc tự tạo phiên đăng nhập. |
+| PasswordResetService / OtpMailService | Phát/gửi và kiểm tra OTP khôi phục mật khẩu; đổi mật khẩu và thu hồi phiên theo [policy V25](Password_Recovery.md). |
 
 ## Schema và đánh đổi
 
@@ -38,6 +39,6 @@ Mỗi request cần DB, đổi lại phiên tồn tại qua restart và logout/q
 
 ## Kiểm thử
 
-AuthFlowIntegrationTest chạy qua MockMvc + Spring Security + JPA + PostgreSQL/Flyway thật. Clock điều khiển kiểm tra expiry chính xác, không sleep. Bao phủ login đúng/sai, email không tồn tại, PENDING/LOCKED/DISABLED, token sai/hết hạn/thu hồi, nhiều phiên, không lộ bí mật, thay đổi role/trạng thái, 401/403 và đăng ký–OTP → login. Admin probe chỉ tồn tại trong test, không thêm API quản trị vào sản phẩm.
+AuthFlowIntegrationTest chạy qua MockMvc + Spring Security + JPA + PostgreSQL/Flyway thật. Clock điều khiển kiểm tra expiry chính xác, không sleep. Bao phủ login đúng/sai, email không tồn tại, PENDING/LOCKED/DISABLED, token sai/hết hạn/thu hồi, nhiều phiên, không lộ bí mật, thay đổi role/trạng thái, 401/403 và đăng ký ACTIVE không OTP → login. Admin probe chỉ tồn tại trong test, không thêm API quản trị vào sản phẩm.
 
 Chạy toàn bộ backend bằng `.\mvnw.cmd test` với datasource PostgreSQL test đã cấu hình. Không dùng DB production cho integration test.

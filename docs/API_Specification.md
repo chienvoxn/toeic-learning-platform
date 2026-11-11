@@ -1,5 +1,8 @@
 # TOEIC Learning Platform — API Specification v1.0
 
+> **EXAM-01 hiện hành:** Đã có quản lý/import đề, Teacher gửi duyệt → Admin duyệt/xuất bản, media upload/playback, thi server, autosave/submit/chấm, lịch sử và điểm ước tính. [Contract và phạm vi](EXAM01_End_To_End.md) thay các ghi chú lịch sử “chưa có” cho những luồng này; các mục DESIGN/OPEN khác không tự được chốt.
+
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** Các endpoint/DTO trong tài liệu này là contract đề xuất, không phải OpenAPI đã kiểm thử. ERD v1.6 đã có `question_versions.status` và không còn cột `learning_progress.content_id` trùng; các ghi chú “missing/duplicate” dựa trên ERD v1.3 là lịch sử. API `rating: AGAIN/HARD/GOOD/EASY` chưa khớp cột `review_history.rating integer`; API `clientSequence` chưa có cột lưu ở `attempt_answers`. `Idempotency-Key` chưa có bảng lưu yêu cầu tương ứng. Các điểm này phải được duyệt trước khi freeze contract.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -10,7 +13,7 @@
 ## 1. Contract conventions
 
 - Base URL: `/api/v1`; JSON UTF-8; `Content-Type: application/json`; HTTPS mandatory.
-- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/verify-email/resend-otp; [CONTENT-01](CONTENT01_Read_API.md) mở hai GET content, chỉ trả published PUBLIC cho Guest và thêm AUTHENTICATED khi session có content:read; PRIVATE luôn ẩn.
+- Identity hiện dùng opaque Bearer session theo [ADR-017](ADR_Auth_Session.md), thay đề xuất JWT. Guest có register/login/forgot-password/reset-password/google/challenge/google; [CONTENT-01](CONTENT01_Read_API.md) mở hai GET content, chỉ trả published PUBLIC cho Guest và thêm AUTHENTICATED khi session có content:read; PRIVATE luôn ẩn.
 - IDs UUID; timestamps ISO-8601 UTC; pagination `page` (0-based), `size` (default 20, max 100), `sort` allowlist.
 - `GET` safe; `PUT` idempotent where possible; `POST` state transition cần idempotency policy.
 - Các API cá nhân lấy actor từ phiên Bearer đã xác thực, không tin userId request. Teacher/Admin permissions theo RBAC, ownership khi sửa draft.
@@ -304,7 +307,7 @@ hơn các ví dụ OTP đăng ký lịch sử.
 **Google OIDC runtime:** public POST `/api/v1/auth/google/challenge` và
 `/api/v1/auth/google`, nonce/cookie binding, xác minh ID token và xác nhận mật khẩu
 khi link theo [Google_OAuth2.md](Google_OAuth2.md). Login/me bổ sung
-`user.localLoginEnabled`; không thay bearer/OTP contract hiện hữu.
+`user.localLoginEnabled`; giữ Bearer contract; OTP chỉ dùng khôi phục mật khẩu theo [Password_Recovery.md](Password_Recovery.md).
 
 ```json
 // POST /auth/register
@@ -334,7 +337,7 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 - `/users/me` yêu cầu permission DB `user:read:self` ở API và service, kèm ownership ở service. V14 cấp cho ba role; thu hồi grant/role có hiệu lực từ request sau khi commit, trả 403 dù session còn hợp lệ. Logout vẫn cho phép thu hồi chính session khi không còn permission nghiệp vụ. Payload role/permission trong register/login không được áp dụng; không có API tự cấp quyền.
 - Thiếu token: `401 UNAUTHENTICATED`; sai/không tồn tại/đã thu hồi hoặc tài khoản bị khóa: `401 INVALID_TOKEN`; tại hoặc sau expiresAt: `401 TOKEN_EXPIRED`. Lỗi auth có `{code,message,traceId,details:[]}` và `WWW-Authenticate: Bearer`.
 - `/api/v1/admin/**` yêu cầu ADMIN: phiên hợp lệ thiếu role trả `403 FORBIDDEN`, thiếu phiên trả 401. API admin trong catalogue vẫn là đề xuất; rule route không đồng nghĩa nghiệp vụ admin đã triển khai.
-- Register/verify-email/resend-otp và hai health endpoint cũ vẫn public. Contract lỗi đăng ký–OTP giữ nguyên.
+- POST register/login/forgot-password/reset-password/google/challenge/google và hai GET health endpoint vẫn public. Đăng ký ACTIVE không OTP; verify-email/resend-otp đã gỡ. Contract recovery theo [Password_Recovery.md](Password_Recovery.md).
 
 ### 4.2 Question version and publish
 

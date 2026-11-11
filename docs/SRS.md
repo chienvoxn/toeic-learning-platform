@@ -1,5 +1,8 @@
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
+> **EXAM-01 hiện hành:** Đã có quản lý/import đề, Teacher gửi duyệt → Admin duyệt/xuất bản, media upload/playback, thi server, autosave/submit/chấm, lịch sử và điểm ước tính. [Contract và phạm vi](EXAM01_End_To_End.md) thay các ghi chú lịch sử “chưa có” cho những luồng này; các mục DESIGN/OPEN khác không tự được chốt.
+
+
 > **Chính sách tài khoản mới 2026-11-11:** đăng ký ACTIVE ngay, đăng nhập không OTP;
 > OTP chỉ dùng quên mật khẩu theo [Password_Recovery.md](Password_Recovery.md).
 > Chính sách này thay thế các mô tả xác minh đăng ký cũ bên dưới. Google OAuth2 vẫn
@@ -72,7 +75,7 @@ Nonce một lần/cookie binding bảo vệ callback; không mở quyền Google
 2. Xác minh mật khẩu/trạng thái.
 3. Phát hành phiên đăng nhập/token và tải quyền.
 
-**Quyết định triển khai identity 2026-11-01:** theo [ADR-017](ADR_Auth_Session.md), login chỉ cho ACTIVE, phát opaque Bearer session mặc định 15 phút; mỗi request kiểm phiên/trạng thái/role từ DB. Logout thu hồi phiên hiện tại; GET /api/v1/users/me trả tài khoản và role không lộ passwordHash. Chưa xác thực trả 401, thiếu role trả 403. Đăng ký–OTP hiện hữu giữ nguyên; refresh token vẫn OPEN.
+**Quyết định triển khai identity 2026-11-01:** theo [ADR-017](ADR_Auth_Session.md), login chỉ cho ACTIVE, phát opaque Bearer session mặc định 15 phút; mỗi request kiểm phiên/trạng thái/role từ DB. Logout thu hồi phiên hiện tại; GET /api/v1/users/me trả tài khoản và role không lộ passwordHash. Chưa xác thực trả 401, thiếu role trả 403. Đăng ký ACTIVE ngay không OTP theo [policy V25](Password_Recovery.md); OTP chỉ dùng khôi phục mật khẩu; refresh token vẫn OPEN.
 
 **AUTH-04 — quyết định người dùng chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). Cập nhật tên và mục tiêu Listening + Reading tổng của chính actor; targetScore 10–990, nguyên và bội số 5 là validation mục tiêu sản phẩm, chưa có ngày mục tiêu. Đổi mật khẩu cần mật khẩu cũ đúng, ghi hash và thu hồi mọi phiên cùng transaction, 204 không token mới; sai/validation lỗi không thay đổi dữ liệu hoặc phiên. Login đồng thời không được để phiên dùng mật khẩu cũ còn hiệu lực sau đổi.
 

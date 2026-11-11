@@ -20,7 +20,7 @@ HLD Phần B ưu tiên khi xung đột với Phần A.
 - Giữ kiến trúc modular monolith.
 - Tổ chức trong các module hiện có:
   api, application, domain, infrastructure.
-- Bảo toàn chức năng đăng ký, xác minh và gửi lại OTP.
+- Bảo toàn chính sách tại docs/Password_Recovery.md: đăng ký ACTIVE ngay, không OTP và không tự đăng nhập; OTP chỉ dùng khôi phục mật khẩu. Không khôi phục verify-email/resend-otp đăng ký đã gỡ; không đánh dấu email đã xác minh khi chưa có bằng chứng.
 - Không sửa hoặc xóa migration đã áp dụng.
 - Khi thay đổi schema, thêm migration mới.
 - Không đưa mật khẩu, token hoặc API key vào code hay log.

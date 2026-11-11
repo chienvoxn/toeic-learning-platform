@@ -5,7 +5,7 @@ VALUES ('63000000-0000-0000-0000-000000000001', 'q02-fixture@example.invalid', '
 INSERT INTO user_roles (user_id, role_id)
 SELECT '63000000-0000-0000-0000-000000000001', role_id FROM roles WHERE name = 'TEACHER';
 INSERT INTO toeic_parts (part_id, part_number, skill, name) VALUES
-    (930001, 1, 'LISTENING', 'Q02 fixture part one'), (930002, 7, 'READING', 'Q02 fixture part seven');
+    (930001, 1, 'LISTENING', 'Q02 fixture part one'), (930002, 7, 'READING', 'Q02 fixture part seven') ON CONFLICT (part_number) DO NOTHING;
 INSERT INTO topics (topic_id, name) VALUES (930001, 'Q02 topic one'), (930002, 'Q02 topic two');
 INSERT INTO question_types (question_type_id, code, name) VALUES (930001, 'Q02_FIXTURE', 'Q02 fixture type');
 
@@ -33,7 +33,7 @@ INSERT INTO questions (question_id, group_id, part_id, topic_id, question_type_i
 SELECT ('73000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid,
        CASE WHEN n = 2 OR n BETWEEN 12 AND 23 AND n <> 22
             THEN ('74000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid ELSE NULL END,
-       CASE WHEN n = 2 THEN 930002 ELSE 930001 END,
+       (SELECT part_id FROM toeic_parts WHERE part_number=CASE WHEN n = 2 THEN 7 ELSE 1 END),
        CASE n WHEN 2 THEN 930002 WHEN 3 THEN NULL ELSE 930001 END,
        930001, '63000000-0000-0000-0000-000000000001'::uuid,
        CASE n WHEN 4 THEN 'DRAFT' WHEN 5 THEN 'ARCHIVED' ELSE 'PUBLISHED' END, now(), now()

@@ -1,0 +1,37 @@
+.exam-studio {max-width:1250px;margin:auto;color:#1c2940}
+.studio-heading,.studio-editor-heading {display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.studio-heading h1 {font-size:32px;font-weight:750;letter-spacing:-1px;margin:4px 0 8px}
+.studio-heading p,.studio-caption {color:#52647a;line-height:1.6}
+.studio-actions {display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0}
+.exam-studio button,.studio-file {display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border:1px solid #c9d5e2;border-radius:8px;background:white;cursor:pointer;font-size:14px;line-height:1.3}
+.exam-studio button:hover,.studio-file:hover {background:#edf4fa}
+.exam-studio button:disabled {opacity:.45;cursor:not-allowed}
+.exam-studio .selected {background:#183b61;color:white;border-color:#183b61}
+.studio-file input {max-width:190px}
+.studio-workspace {display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px;margin-top:24px;align-items:start}
+.studio-library {position:sticky;top:20px;max-height:80vh;overflow:auto}
+.studio-library>button {width:100%;display:flex;flex-direction:column;align-items:start;text-align:left;margin-bottom:10px;padding:16px;gap:7px}
+.studio-library span,.studio-library small {font-size:12px}
+.studio-editor {background:#fff;border:1px solid #dbe3eb;border-radius:14px;padding:24px;min-width:0}
+.studio-editor h2 {font-size:21px;font-weight:700}
+.studio-editor-heading span {font-size:13px;color:#52647a}
+.studio-empty {padding:60px 20px;text-align:center;line-height:1.8}
+.studio-fields {border:0;padding:0;min-width:0}
+.exam-field {display:flex;flex-direction:column;gap:7px;margin:12px 0;font-size:14px;min-width:0}
+.exam-field span {font-weight:600}
+.exam-field input,.exam-field textarea,.exam-field select,.studio-actions>input {border:1px solid #b8c7d6;border-radius:7px;padding:10px;width:100%;background:white;color:#1c2940;min-width:0}
+.exam-field input[type=file] {font-size:12px}
+.exam-field textarea {resize:vertical;min-height:76px}
+.exam-field small {overflow-wrap:anywhere}
+.exam-form-grid {display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.studio-error {padding:16px;background:#fff1ee;border:1px solid #edb8af;color:#8c3021;border-radius:8px;margin:16px 0;overflow-wrap:anywhere}
+.studio-error ul {padding-left:22px;list-style:disc;line-height:1.8}
+.studio-success {color:#156044;background:#edf8f1;padding:10px;border-radius:6px}
+.studio-question-tabs {display:flex;flex-wrap:wrap;gap:6px;padding:22px 0;border-top:1px solid #dbe3eb;margin-top:24px}
+.studio-groups,.studio-conversion {padding:16px;border:1px solid #dbe3eb;border-radius:10px;margin:20px 0}
+.studio-groups summary,.studio-conversion summary {font-weight:650;cursor:pointer}
+.studio-groups article,.studio-preview article {padding:20px 0;border-bottom:1px solid #dbe3eb}
+.studio-preview p,.preserve-lines {white-space:pre-wrap;line-height:1.7}
+.exam-media {margin:12px 0}.exam-media audio{width:100%;max-width:520px}
+.exam-studio :focus-visible {outline:3px solid #638faf;outline-offset:2px}
+@media(max-width:850px){.studio-workspace{grid-template-columns:1fr}.studio-library{position:static;max-height:260px}.studio-editor{padding:16px}.exam-form-grid{grid-template-columns:1fr}.studio-heading h1{font-size:27px}}

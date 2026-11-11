@@ -151,10 +151,10 @@ class QuestionReadIntegrationTest {
     void filtersPagesAndTotalsUseExactlyTheReadableSet() throws Exception {
         var token = token();
         mvc.perform(get("/api/v1/questions").header("Authorization", "Bearer " + token)
-                        .param("partId", "930001").param("topicId", "930001").param("difficulty", "EASY"))
+                        .param("partId", jdbc.queryForObject("select part_id from toeic_parts where part_number=1", Integer.class).toString()).param("topicId", "930001").param("difficulty", "EASY"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].questionId").value(questionId(1)));
-        mvc.perform(get("/api/v1/questions").header("Authorization", "Bearer " + token).param("partId", "930002"))
+        mvc.perform(get("/api/v1/questions").header("Authorization", "Bearer " + token).param("partId", jdbc.queryForObject("select part_id from toeic_parts where part_number=7", Integer.class).toString()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].questionId").value(questionId(2)));
         mvc.perform(get("/api/v1/questions").header("Authorization", "Bearer " + token).param("topicId", "999999"))

@@ -11,7 +11,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest(path, { token, headers = {}, body, ...options } = {}) {
+export async function apiRequest(path, { token, headers = {}, body, responseType, ...options } = {}) {
   const url = path.startsWith('http') || path.startsWith('/api/')
     ? path
     : `${API_BASE.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -19,15 +19,16 @@ export async function apiRequest(path, { token, headers = {}, body, ...options }
   const storedToken = token === null ? null : token || localStorage.getItem('auth_token');
 
   let response;
+  const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
   try {
     response = await fetch(url, {
       ...options,
       headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !multipart ? { 'Content-Type': 'application/json' } : {}),
         ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
         ...headers,
       },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}),
     });
   } catch (error) {
     if (error.name === 'AbortError') throw error;
@@ -50,6 +51,7 @@ export async function apiRequest(path, { token, headers = {}, body, ...options }
   }
 
   if (response.status === 204) return null;
+  if (responseType === 'blob') return response.blob();
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 }

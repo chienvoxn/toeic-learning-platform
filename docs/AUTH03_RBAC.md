@@ -19,7 +19,7 @@ Guest là request chưa xác thực, không phải role được lưu vào DB. D
 
 | API / quyền | Guest | Learner | Teacher | Admin |
 |---|---|---|---|---|
-| POST register/login/verify-email/resend-otp | Có | Có | Có | Có |
+| POST register/login/forgot-password/reset-password/google/challenge/google | Có | Có | Có | Có |
 | GET hai health endpoint hiện hữu | Có | Có | Có | Có |
 | GET `/api/v1/users/me` (`user:read:self`, chỉ chính mình) | 401 | Có | Có | Có |
 | POST `/api/v1/auth/logout` (chỉ phiên hiện tại) | 401 | Có | Có | Có |
@@ -52,16 +52,16 @@ Khi thêm API nghiệp vụ phải thêm guard role/permission và ownership t�
 - `SessionAuthenticationService` kiểm tra hash, expiry, revoked_at và ACTIVE trước khi tạo principal. `PermissionService` tổng hợp, loại trùng, sắp xếp quyền từ DB; snapshot principal chỉ có ID, role/permission và dùng list bất biến. Không cache quyền giữa request hoặc lưu quyền trong token.
 - `BearerSessionFilter` tạo authorities `ROLE_<name>` và permission code. Permission bắt đầu bằng `ROLE_` không được chuyển thành authority để tránh giả mạo namespace role. Không đọc role/permission từ header, query hay body.
 - API `/users/me` kiểm tra authority `user:read:self`; `@EnableMethodSecurity` và `@PreAuthorize` bảo vệ UserProfileService cùng ownership và AuthService.logout cùng session ownership.
-- Chưa xác thực: 401 (có `WWW-Authenticate: Bearer`); phiên hợp lệ thiếu quyền: 403 FORBIDDEN (không có header challenge). Cả hai giữ envelope `code/message/traceId/details`. Contract lỗi đăng ký–OTP giữ nguyên.
+- Chưa xác thực: 401 (có `WWW-Authenticate: Bearer`); phiên hợp lệ thiếu quyền: 403 FORBIDDEN (không có header challenge). Cả hai giữ envelope `code/message/traceId/details`. Đăng ký ACTIVE không OTP; contract recovery theo [Password_Recovery.md](Password_Recovery.md).
 - Thu hồi role/permission, khóa tài khoản, thu hồi phiên có hiệu lực ở request sau khi transaction thay đổi đã commit. Khóa/PENDING/DISABLED trả 401 INVALID_TOKEN cho phiên còn thời hạn; expiry giữ TOKEN_EXPIRED theo ADR-017. Request đã xác thực trước thời điểm thay đổi có thể hoàn tất. Mở khóa lại cho phép dùng session còn hạn/chưa revoked theo thiết kế hiện tại.
 
 ## Trách nhiệm từng service
 
 | Service | Trách nhiệm |
 |---|---|
-| RegistrationService | Chuẩn hóa email, băm password, tạo user PENDING và cấp duy nhất role mặc định LEARNER; khởi tạo OTP trong transaction. |
-| EmailVerificationService | Tạo/xác minh/gửi lại OTP, kiểm soát hạn dùng, số lần sai và cooldown; kích hoạt tài khoản đúng luồng. |
-| OtpMailService | Gửi email OTP qua SMTP; không quản lý quyền. |
+| RegistrationService | Chuẩn hóa email, băm password, tạo user ACTIVE và cấp duy nhất role mặc định LEARNER; không tạo OTP, gửi thư hoặc tự đăng nhập. |
+| PasswordResetService | Phát/kiểm tra OTP khôi phục, kiểm soát hạn dùng, số lần sai và cooldown; đổi mật khẩu và thu hồi phiên, không kích hoạt hoặc mở khóa tài khoản. |
+| OtpMailService | Chỉ gửi email OTP khôi phục mật khẩu qua SMTP; không quản lý quyền. |
 | AuthService | Kiểm tra thông tin đăng nhập và ACTIVE, tạo Bearer session, ghi lastLoginAt; logout chỉ session của actor đã xác thực. |
 | SessionAuthenticationService | Xác thực session và trạng thái user, đọc role/permission hiện tại từ DB và tạo principal cho mỗi request. |
 | PermissionService | Tính hợp quyền từ các role DB, loại trùng và sắp xếp; không tự cấp quyền hoặc mặc định ưu tiên ADMIN. |
@@ -69,7 +69,7 @@ Khi thêm API nghiệp vụ phải thêm guard role/permission và ownership t�
 
 ## Kiểm thử và giới hạn
 
-`AuthFlowIntegrationTest` chạy MockMvc + Security + JPA + PostgreSQL/Flyway thật với Open Session in View tắt. Các test bổ sung kiểm tra seed ba role, grant/revoke trên cùng token, hợp quyền nhiều role, thu hồi role cuối cùng, 401/403, giả mạo namespace role, ownership tại service/profile/logout và payload tự nâng quyền. Test cũ giữ kiểm tra đăng ký–OTP → login, token sai/hết hạn/thu hồi, nhiều phiên và đổi role. Trạng thái PENDING/LOCKED/DISABLED được kiểm tra cả login lẫn request dùng token đã cấp.
+`AuthFlowIntegrationTest` chạy MockMvc + Security + JPA + PostgreSQL/Flyway thật với Open Session in View tắt. Các test bổ sung kiểm tra seed ba role, grant/revoke trên cùng token, hợp quyền nhiều role, thu hồi role cuối cùng, 401/403, giả mạo namespace role, ownership tại service/profile/logout và payload tự nâng quyền. Test cũ giữ kiểm tra đăng ký ACTIVE không OTP → login, token sai/hết hạn/thu hồi, nhiều phiên và đổi role. Trạng thái PENDING/LOCKED/DISABLED được kiểm tra cả login lẫn request dùng token đã cấp.
 
 Admin probe đã có từ AUTH-02 chỉ nằm trong test và chỉ chứng minh guard role. Không coi probe này hoặc permission test của hồ sơ là bằng chứng đã kiểm thử publish, admin role assignment, audit, RAG authorization hay ownership của attempts/decks/recordings/conversations. Các API đó chưa được triển khai. Kết quả chạy test cụ thể phải đối chiếu báo cáo bàn giao và Surefire của lần chạy hiện tại.
 

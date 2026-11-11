@@ -37,6 +37,8 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
       <div className="sidebar-scroll">
         <nav aria-label="Điều hướng chính" className="sidebar-nav">{items.map(navItem)}</nav>
         <div className="sidebar-personal">
+          {navItem(['Lịch sử thi', '/exam-history', 'imgSvg7'])}
+          {user?.roles?.some(role => ['TEACHER', 'ADMIN'].includes(role)) && navItem(['Quản lý đề thi', '/teacher/tests', 'imgSvg2'])}
           {navItem(['Ghi chú của tôi', null, 'imgSvg11'])}
           {navItem(['Từ vựng của tôi', '/vocabulary?view=personal', 'imgSvg5'])}
           <button type="button" className="sidebar-link logout-link" title="Đăng xuất" onClick={async () => { await logout(); navigate('/login'); }}><FigmaAsset name="imgSvg12" /><span>Đăng xuất</span></button>

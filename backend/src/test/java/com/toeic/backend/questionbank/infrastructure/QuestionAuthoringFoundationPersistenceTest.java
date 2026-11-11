@@ -30,7 +30,7 @@ class QuestionAuthoringFoundationPersistenceTest {
     @Autowired ObjectMapper json;
 
     private Question question() {
-        var question = new Question(entityManager.find(ToeicPart.class, 910001),
+        var question = new Question(entityManager.createQuery("select p from ToeicPart p where p.partNumber=1", ToeicPart.class).getSingleResult(),
                 entityManager.find(QuestionTopic.class, 910001), entityManager.find(QuestionType.class, 910001), null, AUTHOR);
         questions.persistNew(question);
         return question;

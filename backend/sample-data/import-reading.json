@@ -1,0 +1,1783 @@
+{
+  "title": "[Mẫu] Reading 01 — Ngữ pháp, email và đơn hàng",
+  "description": "Đề tự biên soạn trải nghiệm hệ thống; audio giọng tổng hợp, không phải đề ETS. Không quy đổi điểm.",
+  "testType": "READING",
+  "durationSeconds": 4500,
+  "maxAttempts": null,
+  "conversionId": null,
+  "groups": [
+    {
+      "key": "text-completion-1",
+      "partNumber": 6,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "To: Sales staff\nSubject: Training invitation\nOur monthly workshop will be held ___[1]___ Monday, 18 May, in room 204. Please ___[2]___ your attendance by Thursday. The workshop includes a short demonstration of the new booking system. ___[3]___\nPrinted materials will be ___[4]___ at the entrance. Thank you for your cooperation.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "text-completion-2",
+      "partNumber": 6,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "To: Finance staff\nSubject: Training invitation\nOur monthly workshop will be held ___[1]___ Monday, 18 May, in room 204. Please ___[2]___ your attendance by Thursday. The workshop includes a short demonstration of the new booking system. ___[3]___\nPrinted materials will be ___[4]___ at the entrance. Thank you for your cooperation.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "text-completion-3",
+      "partNumber": 6,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "To: Operations staff\nSubject: Training invitation\nOur monthly workshop will be held ___[1]___ Monday, 18 May, in room 204. Please ___[2]___ your attendance by Thursday. The workshop includes a short demonstration of the new booking system. ___[3]___\nPrinted materials will be ___[4]___ at the entrance. Thank you for your cooperation.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "text-completion-4",
+      "partNumber": 6,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "To: Customer Service staff\nSubject: Training invitation\nOur monthly workshop will be held ___[1]___ Monday, 18 May, in room 204. Please ___[2]___ your attendance by Thursday. The workshop includes a short demonstration of the new booking system. ___[3]___\nPrinted materials will be ___[4]___ at the entrance. Thank you for your cooperation.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-1",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Oak Community Center\nWeekend photography workshop\nRegistration closes on June 10. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@oak.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-2",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Maple Community Center\nWeekend photography workshop\nRegistration closes on June 11. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@maple.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-3",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Cedar Community Center\nWeekend photography workshop\nRegistration closes on June 12. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@cedar.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-4",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Pine Community Center\nWeekend photography workshop\nRegistration closes on June 13. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@pine.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-5",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Birch Community Center\nWeekend photography workshop\nRegistration closes on June 14. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@birch.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-6",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Elm Community Center\nWeekend photography workshop\nRegistration closes on June 15. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@elm.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-7",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Willow Community Center\nWeekend photography workshop\nRegistration closes on June 16. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@willow.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-8",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Ash Community Center\nWeekend photography workshop\nRegistration closes on June 17. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@ash.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-9",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Cherry Community Center\nWeekend photography workshop\nRegistration closes on June 18. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@cherry.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "single-passage-10",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Spruce Community Center\nWeekend photography workshop\nRegistration closes on June 19. The class meets on Saturday from 10 a.m. to noon. The fee is $35 and includes a printed workbook. Participants should bring their own camera. To register, email classes@spruce.example. Beginners are welcome.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "multiple-passage-1",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Document 1 — Order confirmation\nRiverton Office Supplies\nOrder date: July 12\nOrder: 12 ergonomic chairs. Unit price: $80. Delivery charge: $20. Delivery: July 20, 9–11 a.m.\n\nDocument 2 — Email from customer\nThank you for the confirmation. Please deliver to the rear entrance because the main lobby is being painted. Our receptionist, Ms. Chen, will sign for the order. We need two additional chairs. Could you update the order and confirm the new total?",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "multiple-passage-2",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Document 1 — Order confirmation\nLakeside Office Supplies\nOrder date: July 13\nOrder: 12 ergonomic chairs. Unit price: $80. Delivery charge: $20. Delivery: July 20, 9–11 a.m.\n\nDocument 2 — Email from customer\nThank you for the confirmation. Please deliver to the rear entrance because the main lobby is being painted. Our receptionist, Ms. Chen, will sign for the order. We need two additional chairs. Could you update the order and confirm the new total?",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "multiple-passage-3",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Document 1 — Order confirmation\nHillcrest Office Supplies\nOrder date: July 14\nOrder: 12 ergonomic chairs. Unit price: $80. Delivery charge: $20. Delivery: July 20, 9–11 a.m.\n\nDocument 2 — Email from customer\nThank you for the confirmation. Please deliver to the rear entrance because the main lobby is being painted. Our receptionist, Ms. Chen, will sign for the order. We need two additional chairs. Could you update the order and confirm the new total?",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "multiple-passage-4",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Document 1 — Order confirmation\nBrookfield Office Supplies\nOrder date: July 15\nOrder: 12 ergonomic chairs. Unit price: $80. Delivery charge: $20. Delivery: July 20, 9–11 a.m.\n\nDocument 2 — Email from customer\nThank you for the confirmation. Please deliver to the rear entrance because the main lobby is being painted. Our receptionist, Ms. Chen, will sign for the order. We need two additional chairs. Could you update the order and confirm the new total?",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "key": "multiple-passage-5",
+      "partNumber": 7,
+      "instruction": "Read the passage and choose the best answer.",
+      "passageText": "Document 1 — Order confirmation\nGreenwood Office Supplies\nOrder date: July 16\nOrder: 12 ergonomic chairs. Unit price: $80. Delivery charge: $20. Delivery: July 20, 9–11 a.m.\n\nDocument 2 — Email from customer\nThank you for the confirmation. Please deliver to the rear entrance because the main lobby is being painted. Our receptionist, Ms. Chen, will sign for the order. We need two additional chairs. Could you update the order and confirm the new total?",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    }
+  ],
+  "questions": [
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The meeting starts ___ nine o’clock.",
+      "choices": [
+        "at",
+        "on",
+        "in",
+        "for"
+      ],
+      "answer": "A",
+      "explanation": "At dùng với giờ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Please submit the report ___ Friday.",
+      "choices": [
+        "during",
+        "between",
+        "throughout",
+        "by"
+      ],
+      "answer": "D",
+      "explanation": "By chỉ hạn chót.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "All employees must wear ___ identification badges.",
+      "choices": [
+        "they",
+        "themselves",
+        "their",
+        "them"
+      ],
+      "answer": "C",
+      "explanation": "Trước danh từ cần tính từ sở hữu their.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The new software is ___ than the previous version.",
+      "choices": [
+        "fastly",
+        "faster",
+        "fast",
+        "fastest"
+      ],
+      "answer": "B",
+      "explanation": "Than đi với dạng so sánh hơn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Ms. Lee has worked here ___ 2020.",
+      "choices": [
+        "since",
+        "for",
+        "during",
+        "while"
+      ],
+      "answer": "A",
+      "explanation": "Since đi với mốc thời gian.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The package will ___ tomorrow morning.",
+      "choices": [
+        "arriving",
+        "arrived",
+        "arrival",
+        "arrive"
+      ],
+      "answer": "D",
+      "explanation": "Sau will là động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "We look forward to ___ you at the conference.",
+      "choices": [
+        "seen",
+        "saw",
+        "seeing",
+        "see"
+      ],
+      "answer": "C",
+      "explanation": "Look forward to đi với V-ing.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The manager spoke ___ about the new policy.",
+      "choices": [
+        "clearing",
+        "clearly",
+        "clear",
+        "clarity"
+      ],
+      "answer": "B",
+      "explanation": "Trạng từ bổ nghĩa động từ spoke.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "___ the heavy rain, the delivery arrived on time.",
+      "choices": [
+        "Despite",
+        "Although",
+        "Because",
+        "Unless"
+      ],
+      "answer": "A",
+      "explanation": "Despite đi trước cụm danh từ.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "A receipt is required ___ you request a refund.",
+      "choices": [
+        "during",
+        "despite",
+        "because of",
+        "when"
+      ],
+      "answer": "D",
+      "explanation": "When nối mệnh đề thời gian.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The documents ___ by the supervisor yesterday.",
+      "choices": [
+        "approving",
+        "are approve",
+        "were approved",
+        "approve"
+      ],
+      "answer": "C",
+      "explanation": "Quá khứ bị động: were + phân từ.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Please contact us if you need ___ information.",
+      "choices": [
+        "add",
+        "additional",
+        "addition",
+        "additionally"
+      ],
+      "answer": "B",
+      "explanation": "Tính từ additional bổ nghĩa information.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "This room is large ___ for twenty participants.",
+      "choices": [
+        "enough",
+        "too",
+        "very",
+        "many"
+      ],
+      "answer": "A",
+      "explanation": "Cấu trúc adjective + enough.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The office is closed ___ public holidays.",
+      "choices": [
+        "at",
+        "to",
+        "from",
+        "on"
+      ],
+      "answer": "D",
+      "explanation": "On dùng với ngày.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Neither the printer nor the scanners ___ working.",
+      "choices": [
+        "be",
+        "was",
+        "are",
+        "is"
+      ],
+      "answer": "C",
+      "explanation": "Động từ hòa hợp với chủ ngữ gần nhất scanners.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "We have ___ completed the safety inspection.",
+      "choices": [
+        "still not",
+        "already",
+        "yet",
+        "ever"
+      ],
+      "answer": "B",
+      "explanation": "Already dùng trong câu khẳng định hoàn thành.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The candidate has extensive ___ in accounting.",
+      "choices": [
+        "experience",
+        "experienced",
+        "experiences of",
+        "experiencing"
+      ],
+      "answer": "A",
+      "explanation": "Experience ở đây là danh từ không đếm được.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The presentation was postponed ___ the speaker was ill.",
+      "choices": [
+        "because of",
+        "despite",
+        "during",
+        "because"
+      ],
+      "answer": "D",
+      "explanation": "Because đứng trước mệnh đề.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Please keep the entrance ___ at all times.",
+      "choices": [
+        "clarity",
+        "clears",
+        "clear",
+        "clearly"
+      ],
+      "answer": "C",
+      "explanation": "Keep + tân ngữ + tính từ.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The company plans ___ a new branch.",
+      "choices": [
+        "opens",
+        "to open",
+        "opening",
+        "opened"
+      ],
+      "answer": "B",
+      "explanation": "Plan đi với to-infinitive.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "Our sales increased ___ fifteen percent.",
+      "choices": [
+        "by",
+        "at",
+        "from",
+        "on"
+      ],
+      "answer": "A",
+      "explanation": "By chỉ mức tăng.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The assistant prepared the slides ___.",
+      "choices": [
+        "careful",
+        "care",
+        "caring",
+        "carefully"
+      ],
+      "answer": "D",
+      "explanation": "Trạng từ bổ nghĩa prepared.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The engineer ___ designed the system will lead the training.",
+      "choices": [
+        "where",
+        "whose",
+        "who",
+        "which"
+      ],
+      "answer": "C",
+      "explanation": "Who làm chủ ngữ chỉ người.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "There are only a ___ seats available.",
+      "choices": [
+        "less",
+        "few",
+        "little",
+        "much"
+      ],
+      "answer": "B",
+      "explanation": "A few đi với danh từ đếm được số nhiều.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The invoice must be paid ___ thirty days.",
+      "choices": [
+        "within",
+        "between",
+        "among",
+        "onto"
+      ],
+      "answer": "A",
+      "explanation": "Within chỉ khoảng thời hạn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "If the weather improves, we ___ the event outdoors.",
+      "choices": [
+        "held",
+        "would held",
+        "holding",
+        "will hold"
+      ],
+      "answer": "D",
+      "explanation": "Điều kiện loại 1: if hiện tại, will + V.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The customer asked ___ the warranty covered repairs.",
+      "choices": [
+        "despite",
+        "during",
+        "whether",
+        "unless"
+      ],
+      "answer": "C",
+      "explanation": "Whether mở mệnh đề nghi vấn gián tiếp.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "This is the ___ route to the airport.",
+      "choices": [
+        "shortly",
+        "shortest",
+        "shorter",
+        "short"
+      ],
+      "answer": "B",
+      "explanation": "The đi với dạng so sánh nhất.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The team is responsible ___ maintaining the equipment.",
+      "choices": [
+        "for",
+        "of",
+        "to",
+        "by"
+      ],
+      "answer": "A",
+      "explanation": "Responsible for + V-ing.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 5,
+      "groupKey": null,
+      "questionText": "The instructions should be read before ___ the machine.",
+      "choices": [
+        "operate",
+        "operated",
+        "operation of to",
+        "operating"
+      ],
+      "answer": "D",
+      "explanation": "Giới từ before đi với V-ing.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-1",
+      "questionText": "Choose the word for blank [1].",
+      "choices": [
+        "from",
+        "by",
+        "on",
+        "at"
+      ],
+      "answer": "C",
+      "explanation": "On dùng trước ngày/thứ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-1",
+      "questionText": "Choose the word for blank [2].",
+      "choices": [
+        "confirming",
+        "confirm",
+        "confirmation",
+        "confirmed"
+      ],
+      "answer": "B",
+      "explanation": "Sau please cần động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-1",
+      "questionText": "Choose the sentence for blank [3].",
+      "choices": [
+        "Participants will have time to practice using it.",
+        "The restaurant closed ten years ago.",
+        "Your flight has already departed.",
+        "The building is for sale."
+      ],
+      "answer": "A",
+      "explanation": "Câu bổ sung nói về việc thực hành hệ thống đang được giới thiệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-1",
+      "questionText": "Choose the word for blank [4].",
+      "choices": [
+        "availability",
+        "availably",
+        "avail",
+        "available"
+      ],
+      "answer": "D",
+      "explanation": "Be available: có sẵn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-2",
+      "questionText": "Choose the word for blank [1].",
+      "choices": [
+        "from",
+        "by",
+        "on",
+        "at"
+      ],
+      "answer": "C",
+      "explanation": "On dùng trước ngày/thứ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-2",
+      "questionText": "Choose the word for blank [2].",
+      "choices": [
+        "confirming",
+        "confirm",
+        "confirmation",
+        "confirmed"
+      ],
+      "answer": "B",
+      "explanation": "Sau please cần động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-2",
+      "questionText": "Choose the sentence for blank [3].",
+      "choices": [
+        "Participants will have time to practice using it.",
+        "The restaurant closed ten years ago.",
+        "Your flight has already departed.",
+        "The building is for sale."
+      ],
+      "answer": "A",
+      "explanation": "Câu bổ sung nói về việc thực hành hệ thống đang được giới thiệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-2",
+      "questionText": "Choose the word for blank [4].",
+      "choices": [
+        "availability",
+        "availably",
+        "avail",
+        "available"
+      ],
+      "answer": "D",
+      "explanation": "Be available: có sẵn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-3",
+      "questionText": "Choose the word for blank [1].",
+      "choices": [
+        "from",
+        "by",
+        "on",
+        "at"
+      ],
+      "answer": "C",
+      "explanation": "On dùng trước ngày/thứ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-3",
+      "questionText": "Choose the word for blank [2].",
+      "choices": [
+        "confirming",
+        "confirm",
+        "confirmation",
+        "confirmed"
+      ],
+      "answer": "B",
+      "explanation": "Sau please cần động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-3",
+      "questionText": "Choose the sentence for blank [3].",
+      "choices": [
+        "Participants will have time to practice using it.",
+        "The restaurant closed ten years ago.",
+        "Your flight has already departed.",
+        "The building is for sale."
+      ],
+      "answer": "A",
+      "explanation": "Câu bổ sung nói về việc thực hành hệ thống đang được giới thiệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-3",
+      "questionText": "Choose the word for blank [4].",
+      "choices": [
+        "availability",
+        "availably",
+        "avail",
+        "available"
+      ],
+      "answer": "D",
+      "explanation": "Be available: có sẵn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-4",
+      "questionText": "Choose the word for blank [1].",
+      "choices": [
+        "from",
+        "by",
+        "on",
+        "at"
+      ],
+      "answer": "C",
+      "explanation": "On dùng trước ngày/thứ cụ thể.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-4",
+      "questionText": "Choose the word for blank [2].",
+      "choices": [
+        "confirming",
+        "confirm",
+        "confirmation",
+        "confirmed"
+      ],
+      "answer": "B",
+      "explanation": "Sau please cần động từ nguyên mẫu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-4",
+      "questionText": "Choose the sentence for blank [3].",
+      "choices": [
+        "Participants will have time to practice using it.",
+        "The restaurant closed ten years ago.",
+        "Your flight has already departed.",
+        "The building is for sale."
+      ],
+      "answer": "A",
+      "explanation": "Câu bổ sung nói về việc thực hành hệ thống đang được giới thiệu.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 6,
+      "groupKey": "text-completion-4",
+      "questionText": "Choose the word for blank [4].",
+      "choices": [
+        "availability",
+        "availably",
+        "avail",
+        "available"
+      ],
+      "answer": "D",
+      "explanation": "Be available: có sẵn.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-1",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class",
+        "To announce a camera recall"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-1",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera",
+        "A hotel room"
+      ],
+      "answer": "B",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-1",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "Their own camera",
+        "A company uniform",
+        "A signed medical form",
+        "A packed dinner"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-2",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To announce a camera recall",
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-2",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A hotel room",
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera"
+      ],
+      "answer": "C",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-2",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A packed dinner",
+        "Their own camera",
+        "A company uniform",
+        "A signed medical form"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-3",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To advertise a photography class",
+        "To announce a camera recall",
+        "To request job applications",
+        "To describe a bus route"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-3",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A new camera",
+        "A hotel room",
+        "A monthly travel pass",
+        "A printed workbook"
+      ],
+      "answer": "D",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-3",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A signed medical form",
+        "A packed dinner",
+        "Their own camera",
+        "A company uniform"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-4",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To describe a bus route",
+        "To advertise a photography class",
+        "To announce a camera recall",
+        "To request job applications"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-4",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A printed workbook",
+        "A new camera",
+        "A hotel room",
+        "A monthly travel pass"
+      ],
+      "answer": "A",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-4",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A company uniform",
+        "A signed medical form",
+        "A packed dinner",
+        "Their own camera"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-5",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class",
+        "To announce a camera recall"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-5",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera",
+        "A hotel room"
+      ],
+      "answer": "B",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-5",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "Their own camera",
+        "A company uniform",
+        "A signed medical form",
+        "A packed dinner"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-6",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To announce a camera recall",
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-6",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A hotel room",
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera"
+      ],
+      "answer": "C",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-6",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A packed dinner",
+        "Their own camera",
+        "A company uniform",
+        "A signed medical form"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-7",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To advertise a photography class",
+        "To announce a camera recall",
+        "To request job applications",
+        "To describe a bus route"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-7",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A new camera",
+        "A hotel room",
+        "A monthly travel pass",
+        "A printed workbook"
+      ],
+      "answer": "D",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-7",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A signed medical form",
+        "A packed dinner",
+        "Their own camera",
+        "A company uniform"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-8",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To describe a bus route",
+        "To advertise a photography class",
+        "To announce a camera recall",
+        "To request job applications"
+      ],
+      "answer": "B",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-8",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A printed workbook",
+        "A new camera",
+        "A hotel room",
+        "A monthly travel pass"
+      ],
+      "answer": "A",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-8",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "A company uniform",
+        "A signed medical form",
+        "A packed dinner",
+        "Their own camera"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-9",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class",
+        "To announce a camera recall"
+      ],
+      "answer": "C",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-9",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera",
+        "A hotel room"
+      ],
+      "answer": "B",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-9",
+      "questionText": "What should participants bring?",
+      "choices": [
+        "Their own camera",
+        "A company uniform",
+        "A signed medical form",
+        "A packed dinner"
+      ],
+      "answer": "A",
+      "explanation": "Thông báo yêu cầu mang máy ảnh của mình.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-10",
+      "questionText": "What is the purpose of this notice?",
+      "choices": [
+        "To announce a camera recall",
+        "To request job applications",
+        "To describe a bus route",
+        "To advertise a photography class"
+      ],
+      "answer": "D",
+      "explanation": "Thông báo giới thiệu lớp nhiếp ảnh cuối tuần.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "single-passage-10",
+      "questionText": "What is included in the fee?",
+      "choices": [
+        "A hotel room",
+        "A monthly travel pass",
+        "A printed workbook",
+        "A new camera"
+      ],
+      "answer": "C",
+      "explanation": "Chi phí bao gồm printed workbook.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-1",
+      "questionText": "What did the customer originally order?",
+      "choices": [
+        "Twenty filing cabinets",
+        "Twelve ergonomic chairs",
+        "Twelve desks",
+        "Two printers"
+      ],
+      "answer": "B",
+      "explanation": "Order confirmation ghi 12 ergonomic chairs.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-1",
+      "questionText": "Why should the rear entrance be used?",
+      "choices": [
+        "The main lobby is being painted",
+        "The elevators are broken",
+        "The receptionist is on leave",
+        "The front gate opens at noon"
+      ],
+      "answer": "A",
+      "explanation": "Email nêu lý do main lobby is being painted.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-1",
+      "questionText": "Who will sign for the delivery?",
+      "choices": [
+        "The painter",
+        "The driver’s assistant",
+        "The accounting director",
+        "Ms. Chen"
+      ],
+      "answer": "D",
+      "explanation": "Ms. Chen là người ký nhận được chỉ định.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-1",
+      "questionText": "How many chairs does the customer now want in total?",
+      "choices": [
+        "Twelve",
+        "Twenty",
+        "Fourteen",
+        "Ten"
+      ],
+      "answer": "C",
+      "explanation": "12 chiếc ban đầu cộng 2 chiếc thêm = 14.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-1",
+      "questionText": "What is the updated total including the unchanged delivery charge?",
+      "choices": [
+        "$1,200",
+        "$1,140",
+        "$960",
+        "$1,120"
+      ],
+      "answer": "B",
+      "explanation": "14 × $80 + $20 vận chuyển = $1,140.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-2",
+      "questionText": "What did the customer originally order?",
+      "choices": [
+        "Twelve ergonomic chairs",
+        "Twelve desks",
+        "Two printers",
+        "Twenty filing cabinets"
+      ],
+      "answer": "A",
+      "explanation": "Order confirmation ghi 12 ergonomic chairs.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-2",
+      "questionText": "Why should the rear entrance be used?",
+      "choices": [
+        "The elevators are broken",
+        "The receptionist is on leave",
+        "The front gate opens at noon",
+        "The main lobby is being painted"
+      ],
+      "answer": "D",
+      "explanation": "Email nêu lý do main lobby is being painted.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-2",
+      "questionText": "Who will sign for the delivery?",
+      "choices": [
+        "The driver’s assistant",
+        "The accounting director",
+        "Ms. Chen",
+        "The painter"
+      ],
+      "answer": "C",
+      "explanation": "Ms. Chen là người ký nhận được chỉ định.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-2",
+      "questionText": "How many chairs does the customer now want in total?",
+      "choices": [
+        "Twenty",
+        "Fourteen",
+        "Ten",
+        "Twelve"
+      ],
+      "answer": "B",
+      "explanation": "12 chiếc ban đầu cộng 2 chiếc thêm = 14.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-2",
+      "questionText": "What is the updated total including the unchanged delivery charge?",
+      "choices": [
+        "$1,140",
+        "$960",
+        "$1,120",
+        "$1,200"
+      ],
+      "answer": "A",
+      "explanation": "14 × $80 + $20 vận chuyển = $1,140.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-3",
+      "questionText": "What did the customer originally order?",
+      "choices": [
+        "Twelve desks",
+        "Two printers",
+        "Twenty filing cabinets",
+        "Twelve ergonomic chairs"
+      ],
+      "answer": "D",
+      "explanation": "Order confirmation ghi 12 ergonomic chairs.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-3",
+      "questionText": "Why should the rear entrance be used?",
+      "choices": [
+        "The receptionist is on leave",
+        "The front gate opens at noon",
+        "The main lobby is being painted",
+        "The elevators are broken"
+      ],
+      "answer": "C",
+      "explanation": "Email nêu lý do main lobby is being painted.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-3",
+      "questionText": "Who will sign for the delivery?",
+      "choices": [
+        "The accounting director",
+        "Ms. Chen",
+        "The painter",
+        "The driver’s assistant"
+      ],
+      "answer": "B",
+      "explanation": "Ms. Chen là người ký nhận được chỉ định.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-3",
+      "questionText": "How many chairs does the customer now want in total?",
+      "choices": [
+        "Fourteen",
+        "Ten",
+        "Twelve",
+        "Twenty"
+      ],
+      "answer": "A",
+      "explanation": "12 chiếc ban đầu cộng 2 chiếc thêm = 14.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-3",
+      "questionText": "What is the updated total including the unchanged delivery charge?",
+      "choices": [
+        "$960",
+        "$1,120",
+        "$1,200",
+        "$1,140"
+      ],
+      "answer": "D",
+      "explanation": "14 × $80 + $20 vận chuyển = $1,140.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-4",
+      "questionText": "What did the customer originally order?",
+      "choices": [
+        "Two printers",
+        "Twenty filing cabinets",
+        "Twelve ergonomic chairs",
+        "Twelve desks"
+      ],
+      "answer": "C",
+      "explanation": "Order confirmation ghi 12 ergonomic chairs.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-4",
+      "questionText": "Why should the rear entrance be used?",
+      "choices": [
+        "The front gate opens at noon",
+        "The main lobby is being painted",
+        "The elevators are broken",
+        "The receptionist is on leave"
+      ],
+      "answer": "B",
+      "explanation": "Email nêu lý do main lobby is being painted.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-4",
+      "questionText": "Who will sign for the delivery?",
+      "choices": [
+        "Ms. Chen",
+        "The painter",
+        "The driver’s assistant",
+        "The accounting director"
+      ],
+      "answer": "A",
+      "explanation": "Ms. Chen là người ký nhận được chỉ định.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-4",
+      "questionText": "How many chairs does the customer now want in total?",
+      "choices": [
+        "Ten",
+        "Twelve",
+        "Twenty",
+        "Fourteen"
+      ],
+      "answer": "D",
+      "explanation": "12 chiếc ban đầu cộng 2 chiếc thêm = 14.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-4",
+      "questionText": "What is the updated total including the unchanged delivery charge?",
+      "choices": [
+        "$1,120",
+        "$1,200",
+        "$1,140",
+        "$960"
+      ],
+      "answer": "C",
+      "explanation": "14 × $80 + $20 vận chuyển = $1,140.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-5",
+      "questionText": "What did the customer originally order?",
+      "choices": [
+        "Twenty filing cabinets",
+        "Twelve ergonomic chairs",
+        "Twelve desks",
+        "Two printers"
+      ],
+      "answer": "B",
+      "explanation": "Order confirmation ghi 12 ergonomic chairs.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-5",
+      "questionText": "Why should the rear entrance be used?",
+      "choices": [
+        "The main lobby is being painted",
+        "The elevators are broken",
+        "The receptionist is on leave",
+        "The front gate opens at noon"
+      ],
+      "answer": "A",
+      "explanation": "Email nêu lý do main lobby is being painted.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-5",
+      "questionText": "Who will sign for the delivery?",
+      "choices": [
+        "The painter",
+        "The driver’s assistant",
+        "The accounting director",
+        "Ms. Chen"
+      ],
+      "answer": "D",
+      "explanation": "Ms. Chen là người ký nhận được chỉ định.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-5",
+      "questionText": "How many chairs does the customer now want in total?",
+      "choices": [
+        "Twelve",
+        "Twenty",
+        "Fourteen",
+        "Ten"
+      ],
+      "answer": "C",
+      "explanation": "12 chiếc ban đầu cộng 2 chiếc thêm = 14.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    },
+    {
+      "partNumber": 7,
+      "groupKey": "multiple-passage-5",
+      "questionText": "What is the updated total including the unchanged delivery charge?",
+      "choices": [
+        "$1,200",
+        "$1,140",
+        "$960",
+        "$1,120"
+      ],
+      "answer": "B",
+      "explanation": "14 × $80 + $20 vận chuyển = $1,140.",
+      "audioId": null,
+      "imageId": null,
+      "transcript": null
+    }
+  ]
+}

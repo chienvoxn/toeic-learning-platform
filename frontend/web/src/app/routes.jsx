@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AppProviders } from './providers';
 import HomePage from '../pages/HomePage';
 import HomeEntry from '../pages/HomeEntry';
@@ -25,11 +26,14 @@ import RequireAuth from '../components/templates/RequireAuth';
 import UnavailablePage from '../pages/UnavailablePage';
 import { useMock } from '../lib/runtime-config';
 import ContentDetailPage from '../pages/content/ContentDetailPage';
+const ExamManagementPage = lazy(() => import('../pages/admin/ExamManagementPage'));
+import ExamHistoryPage from '../pages/assessment/ExamHistoryPage';
+import RequireExamAuth from '../components/templates/RequireExamAuth';
 
 function RootLayout() {
   return (
     <AppProviders>
-      <Outlet />
+      <Suspense fallback={<p>Đang tải màn hình…</p>}><Outlet /></Suspense>
     </AppProviders>
   );
 }
@@ -47,9 +51,12 @@ export const router = createBrowserRouter([
       // Thi thử công khai, không nằm trong RequireAuth.
       { path: '/tests', element: <TestCatalogPage /> },
       { path: '/tests/:testId/overview', element: <TestOverviewPage /> },
-      { path: '/attempts/:attemptId', element: <AttemptPage /> },
-      { path: '/attempts/:attemptId/result', element: <ResultPage /> },
+      { path: '/attempts/:attemptId', element: <RequireExamAuth><AttemptPage /></RequireExamAuth> },
+      { path: '/attempts/:attemptId/result', element: <RequireExamAuth><ResultPage /></RequireExamAuth> },
       { element: <RequireAuth />, children: [
+      { path: '/teacher/tests', element: <ExamManagementPage /> },
+      { path: '/admin/tests', element: <ExamManagementPage /> },
+      { path: '/exam-history', element: <ExamHistoryPage /> },
       { path: '/dashboard', element: <HomePage /> },
       { path: '/profile', element: <ProfilePage /> },
       { path: '/settings', element: <SettingsPage /> },
