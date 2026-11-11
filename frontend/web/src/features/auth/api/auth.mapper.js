@@ -4,6 +4,7 @@ export function toClientUser(dto) {
     id: dto.userId, userId: dto.userId, email: dto.email, fullName: dto.fullName,
     avatarUrl: dto.avatarUrl ?? null, targetScore: dto.targetScore ?? null,
     roles: dto.roles ?? [], status: dto.status,
+    localLoginEnabled: dto.localLoginEnabled ?? true,
     emailVerifiedAt: dto.emailVerifiedAt, lastLoginAt: dto.lastLoginAt,
   };
 }

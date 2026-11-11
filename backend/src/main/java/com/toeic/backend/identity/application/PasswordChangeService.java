@@ -37,7 +37,7 @@ public class PasswordChangeService {
         var session = sessions.findById(principal.sessionId()).orElseThrow(AuthException::invalidToken);
         if (!"ACTIVE".equals(user.getStatus()) || !session.getUser().getUserId().equals(userId)
                 || !session.isUsable(now)) { throw AuthException.invalidToken(); }
-        if (!encoder.matches(change.currentPassword(), user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !encoder.matches(change.currentPassword(), user.getPasswordHash())) {
             throw ProfileException.currentPasswordInvalid();
         }
         user.changePasswordHash(encoder.encode(change.newPassword()), now);

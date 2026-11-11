@@ -7,27 +7,27 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import com.toeic.backend.identity.application.RegistrationException;
-import com.toeic.backend.identity.application.RegistrationProperties;
+import com.toeic.backend.identity.application.PasswordResetProperties;
 
 @Service
 public class OtpMailService {
     private final JavaMailSender sender;
-    private final RegistrationProperties properties;
+    private final PasswordResetProperties properties;
 
     public OtpMailService(
             JavaMailSender sender,
-            RegistrationProperties properties) {
+            PasswordResetProperties properties) {
         this.sender = sender;
         this.properties = properties;
     }
 
-    public void sendVerification(String email, String code) {
+    public void sendPasswordReset(String email, String code) {
         var message = new SimpleMailMessage();
         message.setFrom(properties.mailFrom());
         message.setTo(email);
-        message.setSubject("TOEIC - Xac minh email");
+        message.setSubject("ENGLINGO - Dat lai mat khau");
         message.setText(
-                "Ma xac minh cua ban: " + code
+                "Ma OTP dat lai mat khau cua ban: " + code
                 + "\nMa het han sau "
                 + properties.otpTtlSeconds()
                 + " giay. Khong chia se ma nay voi nguoi khac."

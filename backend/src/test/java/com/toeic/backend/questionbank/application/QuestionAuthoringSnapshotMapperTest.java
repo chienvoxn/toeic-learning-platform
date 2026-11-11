@@ -30,7 +30,7 @@ class QuestionAuthoringSnapshotMapperTest {
         var projection = management.from(version);
         assertEquals(version.getQuestionVersionId(), projection.prompt().questionVersionId());
         assertEquals("HIDDEN_EXPLANATION_1", projection.explanation());
-        assertEquals(List.of("A", "B"), projection.choices().stream().map(QuestionAuthoringSnapshotMapper.Choice::label).toList());
+        assertEquals(List.of("A", "B"), projection.choices().stream().map(element -> element.label()).toList());
         assertTrue(projection.choices().stream().allMatch(choice -> choice.questionVersionId().equals(version.getQuestionVersionId())));
         assertTrue(projection.choices().getFirst().isCorrect());
         String managementJson = json.writeValueAsString(projection);
@@ -70,8 +70,8 @@ class QuestionAuthoringSnapshotMapperTest {
         assertNotEquals(firstDto.prompt().questionVersionId(), secondDto.prompt().questionVersionId());
         assertEquals("HIDDEN_EXPLANATION_1", firstDto.explanation());
         assertEquals("OTHER_EXPLANATION", secondDto.explanation());
-        assertTrue(java.util.Collections.disjoint(firstDto.choices().stream().map(QuestionAuthoringSnapshotMapper.Choice::choiceId).toList(),
-                secondDto.choices().stream().map(QuestionAuthoringSnapshotMapper.Choice::choiceId).toList()));
+        assertTrue(java.util.Collections.disjoint(firstDto.choices().stream().map(element -> element.choiceId()).toList(),
+                secondDto.choices().stream().map(element -> element.choiceId()).toList()));
         assertThrows(UnsupportedOperationException.class, () -> firstDto.choices().clear());
         assertEquals("QuestionAuthoringSnapshot[redacted]", firstDto.toString());
         assertEquals("AuthoringChoice[redacted]", firstDto.choices().getFirst().toString());

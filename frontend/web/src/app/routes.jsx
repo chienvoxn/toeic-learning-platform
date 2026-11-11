@@ -1,11 +1,10 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { AppProviders } from './providers';
 import HomePage from '../pages/HomePage';
+import HomeEntry from '../pages/HomeEntry';
 import HealthPage from '../pages/HealthPage';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
-import VerifyEmailPage from '../pages/auth/VerifyEmailPage';
-import RequireAuth from '../features/auth/RequireAuth';
 import ProfilePage from '../pages/profile/ProfilePage';
 import SettingsPage from '../pages/profile/SettingsPage';
 import TestCatalogPage from '../pages/assessment/TestCatalogPage';
@@ -21,6 +20,11 @@ import WordMatchGamePage from '../pages/games/WordMatchGamePage';
 import OnboardingPage from '../pages/onboarding/OnboardingPage';
 import ListeningHubPage from '../pages/listening/ListeningHubPage';
 import NotFoundPage from '../pages/NotFoundPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import RequireAuth from '../features/auth/RequireAuth';
+import UnavailablePage from '../pages/UnavailablePage';
+import { useMock } from '../lib/runtime-config';
+import ContentDetailPage from '../pages/content/ContentDetailPage';
 
 function RootLayout() {
   return (
@@ -34,40 +38,39 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/dashboard', element: <Navigate to="/" replace /> },
+      { path: '/', element: <HomeEntry /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
-      { path: '/verify-email', element: <VerifyEmailPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/verify-email', element: <Navigate to="/login" replace /> },
+      { path: '/health', element: <HealthPage /> },
+      // Thi thử công khai, không nằm trong RequireAuth.
+      { path: '/tests', element: <TestCatalogPage /> },
+      { path: '/tests/:testId/overview', element: <TestOverviewPage /> },
+      { path: '/attempts/:attemptId', element: <AttemptPage /> },
+      { path: '/attempts/:attemptId/result', element: <ResultPage /> },
       { element: <RequireAuth />, children: [
-        { path: '/profile', element: <ProfilePage /> },
-        { path: '/settings', element: <SettingsPage /> },
-        { path: '/attempts/:attemptId', element: <AttemptPage /> },
-        { path: '/attempts/:attemptId/result', element: <ResultPage /> },
-        { path: '/vocabulary/:deckId/review', element: <VocabReviewPage /> },
-      ] },
+      { path: '/dashboard', element: <HomePage /> },
+      { path: '/profile', element: <ProfilePage /> },
+      { path: '/settings', element: <SettingsPage /> },
       { path: '/onboarding', element: <OnboardingPage /> },
 
       // Content Catalog (Figma MainScreen 1-3)
       { path: '/catalog', element: <ContentCatalogPage /> },
+      { path: '/catalog/:contentId', element: <ContentDetailPage /> },
 
       // Minigames (Figma game_margin & mobile-screen 1-5)
-      { path: '/games', element: <GamesCatalogPage /> },
-      { path: '/games/word-match', element: <WordMatchGamePage /> },
-
-      // Assessment Routes
-      { path: '/tests', element: <TestCatalogPage /> },
-      { path: '/tests/:testId/overview', element: <TestOverviewPage /> },
+      { path: '/games', element: useMock ? <GamesCatalogPage /> : <UnavailablePage title="Trò chơi học tập" /> },
+      { path: '/games/word-match', element: useMock ? <WordMatchGamePage /> : <UnavailablePage title="Trò chơi ghép từ" /> },
 
       // Vocabulary SRS Routes
       { path: '/vocabulary', element: <VocabDeckListPage /> },
       { path: '/vocabulary/:deckId', element: <VocabDeckDetailPage /> },
+      { path: '/vocabulary/:deckId/review', element: <VocabReviewPage /> },
 
       // Listening Practice Routes
-      { path: '/listening', element: <ListeningHubPage /> },
-
-      // System Health Check
-      { path: '/health', element: <HealthPage /> },
+      { path: '/listening', element: useMock ? <ListeningHubPage /> : <UnavailablePage title="Dictation và Shadowing" /> },
+      ] },
 
       // 404 Fallback
       { path: '*', element: <NotFoundPage /> },

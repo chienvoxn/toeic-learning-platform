@@ -36,14 +36,26 @@ export class FakeAuthRepository {
     return { user, token };
   }
 
-  async register({ email }) {
+  async register({ email, fullName, _password, targetScore }) {
     await delay(500);
-    return { email, status: 'PENDING' };
+    const userDto = {
+      id: 'usr_' + Date.now(),
+      email,
+      full_name: fullName,
+      target_score: Number(targetScore) || 750,
+      streak_days: 1,
+      roles: ['LEARNER'],
+    };
+    const user = toClientUser(userDto);
+    const token = 'fake_jwt_token_' + Date.now();
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+    return { user, token };
   }
 
-  async verifyEmail() { throw new Error('Xác minh OTP cần VITE_AUTH_MODE=remote.'); }
-  async resendOtp() { throw new Error('Gửi OTP cần VITE_AUTH_MODE=remote.'); }
   async changePassword() { throw new Error('Đổi mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async forgotPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async resetPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
 
   async loginWithGoogle() {
     await delay(350);
@@ -61,11 +73,15 @@ export class FakeAuthRepository {
 
   async getCurrentUser() {
     await delay(200);
+    const token = localStorage.getItem('auth_token');
     const stored = localStorage.getItem('auth_user');
-    if (stored) {
+    // Chỉ khôi phục phiên mock sau khi người dùng thực sự đăng nhập.
+    if (!token || !stored) return null;
+    try {
       return JSON.parse(stored);
+    } catch {
+      return null;
     }
-    return null;
   }
 
   async logout() {

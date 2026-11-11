@@ -54,12 +54,14 @@ export function AuthProvider({ children }) {
     return () => { clearTimeout(timer); window.removeEventListener('focus', expire); };
   }, [user]);
 
-  const login = async credentials => {
+  const authenticate = async (method, credentials) => {
     const current = ++generation.current;
-    const result = await authRepo.login(credentials);
+    const result = await authRepo[method](credentials);
     if (current === generation.current) { setUser(result.user); setSessionError(null); }
     return result.user;
   };
+  const login = credentials => authenticate('login', credentials);
+  const loginWithGoogle = credentials => authenticate('loginWithGoogle', credentials);
   const logout = async () => {
     generation.current++;
     try { await authRepo.logout(); return { revocationFailed: false }; }
@@ -72,15 +74,30 @@ export function AuthProvider({ children }) {
     if (current === generation.current) setUser(updated);
     return updated;
   };
-  const changePassword = async payload => {
-    await authRepo.changePassword(payload);
+  const changePassword = async (currentPassword, newPassword) => {
+    await authRepo.changePassword(currentPassword, newPassword);
     generation.current++;
     setUser(null);
   };
 
+  const register = async payload => {
+    const current = ++generation.current;
+    const result = await authRepo.register(payload);
+    if (!isRemoteAuth && current === generation.current) setUser(result.user);
+    return result;
+  };
+  const resetPassword = async (email, otp, newPassword) => {
+    await authRepo.resetPassword(email, otp, newPassword);
+    // Reset revokes server sessions for this account, including this browser's.
+    if (user?.email?.toLowerCase() === email.trim().toLowerCase()) {
+      generation.current++;
+      if (isRemoteAuth) clearSession(readSession()?.accessToken);
+      setUser(null);
+    }
+  };
+
   return <AuthContext.Provider value={{ user, loading, sessionError, restore, login, logout, updateProfile, changePassword,
-    register: payload => authRepo.register(payload), verifyEmail: payload => authRepo.verifyEmail(payload),
-    resendOtp: email => authRepo.resendOtp(email) }}>
+    register, loginWithGoogle, resetPassword, forgotPassword: email => authRepo.forgotPassword(email) }}>
     {children}
   </AuthContext.Provider>;
 }

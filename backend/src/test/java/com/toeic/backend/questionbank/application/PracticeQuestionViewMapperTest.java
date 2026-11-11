@@ -23,7 +23,7 @@ class PracticeQuestionViewMapperTest {
         for (var hidden : List.of("isCorrect", "correct", "explanation", "SECRET_EXPLANATION", "transcript", "storage", "password", "token")) {
             assertFalse(value.contains(hidden), hidden);
         }
-        assertEquals(List.of("A", "B"), view.choices().stream().map(QuestionPrompt.Choice::label).toList());
+        assertEquals(List.of("A", "B"), view.choices().stream().map(element -> element.label()).toList());
         assertEquals(version.getQuestionVersionId(), view.questionVersionId());
     }
     @Test void onlyMediaOnExactVersionAndExplicitAclListsAreProjected() {
@@ -36,8 +36,8 @@ class PracticeQuestionViewMapperTest {
         var metadata = new QuestionAssetMetadata(visible, "AUDIO", "audio/mpeg", 120L, 5);
         var other = new QuestionAssetMetadata(unrelated, "IMAGE", "image/png", 10L, null);
         var view = mapper.from(version, List.of(metadata, other), List.of(metadata, other));
-        assertEquals(List.of(visible), view.assets().stream().map(PracticeQuestionViewMapper.Asset::resourceId).toList());
-        assertEquals(List.of(visible), view.passage().assets().stream().map(PracticeQuestionViewMapper.Asset::resourceId).toList());
+        assertEquals(List.of(visible), view.assets().stream().map(element -> element.resourceId()).toList());
+        assertEquals(List.of(visible), view.passage().assets().stream().map(element -> element.resourceId()).toList());
         assertEquals(gv.getGroupVersionId(), view.passage().groupVersionId());
         String value = json.writeValueAsString(view);
         assertFalse(value.contains(hidden.toString())); assertFalse(value.contains(unrelated.toString()));

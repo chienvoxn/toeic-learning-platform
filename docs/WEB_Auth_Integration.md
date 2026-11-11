@@ -1,5 +1,62 @@
 # Web Identity integration
 
+## Đồng bộ remote ngày 2026-11-11 — contract hiện hành
+
+Commit `695489908ca272d77289895cb5bfd21c46c04c73` lưu 36 file web-auth local đã review trước tích hợp; đây là bản bảo toàn, **không phải bằng chứng tương thích UI/contract remote mới**. Chỉ bỏ hai dòng whitespace cuối trong AuthServiceTest khi lưu. Commit EXAM-01 `279ae7860260c9faae30d79cc60421bed05bd04e` giữ nguyên và là tổ tiên của lần tích hợp. Có thể đọc bản trước tích hợp bằng `git show 6954899:<path>`.
+
+Đã đọc 15 commit remote còn thiếu rồi merge `origin/feat/web-auth-integration` (`a6075dd`), không rebase/force push. Các thay đổi của nhóm bao gồm landing/guest practice, dashboard/content/vocabulary thật, Google OIDC và policy đăng ký ACTIVE/reset password. Không nhập nhánh bulk-import/exam chưa merge.
+
+Quyết định kết hợp:
+
+| Phần | Kết quả |
+|---|---|
+| Route/UI | Giữ landing, dashboard mới, catalog/vocabulary có guard và guest Reading sample công khai của nhóm. Sample lưu browser, chưa nối EXAM-01. |
+| Đăng ký | POST `/api/v1/auth/register`, allowlist email/password/fullName, trả 201 ACTIVE, không token và không OTP; về login. `/verify-email` cũ chuyển login. |
+| Google | Giữ GoogleSignIn, challenge cookie/nonce, password proof khi liên kết. Repository không gửi app Bearer vào challenge/login. User giữ `localLoginEnabled`; tài khoản Google-only không có form đổi mật khẩu. |
+| Recovery | POST `/auth/forgot-password` và `/auth/reset-password`; giữ UI mới. OTP chỉ cho reset, không khôi phục endpoint xác minh đăng ký cũ. |
+| Phiên | Một AuthProvider/context; canonical storage `toeic.remote.session` chứa accessToken/tokenType/expiresAt. Login/Google login gọi GET me; không dùng cached demo profile. Token legacy bị dọn khi tạo phiên. Người dùng có phiên legacy cần login lại. |
+| Khôi phục/lỗi | Giữ expiry timer/focus, storage giữa tab, generation guard cho phản hồi cũ, token matching khi 401/logout. Restore lỗi mạng giữ token và cho retry; không fallback demo. |
+| HTTP | Kết hợp chuẩn base `/api/v1`, đường dẫn `/api/health`, anonymous `token:null` hoặc `auth:false`, timeout/cancel và NETWORK_ERROR. 403/422 không xóa phiên. |
+| Profile/password | Giữ layout của nhóm, PATCH chỉ gửi field thay đổi và allowlist; null xóa target, omitted giữ target. Kiểm 10–990/bội 5 và UTF-8 password. Đổi mật khẩu ở Settings, sai current password giữ phiên; logout lỗi được báo rõ. |
+| Mode | `VITE_AUTH_MODE=remote` mặc định, độc lập `VITE_USE_MOCK=false`. Bật mock module không tự đổi auth sang fake. Muốn auth demo phải chọn `VITE_AUTH_MODE=mock`. |
+| Backend | Giữ SessionIssuer/Google/reset từ remote; cập nhật constructor của 10 AuthServiceTest đã lưu sang SessionIssuer thật. Giữ union endpoint permission và source guard EXAM-01. Không thêm nghiệp vụ backend mới. |
+
+AGENTS.md local vẫn yêu cầu giữ OTP đăng ký, nhưng backend/docs/migration V25 của nhóm đã thay policy. Theo yêu cầu tích hợp hành vi auth hiện hành, lần này theo V25; không sửa AGENTS.md local và không tự đưa OTP cũ trở lại. Toàn bộ phần dưới mục **Lịch sử trước đồng bộ** là tài liệu/bằng chứng của contract cũ, không dùng để khẳng định contract hiện tại.
+
+### Migration và phạm vi bảo toàn
+
+Origin/develop có V1–V26, gồm V24 Google/V25 reset; V27 Section local không trùng. Không sửa/đổi tên migration đã áp dụng, không sửa DB cũ đang thiếu V24/V25. Dùng DB mới `toeic_web_auth_sync_verify` cho Maven và `toeic_web_auth_sync_http_test` cho browser/HTTP, cluster kiểm thử riêng `127.0.0.1:55459`, user `q03_main_test`. Không reset hoặc xóa DB.
+
+`AGENTS.md`, Postman `api-tests/TOEIC API AUTOMATION - R2.postman_collection.json` và `tatus` nằm ngoài commit. Hash SHA-256 `tatus`: `C5DC158F6231925CDEABB6CDF81705CF9B06AC664E092F470DDF26CED1643B93`. Log, target, dist, node_modules, test-results và env local không được stage. `.env.example` chỉ chứa cấu hình công khai.
+
+### Chạy kiểm chứng sau đồng bộ
+
+Frontend: `npm test`, `npm run lint`, `npm run build`. Browser: `npm run test:auth:e2e` với frontend/backend/Mailpit thật, Chrome, `VITE_AUTH_MODE=remote`, `VITE_USE_MOCK=false`. Đặt `WEB_AUTH_BASE_URL=http://127.0.0.1:5173`, `WEB_AUTH_MAIL_URL=http://127.0.0.1:8025`, `WEB_AUTH_PSQL` là đường dẫn psql, `WEB_AUTH_FIXTURE_DB=toeic_web_auth_sync_http_test`.
+
+Fixture reset OTP chỉ sửa timestamp của tài khoản `web-auth-<UUID>@example.test` vừa tạo trong DB test được allowlist, không đổi clock production. Password/OTP/token ở bộ nhớ; không trace/video/screenshot hoặc in request nhạy cảm. Test auth E2E cũ đã chuyển sang ACTIVE/password-reset theo V25, không skip hoặc xóa để báo xanh. Google thật cần cấu hình client và tài khoản Google; browser local không thay thế kiểm chứng Google thực tế.
+
+Backend dùng Maven Wrapper, chọn test auth/Google/registration/profile/password cùng Practice/Section integration/concurrency; không lặp toàn suite chỉ để commit.
+
+### Kết quả thực tế sau tích hợp (2026-11-11)
+
+| Kiểm tra | Kết quả và phạm vi |
+|---|---|
+| `npm test` | 41/41, 0 fail/skip: cả contract local lẫn tests remote về auth/session/Google SDK/content/vocabulary/guest assessment. Transport stub, không phải HTTP thật. |
+| `npm run lint` | Exit 0, còn 4 warning tại router và hooks assessment/content/games. |
+| `npm run build` | Exit 0, production bundle thành công; cảnh báo plugin timing. Lượt đầu trong sandbox bị EPERM, chạy ngoài sandbox đạt. |
+| Maven Wrapper, DB `toeic_web_auth_sync_verify` | **323 test, 0 failure/error/skip, BUILD SUCCESS, 4:17 phút**. Gồm 18 test class auth/Google/registration/profile/password/OTP reset và Practice/Section integration/concurrency; bao gồm cả 10 AuthServiceTest được lưu trong commit bảo toàn. Không phải full backend suite. |
+| Flyway | DB mới áp dụng V1–V27; V24/V25/V26/V27 đều success. Fetch cuối vẫn không có V27 trên origin/develop hoặc remote feature. |
+| `npm run test:auth:e2e` | **4/4, không skip, 1.3 phút**, Chrome/frontend/backend/PostgreSQL/Mailpit thật trên DB `toeic_web_auth_sync_http_test`. Đăng ký ACTIVE; login sai/đúng; reload/PATCH omitted/null/validation; current password sai giữ phiên; đổi mật khẩu thu hồi hai token; login lại/logout; reset OTP sai/hết hạn/resend và thu hồi token; invalid session; offline/online retry. |
+| Git | Không còn conflict marker; cached diff check và kiểm tra artifact/credential signature đạt; ba file local ngoài commit khớp SHA-256 ban đầu. |
+
+Lệnh Maven thực tế: `mvnw.cmd -o test` với `-Dtest=AuthServiceTest,SessionIssuerTest,AuthFlowIntegrationTest,RegistrationControllerTest,RegistrationFlowIntegrationTest,ProfileFlowIntegrationTest,PasswordChangeIntegrationTest,GoogleAuthIntegrationTest,GoogleIdTokenVerifierTest,PasswordResetOtpTest,SectionAttemptIntegrationTest,SectionConcurrencyTest,PracticeAttemptIntegrationTest,PracticeAnswerIntegrationTest,PracticeSubmissionIntegrationTest,PracticeAnswerConcurrencyTest,PracticeConcurrencyTest,PracticeHttpRollbackTest`. Dùng Java 21, test datasource ở trên, pool 6, Mockito javaagent lấy từ Maven cache và JVM heap 384 MB như setup kiểm thử hiện có. Các runner/log nằm trong backend/target, không commit.
+
+Các lượt browser đầu lỗi helper không chờ form hoặc response login khi đổi trang; đã sửa đồng bộ và timeout từng thao tác 15s, kiểm tra riêng rồi chạy đủ 4 kịch bản lần cuối đạt. Không tính các lượt lỗi là đạt. Diagnostic chỉ ghi route/status; ERR_ABORTED khi chủ động đổi trang và ERR_INTERNET_DISCONNECTED trong case offline là dự kiến. Google login thực với tài khoản Google/client đã cấu hình **chưa kiểm chứng**; backend Google integration và adapter/SDK tests đã chạy.
+
+Bằng chứng EXAM-01 cũ 881 test/40 bước HTTP thuộc trạng thái trước đồng bộ, không dùng thay cho kiểm chứng merge. Nhánh bàn giao gồm EXAM-01 + web-auth bảo toàn + merge remote, không còn PR chỉ 29 file EXAM-01. Backend EXAM-01 vẫn tách trạng thái với UI: chưa nối Section vào UI, chưa protected media playback, chưa EXAM-03. CI phải kiểm tra theo SHA merge cuối sau push.
+
+## Lịch sử trước đồng bộ — contract OTP đăng ký và bằng chứng cũ
+
 ## Phạm vi và căn cứ
 
 Yêu cầu người dùng ngày 2026-11-06: tích hợp auth/profile trên `feat/web-auth-integration`, không thay đổi contract backend, chưa commit/push/merge. Đã đối chiếu SRS UC-01/02, HLD Phần B/ADR-017, LLD Identity/AUTH-04, ERD users/learning_profiles, API Specification và controller/DTO/service Identity thực tế. Các tài liệu draft/OPEN không được dùng để tự bổ sung Google OAuth, refresh token, đổi email hoặc upload avatar.

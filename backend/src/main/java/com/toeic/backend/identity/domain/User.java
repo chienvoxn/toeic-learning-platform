@@ -19,7 +19,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
     @Column(name = "full_name", nullable = false, length = 150)
@@ -67,6 +67,15 @@ public class User {
         return userId;
     }
 
+    public static User fromGoogle(String email, String fullName, OffsetDateTime now, boolean authoritativeEmail) {
+        var user = new User(email, null, fullName);
+        user.status = "ACTIVE";
+        user.emailVerifiedAt = authoritativeEmail ? now : null;
+        user.createdAt = now;
+        user.updatedAt = now;
+        return user;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -107,6 +116,17 @@ public class User {
         this.emailVerifiedAt = OffsetDateTime.now();
         this.status = "ACTIVE";
         this.updatedAt = OffsetDateTime.now();
+    }
+
+    public void activateWithoutEmailVerification(OffsetDateTime now) {
+        if (!"PENDING".equals(status)) throw new IllegalStateException("Only pending accounts can activate");
+        this.status = "ACTIVE";
+        this.updatedAt = now;
+    }
+
+    public void recordEmailProof(OffsetDateTime now) {
+        this.emailVerifiedAt = now;
+        this.updatedAt = now;
     }
 
     public void recordLogin(OffsetDateTime now) {

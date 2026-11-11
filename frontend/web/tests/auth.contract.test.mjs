@@ -22,7 +22,7 @@ beforeEach(() => {
 });
 
 test('register sends camelCase allowlist and never starts a session', async () => {
-  respond({ email: user.email, status: 'PENDING' }, 201);
+  respond({ email: user.email, status: 'ACTIVE' }, 201);
   await repo.register({ email: user.email, password: 'fixture-only', fullName: user.fullName, role: 'ADMIN', targetScore: 750 });
   assert.deepEqual(Object.keys(JSON.parse(calls[0].body)).sort(), ['email', 'fullName', 'password']);
   assert.equal(calls[0].headers.Authorization, undefined);
@@ -96,14 +96,14 @@ test('password validation enforces UTF-8 byte limit without stripping', () => {
   assert.equal(passwordError(' secret '), '');
 });
 
-test('OTP endpoints are anonymous; resend codes remain distinguishable', async () => {
+test('password recovery endpoints are anonymous; cooldown remains distinguishable', async () => {
   saveSession({ accessToken: 'session', tokenType: 'Bearer', expiresIn: 900 });
   respond({ message: 'ok' });
-  await repo.verifyEmail({ email: user.email, otp: '123456' });
-  assert.deepEqual(JSON.parse(calls[0].body), { email: user.email, otp: '123456' });
+  await repo.resetPassword(user.email, '123456', 'fixture-only');
+  assert.deepEqual(JSON.parse(calls[0].body), { email: user.email, otp: '123456', newPassword: 'fixture-only' });
   assert.equal(calls[0].headers.Authorization, undefined);
   respond({ code: 'OTP_RESEND_TOO_SOON' }, 429);
-  await assert.rejects(repo.resendOtp(user.email), { status: 429, code: 'OTP_RESEND_TOO_SOON' });
+  await assert.rejects(repo.forgotPassword(user.email), { status: 429, code: 'OTP_RESEND_TOO_SOON' });
 });
 
 test('network error never creates a fake user; logout still clears local session', async () => {

@@ -23,7 +23,7 @@ class QuestionChoiceBatchTest {
         var version = draft();
         var result = version.addChoices(List.of(new QuestionChoiceDraft("B", "B", false, 2),
                 new QuestionChoiceDraft("A", "A", true, 1)));
-        assertEquals(List.of("A", "B"), version.getChoices().stream().map(QuestionChoice::getLabel).toList());
+        assertEquals(List.of("A", "B"), version.getChoices().stream().map(element -> element.getLabel()).toList());
         assertTrue(result.stream().allMatch(choice -> choice.getQuestionVersionId().equals(version.getQuestionVersionId())));
         assertEquals(1, version.answerKey().correctChoiceIds().size());
         assertThrows(UnsupportedOperationException.class, () -> result.clear());

@@ -262,3 +262,6 @@ frontend/web/src/services/apiClient.js
 - docs/SRS.md
 
 Không frontend/web/** hoặc 39 file nền trong manifest. Người dùng đã ủy quyền stage/commit/push riêng backend EXAM-01 và kiểm CI SHA cuối, author/committer pthanh137 <sleapf137@gmail.com>; không ép cập nhật nhánh hoặc merge PR. Không tạo nhánh/worktree, Full Mock hoặc EXAM-03. Backend có test/HTTP evidence EXAM-01 riêng; **UI chưa tích hợp nên toàn bộ EXAM-01/Sprint 2 TV2 chưa được đánh dấu Done**. Media chỉ metadata được phép; chưa phát/download protected media, không trả transcript và không dùng SQL fixture thay workflow publish.
+## Ghi chú đồng bộ web-auth 2026-11-11
+
+Commit EXAM-01 `279ae7860260c9faae30d79cc60421bed05bd04e` giữ nguyên khi merge remote feature. Nhánh sau đồng bộ còn gồm commit bảo toàn web-auth `6954899` và phần UI/auth của nhóm; phạm vi PR không còn chỉ manifest 29 file EXAM-01 bên dưới. V27 không trùng remote V1–V26; DB kiểm thử mới đã áp dụng đủ V1–V27. Hồi quy merge: 323 test auth/Practice/Section và 4 browser auth E2E đạt, xem [bằng chứng và phạm vi](WEB_Auth_Integration.md). Bằng chứng 881 test/40 bước HTTP bên dưới là trước đồng bộ. Backend EXAM-01 bàn giao; UI Section, protected media playback và EXAM-03 vẫn chưa hoàn thành.

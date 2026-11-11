@@ -318,26 +318,17 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    void registrationResendAndVerificationRemainPublicAndFeedLogin() throws Exception {
+    void registrationRemainsPublicAndLogsInWithoutOtp() throws Exception {
         var newEmail = "new-" + email;
         mvc.perform(post("/api/v1/auth/register").contentType(APPLICATION_JSON)
                         .header("Authorization", "Bearer stale-token")
                         .content(mapper.writeValueAsString(Map.of("email", newEmail, "password", password,
                                 "fullName", "New learner"))))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("ACTIVE"));
         createdUsers.add(users.findByEmail(newEmail).orElseThrow().getUserId());
-        login(newEmail, password).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/v1/auth/resend-otp").contentType(APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(Map.of("email", "unknown-" + email))))
-                .andExpect(status().isOk());
-        var otp = ArgumentCaptor.forClass(String.class);
-        verify(mail).sendVerification(eq(newEmail), otp.capture());
-        mvc.perform(post("/api/v1/auth/verify-email").contentType(APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(Map.of("email", newEmail, "otp", otp.getValue()))))
-                .andExpect(status().isOk());
         login(newEmail, password).andExpect(status().isOk());
+        verifyNoInteractions(mail);
     }
-
     @ParameterizedTest
     @ValueSource(strings = {"LEARNER", "TEACHER", "ADMIN"})
     void seededRolesCanReadTheirOwnProfile(String role) throws Exception {

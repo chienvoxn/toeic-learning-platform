@@ -65,10 +65,8 @@ class AuthServiceTest {
             users,
             sessions,
             encoder,
-            tokens,
-            properties,
             clock,
-            learningProfiles
+            new SessionIssuer(sessions, learningProfiles, tokens, properties, clock)
         );
     }
 
