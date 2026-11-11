@@ -66,4 +66,19 @@ public class LearningProfileController {
                 days
         );
     }
+
+    @GetMapping("/streak")
+    public LearningStreakResponse getStreak(
+            @AuthenticationPrincipal SessionPrincipal principal,
+            @RequestParam(defaultValue = "30") int days
+    ) {
+        if (days < 1 || days > 90) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "days must be between 1 and 90"
+            );
+        }
+        return learningStatisticsService.getStreak(principal.userId(), days);
+    }
+
 }
