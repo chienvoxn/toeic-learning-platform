@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
+> **Chính sách tài khoản mới 2026-11-11:** đăng ký ACTIVE ngay, đăng nhập không OTP;
+> OTP chỉ dùng quên mật khẩu theo [Password_Recovery.md](Password_Recovery.md).
+> Chính sách này thay thế các mô tả xác minh đăng ký cũ bên dưới. Google OAuth2 vẫn
+> yêu cầu ID token hợp lệ và xác nhận mật khẩu khi link email trùng, không thêm OTP.
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** SRS là nguồn yêu cầu nghiệp vụ; HLD/LLD/API là thiết kế đề xuất triển khai. BR-02, BR-07–10, BR-15–18 và BR-22 là các điểm giao cắt quan trọng. ERD v1.6 đã bổ sung `question_versions.status`, nhưng `review_history.rating` vẫn là `integer`, chưa tương thích trực tiếp với API rating dạng chuỗi. Không coi các quyết định còn [OPEN] là yêu cầu đã phê duyệt.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -55,6 +60,11 @@
 
 ### UC-02 — Đăng nhập và phân quyền
 
+**Google OAuth2/OIDC:** bổ sung đăng nhập Google cho web theo [contract và policy](Google_OAuth2.md).
+Google subject là định danh; email local trùng không tự link, cần mật khẩu hiện tại;
+Đăng ký ACTIVE ngay; OTP chỉ dùng quên mật khẩu. Google-only mới chỉ nhận LEARNER và dùng session opaque.
+Nonce một lần/cookie binding bảo vệ callback; không mở quyền Google APIs.
+
 **Actor chính:** Learner. **Tiền điều kiện:** tài khoản tồn tại.
 
 **Luồng chính:**
@@ -63,6 +73,8 @@
 3. Phát hành phiên đăng nhập/token và tải quyền.
 
 **Quyết định triển khai identity 2026-11-01:** theo [ADR-017](ADR_Auth_Session.md), login chỉ cho ACTIVE, phát opaque Bearer session mặc định 15 phút; mỗi request kiểm phiên/trạng thái/role từ DB. Logout thu hồi phiên hiện tại; GET /api/v1/users/me trả tài khoản và role không lộ passwordHash. Chưa xác thực trả 401, thiếu role trả 403. Đăng ký–OTP hiện hữu giữ nguyên; refresh token vẫn OPEN.
+
+**AUTH-04 — quyết định người dùng chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). Cập nhật tên và mục tiêu Listening + Reading tổng của chính actor; targetScore 10–990, nguyên và bội số 5 là validation mục tiêu sản phẩm, chưa có ngày mục tiêu. Đổi mật khẩu cần mật khẩu cũ đúng, ghi hash và thu hồi mọi phiên cùng transaction, 204 không token mới; sai/validation lỗi không thay đổi dữ liệu hoặc phiên. Login đồng thời không được để phiên dùng mật khẩu cũ còn hiệu lực sau đổi.
 
 **Ngoại lệ:** đầu vào không hợp lệ; thiếu quyền; bản ghi không tồn tại; trạng thái không cho phép; lỗi mạng. Giao dịch phải an toàn, không phát sinh dữ liệu nửa chừng.
 
@@ -81,7 +93,17 @@
 
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
+**CONTENT-02 — sản phẩm chốt 2026-11-04:** [Tìm kiếm/bookmark/lịch sử](CONTENT02_Search_Bookmarks_History.md). Tìm trên title/summary/body current published, không phân biệt hoa/thường, không bỏ dấu, whitespace chuẩn hóa/max 200, ký tự wildcard literal; lọc quyền và search cùng data/count tại DB. Bookmark/history mặc định LEARNER qua permission, own actor; bookmark 201/409, bỏ own bookmark 204/404 cả khi bài ẩn. Lịch sử truy cập được ghi bằng POST rõ ràng, GET không ghi; một hàng gần nhất user/content, pin version và giờ server, chỉ hiện khi pin còn current và được đọc. Publish mới ẩn entry cũ đến lần ghi tiếp, không xóa lịch sử và không coi truy cập là hoàn thành bài.
+
 ### UC-04 — Luyện tập TOEIC theo Part
+
+**PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11:** lưu từng câu trong pin của attempt, null bỏ chọn; đúng 1, sai/bỏ trống 0; rawScore, correct/incorrect/unanswered và tỷ lệ đúng trên tổng câu, chưa quy đổi TOEIC. Submit đồng bộ/chấm/lưu nguyên tử, idempotent đọc kết quả đã lưu, tuần tự hóa với save; đã submit không sửa, chỉ owner có permission được xem key/explanation từ pin. IN_PROGRESS hết hạn không lưu/submit; GRADED vẫn replay sau hạn. Không tự trả transcript/media URL/path. [Contract và kiểm thử PRAC-02](PRAC02_Answers_Submission_Grading.md).
+**Cập nhật yêu cầu guest:** Người dùng có thể thi thử mà không đăng nhập. Bản web
+hiện mở luồng công khai với một đề Reading mẫu, lưu/chấm trên trình duyệt, không
+ghi lịch sử tài khoản và không quy đổi điểm TOEIC. Đây là ngoại lệ cho phần luyện
+thử local; luồng thi lưu trên server dưới đây vẫn chưa được hiện thực. Khi triển
+khai guest server cần đặc tả định danh khách, ownership, snapshot và thời gian
+server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
@@ -95,6 +117,8 @@
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
 ### UC-05 — Thực hiện Section Test
+
+**EXAM-01 — quyết định sản phẩm vừa chốt 2026-11-11:** thay luồng TestVersion fixed DESIGN dưới đây cho phạm vi EXAM-01 bằng snapshot từ ngân hàng published, chưa phụ thuộc EXAM-04. LISTENING đủ Part 1–4 hoặc READING đủ Part 5–7; chọn nguyên nhóm/thứ tự nghiệp vụ, đúng tổng hoặc 409; cấu hình nguyên 1–100 câu/1–120 phút là giới hạn sản phẩm, không là cấu trúc TOEIC chính thức. Server pin version/order/config/startedAt/expiresAt. Save/thay/bỏ chỉ trước hạn, submit lần đầu sau hạn được chấm đáp án đã lưu, không nhận answers trong submit. Atomic/idempotent, owner + permission đúng source, raw total/accuracy/Part statistics, key/explanation chỉ sau submit, không quy đổi TOEIC hoặc mở media path. Chưa tự chốt khi không có request (EXAM-03). [Contract, demo và trạng thái backend/UI](EXAM01_Section_Attempts.md).
 
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 

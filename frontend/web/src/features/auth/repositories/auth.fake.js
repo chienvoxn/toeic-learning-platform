@@ -1,4 +1,4 @@
-import { toClientUser } from '../api/auth.mapper';
+import { toDemoUser as toClientUser } from '../api/auth.mapper';
 
 const delay = (ms = 350) => new Promise(res => setTimeout(res, ms));
 
@@ -53,6 +53,10 @@ export class FakeAuthRepository {
     return { user, token };
   }
 
+  async changePassword() { throw new Error('Đổi mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async forgotPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async resetPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
+
   async loginWithGoogle() {
     await delay(350);
     const userDto = {
@@ -69,14 +73,15 @@ export class FakeAuthRepository {
 
   async getCurrentUser() {
     await delay(200);
+    const token = localStorage.getItem('auth_token');
     const stored = localStorage.getItem('auth_user');
-    if (stored) {
+    // Chỉ khôi phục phiên mock sau khi người dùng thực sự đăng nhập.
+    if (!token || !stored) return null;
+    try {
       return JSON.parse(stored);
+    } catch {
+      return null;
     }
-    // Mặc định cung cấp user mẫu để dev không bị chặn màn hình
-    const defaultUser = toClientUser(MOCK_LEARNER_DTO);
-    localStorage.setItem('auth_user', JSON.stringify(defaultUser));
-    return defaultUser;
   }
 
   async logout() {

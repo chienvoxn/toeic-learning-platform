@@ -1,7 +1,7 @@
 import { FakeVocabularyRepository } from './vocabulary.fake';
 import { RemoteVocabularyRepository } from './vocabulary.api';
 
-const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
+import { useMock as isMock } from '@/lib/runtime-config';
 
 class VocabularyRepositoryFactory {
   static instance = null;

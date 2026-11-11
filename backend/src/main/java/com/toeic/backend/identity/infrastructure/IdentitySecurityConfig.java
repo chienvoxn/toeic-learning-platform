@@ -8,6 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationManagers;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,7 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableConfigurationProperties(AuthProperties.class)
 public class IdentitySecurityConfig {
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
-            "/api/v1/auth/register", "/api/v1/auth/verify-email", "/api/v1/auth/resend-otp", "/api/v1/auth/login");
+            "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password", "/api/v1/auth/login",
+            "/api/v1/auth/google/challenge", "/api/v1/auth/google");
     private static final Set<String> PUBLIC_GET_PATHS = Set.of("/api/health", "/api/health/database");
 
     static boolean isPublicRequest(String method, String path) {
@@ -43,7 +46,28 @@ public class IdentitySecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new)).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
+                        // Optional bearer auth is still processed; content service filters public/member visibility.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
+                        .requestMatchers("/api/v1/teacher/contents", "/api/v1/teacher/contents/**")
+                        .hasAnyAuthority("content:manage:self", "content:manage:any")
+                        .requestMatchers("/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
+                                "/api/v1/teacher/question-groups", "/api/v1/teacher/question-groups/**")
+                        .hasAnyAuthority("question:manage:self", "question:manage:any")
+                        .requestMatchers("/api/v1/attempts", "/api/v1/attempts/**").hasAnyAuthority("practice:manage:self", "exam:manage:self")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/bookmarks").hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/history").hasAuthority("content:history:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/content-history").hasAuthority("content:history:self")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasAuthority("user:read:self"),
+                                AuthorityAuthorizationManager.hasAuthority("user:update:self")))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/password")
+                        .hasAuthority("user:password:change:self")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
+                                AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
+                                        AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(config -> config

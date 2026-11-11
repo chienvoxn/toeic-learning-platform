@@ -3,8 +3,12 @@ import { AppHeader } from '@/components/organisms/AppHeader';
 import { LearnerSidebar } from '@/components/organisms/LearnerSidebar';
 import { MobileBottomNav } from '@/components/organisms/MobileBottomNav';
 import { useLearnerLayout } from '@/hooks/useLearnerLayout';
+import { useLocation } from 'react-router-dom';
+import { demoModules, isRemoteAuth } from '@/features/auth/config';
 
 export default function LearnerTemplate({ children, className = '', variant = 'dashboard' }) {
+  const { pathname } = useLocation();
+  const demoPage = !['/profile', '/settings'].includes(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useLearnerLayout();
   const sidebarRef = useRef(null);
@@ -42,7 +46,10 @@ export default function LearnerTemplate({ children, className = '', variant = 'd
       <LearnerSidebar sidebarRef={sidebarRef} compact={sidebarCollapsed} open={menuOpen} onClose={() => setMenuOpen(false)} onCollapse={toggleSidebar} />
       <div className="learning-main">
         <AppHeader menuOpen={menuOpen} onMenu={() => setMenuOpen(true)} />
-        <main id="main-content" className={`learner-content ${className}`}>{children}</main>
+        <main id="main-content" className={`learner-content ${className}`}>
+          {!isRemoteAuth && <p className="integration-notice" role="status">Auth đang chạy DEMO, không xác thực backend.</p>}
+          {demoModules && demoPage && <p className="integration-notice" role="status">DEMO — học liệu, bài thi, từ vựng và hoạt động học chưa tích hợp backend; dữ liệu minh họa không phải tiến độ tài khoản.</p>}
+          {children}</main>
       </div>
     </div>
     <MobileBottomNav />

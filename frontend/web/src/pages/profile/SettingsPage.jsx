@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import PasswordChangeForm from '@/components/organisms/PasswordChangeForm';
+import { isRemoteAuth } from '@/features/auth/config';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -32,14 +34,16 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    const result = await logout();
+    navigate('/login', { state: { logoutFailed: result?.revocationFailed } });
   };
 
   return (
     <LearnerTemplate variant="catalog">
       <div className="max-w-md mx-auto px-4 py-4 pb-24 md:pb-12 space-y-5">
         <h1 className="text-xl font-extrabold text-gray-900">Cài Đặt & Tài Khoản</h1>
+        {isRemoteAuth && user?.localLoginEnabled !== false && <PasswordChangeForm />}
+        {user?.localLoginEnabled === false && <p className="text-sm text-slate-500">Tài khoản này đăng nhập bằng Google và chưa có mật khẩu riêng.</p>}
 
         {savedMessage && (
           <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold rounded-xl text-center animate-fade-in">
@@ -55,9 +59,9 @@ export default function SettingsPage() {
             </div>
             <div>
               <strong className="text-sm font-extrabold text-gray-900 block">{user?.fullName || 'Học viên'}</strong>
-              <span className="text-xs text-gray-400">{user?.email || 'learner@example.com'}</span>
+              <span className="text-xs text-gray-400">{user?.email}</span>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-blue-600">
-                <Target size={12} /> Mục tiêu: {user?.targetScore || 850}+ TOEIC
+                <Target size={12} /> Mục tiêu: {user?.targetScore ? user.targetScore + '+ TOEIC' : 'Chưa đặt'}
               </div>
             </div>
           </div>
@@ -71,6 +75,7 @@ export default function SettingsPage() {
           </Link>
         </div>
 
+        <p className="integration-notice">Các tùy chọn học tập, âm thanh và nhắc nhở bên dưới là demo/local, chưa được lưu qua Identity.</p>
         {/* Learning Targets Section */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs space-y-3">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">

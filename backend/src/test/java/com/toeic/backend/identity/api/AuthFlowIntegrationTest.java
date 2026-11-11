@@ -318,26 +318,17 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    void registrationResendAndVerificationRemainPublicAndFeedLogin() throws Exception {
+    void registrationRemainsPublicAndLogsInWithoutOtp() throws Exception {
         var newEmail = "new-" + email;
         mvc.perform(post("/api/v1/auth/register").contentType(APPLICATION_JSON)
                         .header("Authorization", "Bearer stale-token")
                         .content(mapper.writeValueAsString(Map.of("email", newEmail, "password", password,
                                 "fullName", "New learner"))))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("ACTIVE"));
         createdUsers.add(users.findByEmail(newEmail).orElseThrow().getUserId());
-        login(newEmail, password).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/v1/auth/resend-otp").contentType(APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(Map.of("email", "unknown-" + email))))
-                .andExpect(status().isOk());
-        var otp = ArgumentCaptor.forClass(String.class);
-        verify(mail).sendVerification(eq(newEmail), otp.capture());
-        mvc.perform(post("/api/v1/auth/verify-email").contentType(APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(Map.of("email", newEmail, "otp", otp.getValue()))))
-                .andExpect(status().isOk());
         login(newEmail, password).andExpect(status().isOk());
+        verifyNoInteractions(mail);
     }
-
     @ParameterizedTest
     @ValueSource(strings = {"LEARNER", "TEACHER", "ADMIN"})
     void seededRolesCanReadTheirOwnProfile(String role) throws Exception {
@@ -346,7 +337,13 @@ class AuthFlowIntegrationTest {
                 account.getUserId(), roles.findByName(role).orElseThrow().getRoleId());
         var token = token();
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        var expected = switch (role) {
+            case "LEARNER" -> List.of("content:bookmark:self", "content:history:self", "content:read", "exam:manage:self", "practice:manage:self", "user:password:change:self", "user:read:self", "user:update:self");
+            case "TEACHER" -> List.of("content:manage:self", "content:read", "question:manage:self", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
+            case "ADMIN" -> List.of("content:manage:any", "content:manage:self", "content:read", "question:manage:any", "question:manage:self", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
+            default -> throw new AssertionError("Unexpected seeded role");
+        };
+        assertEquals(expected, authentication.authenticate(token).permissions());
     }
 
     private int assignIsolatedRole() {
@@ -391,7 +388,8 @@ class AuthFlowIntegrationTest {
         jdbc.update("insert into user_roles (user_id, role_id) values (?, ?)", account.getUserId(), learnerId);
         var token = token();
         assertEquals(2, authentication.authenticate(token).roles().size());
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        assertEquals(List.of("content:bookmark:self", "content:history:self", "content:read", "exam:manage:self", "practice:manage:self", "user:password:change:self", "user:read:self", "user:update:self"),
+                authentication.authenticate(token).permissions());
         jdbc.update("delete from user_roles where user_id = ? and role_id = ?", account.getUserId(), roleId);
         me(token).andExpect(status().isOk());
         jdbc.update("delete from user_roles where user_id = ?", account.getUserId());
@@ -463,7 +461,8 @@ class AuthFlowIntegrationTest {
                         .header("X-Role", "ADMIN").header("X-Permissions", "user:manage")
                         .param("roles", "ADMIN").param("permissions", "user:manage"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("LEARNER"));
-        assertEquals(List.of("user:read:self"), authentication.authenticate(token).permissions());
+        assertEquals(List.of("content:bookmark:self", "content:history:self", "content:read", "exam:manage:self", "practice:manage:self", "user:password:change:self", "user:read:self", "user:update:self"),
+                authentication.authenticate(token).permissions());
         mvc.perform(put("/api/v1/admin/users/" + registered.getUserId() + "/roles")
                         .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
                         .content("{\"roles\":[\"ADMIN\"]}"))

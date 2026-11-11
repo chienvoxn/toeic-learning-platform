@@ -1,6 +1,9 @@
 package com.toeic.backend.identity.application;
 
-import java.nio.charset.StandardCharsets;
+import com.toeic.backend.identity.domain.PasswordPolicy;
+import com.toeic.backend.identity.domain.EmailAddress;
+import java.time.Clock;
+import java.time.OffsetDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,18 +20,18 @@ public class RegistrationService {
     private final UserRepository users;
     private final RoleRepository roles;
     private final PasswordEncoder encoder;
-    private final EmailVerificationService verification;
+    private final Clock clock;
 
     public RegistrationService(
             UserRepository users,
             RoleRepository roles,
             PasswordEncoder encoder,
-            EmailVerificationService verification
+            Clock clock
     ) {
         this.users = users;
         this.roles = roles;
         this.encoder = encoder;
-        this.verification = verification;
+        this.clock = clock;
     }
 
     @Transactional
@@ -36,7 +39,7 @@ public class RegistrationService {
             String email, String password, String fullName
     ) {
         String normalizedEmail =
-                EmailVerificationService.normalizeEmail(email);
+                EmailAddress.normalize(email);
 
         if (users.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new RegistrationException(
@@ -46,7 +49,7 @@ public class RegistrationService {
             );
         }
 
-        if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (!PasswordPolicy.fitsBcrypt(password)) {
             throw new RegistrationException(
                     "PASSWORD_TOO_LONG",
                     "Mat khau khong duoc vuot 72 byte UTF-8.",
@@ -68,8 +71,8 @@ public class RegistrationService {
         );
 
         user.addRole(learner);
+        user.activateWithoutEmailVerification(OffsetDateTime.now(clock));
         users.saveAndFlush(user);
-        verification.issue(user);
 
         return user;
     }

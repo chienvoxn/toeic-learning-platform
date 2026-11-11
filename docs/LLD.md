@@ -1,5 +1,12 @@
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
+> **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
+> consume và revoke sessions cùng transaction. [Thiết kế V25](Password_Recovery.md).
+
+> **Google OIDC runtime:** `GoogleIdTokenVerifier`, `GoogleAuthService`, `SessionIssuer`
+> và V24 bổ sung login Google, binding cookie/nonce một lần và explicit password linking.
+> Session email giữ nguyên; OTP chỉ dùng khôi phục mật khẩu theo policy mới. [Contract và transaction](Google_OAuth2.md).
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** Danh mục bảng ở §7.1 được trích từ ERD v1.3 cũ và chỉ mang tính lịch sử, **không phải schema v1.6 hiện hành**. ERD v1.6 đã sửa trùng `learning_progress.content_id` và bổ sung `question_versions.status`. Các vấn đề còn mở: `attempt_answers.client_sequence` chưa persisted; `review_history.rating` integer khác API enum chuỗi; chưa có `idempotency_requests`/`auth_sessions` trong ERD v1.6. Không tự coi thuật toán 4 mức SRS đã được freeze.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -10,6 +17,12 @@
 > **Phân loại:** [BASELINE] kế thừa yêu cầu đã mô tả; [DESIGN] lựa chọn triển khai ở LLD; [OPEN] phải xác nhận trước khi freeze. API contract chi tiết nằm trong `TOEIC_API_Specification_v1.0.md`.
 
 ## 1. Mục tiêu, phạm vi và ranh giới
+
+**Q-03 runtime — quyết định người dùng chốt:** QuestionAuthoringService kiểm principal/permission và ownership ở service, DTO/controller allowlist; list/history read REPEATABLE_READ, data/count cùng scope DB. Write READ_COMMITTED khóa group parents theo UUID→group versions→question parent→question versions→mọi media theo UUID→grant, giữ đến commit; parent lock tuần tự hóa working draft/archive. Published snapshot/pointer không sửa; history/pin group version tường minh, archive group không cascade nhưng Q-02 lọc group status. QuestionMediaReuseService kiểm owner/active grant và visibility/type, any không bypass; transcript ở link version–AUDIO, lỗi rollback toàn bộ. JDBC DRAFT writes và Q-01 JPA snapshot reader dùng chung transaction; clear persistence context trước DTO để không đọc collection cũ. V21 không backfill; controller, payload, error contract và kiểm thử: [Q03_Question_Authoring.md](Q03_Question_Authoring.md). Không publish workflow/upload/practice/grading.
+
+**CONTENT-03 media runtime:** ContentMediaReuseService (transaction MANDATORY, permission + actor) khóa mọi media FOR SHARE theo UUID rồi grant row FOR SHARE; owner hoặc active grant và visibility/read permission đều bắt buộc, không content:manage:any bypass. ContentAssetRepository đọc mọi link nguồn kể cả PRIVATE và ghi tập links của draft sau khi validate toàn bộ; clone sai một nguồn 409 rollback, ID gắn mới sai 404 chung, retained invalid 409 nhưng cho bỏ. Existing content write khóa content→versions→media→grants, giữ tới commit; writer nhiều loại row phải cùng thứ tự. CREATE chưa có shared parent/version nên validate media trước insert. V20 nullable owner, grants có audit và revoked state; không backfill, không created_by media. Thu hồi grant không đổi published links/quyền xem. [Contract và kiểm thử cạnh tranh](CONTENT03_Requirement_Check.md).
+
+**CONTENT-03 CRUD runtime — quyết định sản phẩm chốt, không phải AC backlog:** ContentManagementService bảo vệ permission + actor, DB own/any data/count/detail, transaction parent→version locks. POST DRAFT/PRIVATE; PATCH tạo/reuse draft từ đúng pointer, text/assets published bất biến, validate toàn bộ trước ghi. Metadata parent category/difficulty chưa version hóa: chỉ sửa khi content DRAFT, trên PUBLISHED 409 cho cả PATCH; text-only vẫn kiểm lại quyền retained media. DELETE archive parent idempotent, giữ tham chiếu và ẩn Learner data/count. V19 seed category và self/any permission; V20 thêm ownership/grant media. Các ghi chú lịch sử Teacher CRUD/media binding chưa triển khai phía dưới được thay bằng runtime này; upload, quản trị grant/ownership, publish/restore/progress vẫn ngoài phạm vi.
 
 LLD cụ thể hóa controller, application service, domain service, repository, DTO, transaction, state machine, authorization, consistency, background job, event và testing. Không thay thế ERD, SRS hay HLD. Spring Boot modular monolith là nguồn sự thật cho nghiệp vụ; FastAPI chỉ xử lý RAG/LLM. Client React/React Native không chấm điểm và không quyết định thời gian thi.
 
@@ -59,6 +72,8 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**AUTH-04 — chốt 2026-11-03:** [Phạm vi và quyết định](AUTH04_Profile_Password_Goals.md). UserProfileService kế thừa GET/PATCH me, trả/cập nhật tên và targetScore 10–990 bội số 5, null xóa/bỏ qua giữ nguyên, không ngày mục tiêu. Mapping một phần learning_profiles chỉ ghi mục tiêu và timestamp, giữ nguyên dữ liệu analytics. PasswordChangeService xác minh mật khẩu cũ và cập nhật hash + thu hồi mọi phiên cùng transaction, trả 204 không token mới. Login và đổi mật khẩu khóa cùng user trước xác minh để ngăn tạo phiên bằng credential cũ sau đổi. API/service có permission + ownership, DTO allowlist từ chối trường hệ thống. V17 chỉ seed quyền, không đổi schema mục tiêu.
+
 **AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AdminUserController/AssignRole và quyền nghiệp vụ khác bên trên vẫn là DESIGN, chưa triển khai; không coi ma trận reviewer/publisher OPEN là grant mặc định.
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
@@ -76,7 +91,11 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Chỉ hiển thị published; progress tham chiếu content version đã học; media soft-delete.
 
+**CONTENT-01 hiện thực (2026-11-02):** [Quyết định và contract](CONTENT01_Read_API.md). ContentReadService + ContentAccessPolicy xử lý hai GET qua ContentRepository/ContentMediaRepository. V15 bổ sung visibility content/media (mặc định PRIVATE), bảng learning_content_version_resources và grant content:read cho ba role. Chỉ current version published, chưa archived và có published_at hợp lệ được đọc; title/summary/body từ version, không legacy. Guest đọc PUBLIC; session + content:read đọc thêm AUTHENTICATED; PRIVATE luôn ẩn. List/count/detail áp dụng cùng predicate ở DB; DTO chuyển trong transaction REPEATABLE_READ. Danh mục trả lồng trong DTO, không thêm endpoint category riêng. content_resources legacy không dùng làm published media vì không pin version. Teacher authoring/publish, progress, bookmark, media download/upload và soft-delete vẫn chưa triển khai.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
+
+**CONTENT-02 — sản phẩm chốt 2026-11-04:** [Contract và kiểm thử](CONTENT02_Search_Bookmarks_History.md). ContentReadService mở rộng q trên title/summary/body current published, literal/case-insensitive Unicode, chuẩn hóa whitespace/max 200; cùng predicate DB cho data/count. ContentPersonalService bảo vệ API/service bằng permission + own SessionPrincipal, bookmark dùng PK V3/ON CONFLICT (201/409), DELETE own row 204/404 cả khi bài ẩn. V18 thêm learning_content_history một hàng user/content, composite FK pin version đúng content, timestamp server, index và hai permission chỉ grant mặc định LEARNER. Không hard-code cấm Teacher/Admin đã có permission. Ghi khóa riêng content rồi version đến commit; list RR lọc current/readable (history thêm pin=current). GET không ghi, POST history 204 create/update, không gán progress/completion. Nhận định bookmark chưa triển khai trong đoạn lịch sử CONTENT-01 phía trên không áp dụng sau CONTENT-02; publish/media/progress vẫn ngoài phạm vi.
 
 ### 2.3 Question Bank
 
@@ -91,9 +110,17 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Choices gắn version; không chỉnh version published; group version khớp question.
 
+**TV2 Q-01 hiện thực:** [Mapping, domain và giới hạn](Q01_Question_Domain.md) bám V4/V10, không thêm migration/API. Answer dùng question_choices.is_correct; explanation là cột question_versions. Aggregate tạo mới cascade PERSIST choice/resource, domain chỉ sửa DRAFT và kiểm tra group version; metadata media đọc qua link version có sẵn, không tạo entity media trùng. QuestionPromptMapper dùng allowlist không có answer key/explanation để Q-02 tích hợp sau; chưa quyết định quyền/publication policy. Trigger immutable, publish workflow, tags/error categories và learner answers vẫn ngoài phạm vi. Nhận định lịch sử “question_versions thiếu status” bên dưới không áp dụng cho V4 hiện có.
+
+**TV2 Q-02 hiện thực:** [Quyết định mới và contract](Q02_Question_Read_API.md) chốt Teacher/Admin + question:read, 401/403/404 theo phạm vi. QuestionReadService bảo vệ method và đọc trong REPEATABLE_READ; QuestionVersionRepository tái sử dụng Q-01, áp dụng chung predicate publication/quyền/filter ở data/count/detail. V16 thêm current pointer question/group với composite FK đúng identity, group/group version status/timestamps mặc định ẩn; không sửa migration cũ, không backfill published. DTO qua mapper allowlist, media metadata/ID đều lọc visibility và link version. Không triển khai workflow publish hoặc làm bài/chấm điểm.
+
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.4 Assessment & Blueprint
+
+**PRAC-01 review thứ tự:** V23 thêm group_question_order trên question version, không backfill. Catalog chỉ nhận group có vị trí positive/unique giữa current members, sort theo vị trí và revalidate cả membership lẫn thứ tự sau khóa. Snapshot question_order giữ nguyên sau reload. Không dùng created_at/UUID làm thứ tự nghiệp vụ; working draft/history không tham gia current membership. Chưa mở API authoring vị trí.
+
+**PRAC-01 runtime — quyết định sản phẩm 2026-11-10:** [API và kiểm thử](PRAC01_Practice_Sessions.md). PracticeSessionService bảo vệ permission/actor và ownership DB; tạo READ_COMMITTED, selector subset-sum mỗi Part + DP phân bổ tổng, không cắt nhóm/greedy false shortage. PracticeQuestionCatalog dùng query publication/type/choices/filter giữ toàn bộ group members, khóa group parents→group versions→question parents→question versions→media theo ID ổn định rồi revalidate. Attempts/snapshots ghi nguyên tử; GET REPEATABLE_READ exact pin, archive/republish không đổi nguồn. PracticeQuestionViewMapper tái sử dụng Q-01 safe mapper/metadata visibility, không question:read/owner grant cho Learner. V22 chỉ seed practice:manage:self mặc định LEARNER. 24h server, expired tính khi đọc, không scheduler, chưa answer/submit/grading/test workflow. Contract mẫu phía dưới cho phần này còn lại là DESIGN.
 
 **Tables:** `tests`, `test_versions`, `test_questions`, `test_blueprints`, `test_blueprint_items`, `attempts`, `attempt_question_snapshots`, `attempt_answers`, `attempt_part_results`, `score_conversion_tables`, `score_conversion_rules`.
 
@@ -154,6 +181,10 @@ backend/src/main/java/com/toeic/platform/
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.8 AI Tutor & RAG
+
+**Python RAG runtime:** [Hai luồng ingestion/querying](RAG_Tutor.md) dùng LangChain và index
+pgvector `rag_*` do Alembic quản lý; backend Java vẫn dùng Flyway. Các service/controller Java bên dưới vẫn là DESIGN;
+không ánh xạ chunk ID Python vào FK nghiệp vụ khi chưa có mapping tương ứng.
 
 **Tables:** `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_request_logs`, `ai_configs`, `knowledge_documents`, `knowledge_chunks`.
 
@@ -309,6 +340,10 @@ sequenceDiagram
 **Race control:** giới hạn số lượt thi cần serialization theo `(user_id,test_version_id)` hoặc advisory lock/row policy; chỉ `COUNT(*)` rồi insert là race-prone. `max_attempts=NULL` = không giới hạn. Snapshot tạo atomically với Attempt.
 
 ### 5.2 Autosave đồng thời Submit
+
+**EXAM-01 runtime — quyết định 2026-11-11:** SectionSessionService tạo bằng PracticeQuestionCatalog/PracticeUnitSelector đủ mọi Part, pin nguồn/order/config/server expiry, persist cùng transaction. PracticeSessionService/Submissions dùng chung routes/repository và requireSource guard (practice hoặc exam permission theo persisted source); endpoint union không bypass quyền theo source. AttemptGrading đã tách từ PRAC-02, không tạo grading thứ hai; Section result thêm persisted Part statistics. Save recheck now sau parent lock và chặn từ deadline, submit Section được chấm muộn, Practice vẫn từ chối; GET/result không tự chốt, worker EXAM-03 chưa có. V27 không sửa migration cũ. [Contract và test](EXAM01_Section_Attempts.md).
+
+**Runtime PRAC-02 — sản phẩm chốt 2026-11-11:** PracticeSubmissionService dùng READ_COMMITTED + cùng parent row lock cho save/submit, actor/permission và ownership/source ở DB. Save kiểm thời gian sau khóa, membership pin và composite choice. Submit chấm đồng bộ, lưu answer grading snapshots V26, part results và header GRADED cùng transaction; không worker/outbox hoặc intermediate SUBMITTED persisted. GRADED replay kết quả đã lưu trước expiry check; result REPEATABLE_READ chỉ cho owner có permission. Đúng=1, sai/bỏ trống=0, accuracy đúng/tổng (phần trăm 2 chữ số); explanation chỉ trong result sau submit. HLD Phần B §25 có cùng override runtime; diagrams/Idempotency-Key/background bên dưới là DESIGN cho Test tương lai. [Chi tiết](PRAC02_Answers_Submission_Grading.md).
 
 ```mermaid
 sequenceDiagram

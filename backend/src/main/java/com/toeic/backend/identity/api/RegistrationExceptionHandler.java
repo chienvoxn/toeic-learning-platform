@@ -4,12 +4,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.toeic.backend.identity.application.RegistrationException;
 
-@RestControllerAdvice(assignableTypes = RegistrationController.class)
+@RestControllerAdvice(assignableTypes = {RegistrationController.class, PasswordResetController.class})
 public class RegistrationExceptionHandler {
 
     @ExceptionHandler(RegistrationException.class)
@@ -24,9 +25,9 @@ public class RegistrationExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     public ResponseEntity<ErrorResponse> handleValidation(
-            MethodArgumentNotValidException exception
+            Exception exception
     ) {
         return ResponseEntity
                 .badRequest()

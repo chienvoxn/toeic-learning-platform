@@ -7,13 +7,14 @@ from langchain_core.documents import Document
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 
-from app.service import DocumentRejected, RagService
-from app.store import IndexConfigurationError, VectorStore, validate_vector
+from app.infrastructure.vector_store import IndexConfigurationError, VectorStore, validate_vector
+from app.knowledge.errors import DocumentRejected
+from app.knowledge.service import KnowledgeService
 
 
 def test_index_persists_across_restart_and_rejects_different_vector_space(options, provider):
     store = VectorStore(options)
-    service = RagService(options, store, provider)
+    service = KnowledgeService(options, store, provider)
     service.ingest(UUID(DOC_ID), "Grammar", [Document(page_content="Present perfect")], None)
     store.close()
     reopened = VectorStore(options)
@@ -22,6 +23,24 @@ def test_index_persists_across_restart_and_rejects_different_vector_space(option
     changed = options.model_copy(update={"embedding_dimensions": 256})
     with pytest.raises(IndexConfigurationError):
         VectorStore(changed)
+
+
+def test_index_rejects_openai_vectors_after_switch_to_gemini(options):
+    from sqlalchemy import text
+
+    store = VectorStore(options)
+    old_signature = (
+        f"openai:text-embedding-3-small:{options.embedding_dimensions}:"
+        f"{options.chunk_size}:{options.chunk_overlap}:v1"
+    )
+    with store.engine.begin() as connection:
+        connection.execute(
+            text("UPDATE rag_index_config SET signature = :signature WHERE id = 1"),
+            {"signature": old_signature},
+        )
+    store.close()
+    with pytest.raises(IndexConfigurationError):
+        VectorStore(options)
 
 
 @pytest.mark.parametrize("vector", [[0.0] * 128, [1.0], [math.nan] * 128, [math.inf] * 128])
@@ -41,7 +60,7 @@ def test_postgres_column_supports_cosine_distance_operator(options):
 
 def test_chunking_keeps_page_and_rejects_empty_text(options, provider):
     store = VectorStore(options)
-    service = RagService(options, store, provider)
+    service = KnowledgeService(options, store, provider)
     service.ingest(
         UUID(DOC_ID),
         "Grammar",

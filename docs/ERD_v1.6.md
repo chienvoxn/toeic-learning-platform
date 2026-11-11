@@ -1,6 +1,32 @@
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **EXAM-01 V27 runtime — sản phẩm chốt 2026-11-11:** attempts thêm section_type VARCHAR(20) và configured_duration_seconds INTEGER nullable cho rows cũ; SECTION_SNAPSHOT bắt buộc attempt_type=SECTION, test_version_id NULL, section_type LISTENING/READING, duration 60–7200 giây/bội 60, total_questions 1–100, expires_at = started_at + configured_duration_seconds. Source khác giữ hai cột NULL. questionCount pin bằng total_questions, Part bắt buộc suy từ section_type, tập/order version pin bằng snapshots V10. Không backfill/sửa V1–V26. V27 seed exam:manage:self chỉ mặc định LEARNER. Membership đủ mọi Part và feasibility nguyên nhóm được application enforce; chấm/answer/part results dùng V5/V26. [Contract/schema/kiểm thử](EXAM01_Section_Attempts.md).
+
+> **PRAC-02 V26 runtime — quyết định sản phẩm 2026-11-11:** giữ bảng V5/V10, thêm attempt_answers.correct_choice_id UUID nullable với composite FK `(question_version_id,correct_choice_id)` → question_choices, explanation_snapshot TEXT nullable và part_number_snapshot INTEGER nullable/check 1–7. Không backfill key/kết quả cũ, không sửa V1–V23. Trước submit is_correct/key/part snapshot NULL; submit tạo cả row bỏ trống, lưu bool/key/explanation/Part và attempt_part_results cùng header GRADED trong một transaction. Khóa parent/ownership/source, kiểm membership ở application và composite FK choice DB; không global FK answers→practice snapshot vì còn source TEST_VERSION DESIGN. rawScore/count/accuracy suy từ kết quả đúng/sai đã persisted, không từ đáp án current published. [API, quyết định và kiểm thử](PRAC02_Answers_Submission_Grading.md).
+> **V25:** tạo `password_reset_otps`, không tái sử dụng OTP xác minh cũ; chuyển user
+> PENDING có local password sang ACTIVE mà không giả lập email proof, giữ tài khoản
+> bị khóa. Không sửa migration cũ. [Policy mới](Password_Recovery.md).
+
+> **V24 Google OIDC:** `google_identities` dùng Google subject làm PK, unique user FK;
+> `google_login_challenges` lưu hash nonce/binding, TTL và thời điểm consume. Cho phép
+> users.password_hash NULL với Google-only; không đổi credential user hiện hữu.
+> V1–V23 giữ nguyên. [Policy và contract](Google_OAuth2.md).
+
+> **PRAC-01 V22/V23 runtime:** tái sử dụng attempts và attempt_question_snapshots V5/V10; PRACTICE_SNAPSHOT, test_version_id NULL, pin version/group/order nguyên tử, expires_at 24h server. V22 seed practice:manage:self cho LEARNER. V23 thêm question_versions.group_question_order nullable/positive; không backfill hoặc sửa V1–V22. Group cần đủ vị trí unique giữa current members; history/draft có thể cùng vị trí. Không suy thứ tự từ created_at/UUID, chưa có API authoring vị trí. Snapshot giữ tham chiếu/order sau archive/republish; media visibility không bị bypass. Chưa answer/submit/grading. [Contract và quyết định](PRAC01_Practice_Sessions.md).
+
+> **Q-03 V21 — schema authoring runtime:** question_groups.created_by UUID nullable FK users(user_id), index creator; không suy owner cho legacy. Thêm transcript TEXT nullable trên question_resources và question_group_version_resources, pin theo đúng version/media; không sửa/fallback/backfill media_resources.transcript. Tái sử dụng V20 owner/grant và V16 published pointers; seed SINGLE_CHOICE và question:manage:self/any, mặc định Teacher/Admin self, chỉ Admin any. Không backfill publication, owner/grant hoặc thay published links. [API, transaction và giới hạn](Q03_Question_Authoring.md). DBML lịch sử và V1–V20 giữ nguyên.
+
 > **Trạng thái:** Logical schema từ DBML v1.6 được cung cấp; chưa xác nhận import, migration, constraints hay JPA mapping.
+
+> **CONTENT-03 V20 — schema media runtime:** media_resources.owner_id UUID nullable FK users(user_id), index owner; không created_by/default owner/backfill. media_reuse_grants(media_id UUID FK media_resources.resource_id,user_id UUID FK users,granted_by UUID FK users,granted_at timestamptz NOT NULL,revoked_by UUID FK users nullable,revoked_at timestamptz nullable), PK(media_id,user_id), index user. Revocation identity/time cùng null hoặc cùng có; revoked_at>=granted_at. Active khi revoked_at null. Grant chỉ authoring/reuse, không thay Learner visibility; không đổi published links. Chưa có API cấp/thu hồi hoặc chuyển owner. [Contract, mapping/repository và khóa DB](CONTENT03_Requirement_Check.md). DBML lịch sử và V1–V19 giữ nguyên.
+
+> **CONTENT-03 V19 (2026-11-04):** seed sáu content_categories theo code GRAMMAR/VOCAB/LISTENING/READING/STRATEGIES/DOCS và permission/role_permissions content:manage:self/any, không đổi category hiện có. Content owner ở learning_contents.author_id, version creator ở learning_content_versions.created_by; archive đổi content.status và giữ pointer/FK bookmark/history/assets. Category/difficulty vẫn ở parent, chỉ sửa khi DRAFT. Media owner/grant bổ sung riêng tại V20 ở trên, không suy từ content/version creator. [Quyết định sản phẩm](CONTENT03_Requirement_Check.md).
+
+> **Cập nhật runtime CONTENT-01 (2026-11-02):** DBML bên dưới giữ làm lịch sử. V15 mở rộng V3/V10 với visibility PUBLIC/AUTHENTICATED/PRIVATE (default PRIVATE) trên learning_contents/media_resources và bảng learning_content_version_resources(content_version_id,resource_id,display_order), FK tới version/media, PK ghép hai ID. Không đổi migration cũ. Mapping/query đọc và quyết định không backfill content_resources legacy: [CONTENT01_Read_API.md](CONTENT01_Read_API.md).
+
+> **Cập nhật runtime Q-02 (2026-11-02):** V16 thêm questions.current_published_version_id và question_groups.current_published_version_id, composite FK cùng question/group; question_groups.status và question_group_versions.status/published_at/archived_at, default DRAFT/pointer NULL. Thêm unique (group_version_id,group_id) phục vụ FK, không backfill published. Đây là metadata cho API đọc, không phải publish workflow; [Q02_Question_Read_API.md](Q02_Question_Read_API.md). V1–V15 và DBML lịch sử giữ nguyên.
+
+> **Cập nhật runtime CONTENT-02 (2026-11-04):** V18 thêm learning_content_history(user_id,content_id,content_version_id,last_accessed_at), PK(user_id,content_id), FK user/content và composite FK content/version tới V10; index user/time/content và version. Bookmark tái sử dụng bảng/PK V3, thêm index user/created_at/content. Hai permission content:bookmark:self/content:history:self chỉ grant mặc định LEARNER; lịch sử là truy cập, không ghi learning_progress/completion. [Quyết định sản phẩm](CONTENT02_Search_Bookmarks_History.md). DBML nguồn và V1–V17 giữ nguyên.
 
 ## 1. Danh mục bảng
 
@@ -353,6 +379,8 @@ Table attempts {
   test_version_id uuid
   attempt_type varchar(30) [not null]
   attempt_source_type varchar(30) [not null]
+  section_type varchar(20) // V27, NULL ngoài SECTION_SNAPSHOT
+  configured_duration_seconds integer // V27, Section 60..7200, bội 60
   expires_at timestamptz [not null]
   max_attempts_snapshot integer
   status varchar(20) [not null]
@@ -376,6 +404,9 @@ Table attempt_answers {
   question_version_id uuid [not null]
   selected_choice_id uuid
   is_correct boolean
+  correct_choice_id uuid // V26, nullable, composite FK cùng question_version_id
+  explanation_snapshot text // V26, nullable
+  part_number_snapshot integer // V26, nullable, 1..7
   answered_at timestamptz
   updated_at timestamptz [not null]
   indexes {

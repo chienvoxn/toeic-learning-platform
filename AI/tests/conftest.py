@@ -15,7 +15,7 @@ PRIVATE_ID = "ef71841f-9549-456d-a801-835836c1befd"
 
 
 class FakeProvider:
-    """Deterministic retrieval vectors; never calls Gemini or requires a real API key."""
+    """Deterministic retrieval vectors; never calls a provider or requires a real API key."""
 
     def __init__(self):
         self.embedded = []
@@ -80,6 +80,7 @@ def options(tmp_path):
         ai_admin_key=ADMIN_KEY,
         google_api_key="",
         embedding_dimensions=128,
+        allow_sqlite_for_tests=True,
         database_url=f"sqlite:///{(tmp_path / 'index.db').as_posix()}",
         min_similarity=0.5,
     )

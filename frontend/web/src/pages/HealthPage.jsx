@@ -1,58 +1,27 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { healthApi } from '@/services/apiClient';
-import LearnerTemplate from '@/components/templates/LearnerTemplate';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useMock } from '@/lib/runtime-config';
+import { authMode } from '@/features/auth/config';
 
 export default function HealthPage() {
-  const [state, setState] = useState({ loading: true, status: '', error: '' });
-
+  const [state, setState] = useState({ loading: true });
   useEffect(() => {
     const controller = new AbortController();
-    healthApi.check()
-      .then(data => {
-        if (!controller.signal.aborted) {
-          setState({ loading: false, status: data?.status || 'ONLINE', error: '' });
-        }
-      })
-      .catch(error => {
-        if (!controller.signal.aborted) {
-          setState({ loading: false, status: 'OFFLINE / DISCONNECTED', error: error.message });
-        }
+    Promise.allSettled([healthApi.check({ signal: controller.signal }), healthApi.database({ signal: controller.signal })]).then(([app, database]) => {
+      if (!controller.signal.aborted) setState({ loading: false,
+        app: app.status === 'fulfilled' ? app.value.status : 'Không kết nối được',
+        database: database.status === 'fulfilled' ? database.value.status : 'Không kết nối được',
+        error: app.status === 'rejected' ? app.reason.message : database.status === 'rejected' ? database.reason.message : '',
       });
+    });
     return () => controller.abort();
   }, []);
-
-  return (
-    <LearnerTemplate>
-      <div className="max-w-xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Kiểm tra kết nối hệ thống (System Health)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-sm font-semibold text-slate-700">Frontend Web React:</span>
-              <Badge variant="success">Hoạt động bình thường</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-sm font-semibold text-slate-700">Chế độ Mock Data:</span>
-              <Badge variant="default">Đang bật (VITE_USE_MOCK=true)</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-sm font-semibold text-slate-700">Backend Spring Boot API:</span>
-              <Badge variant={state.status === 'ONLINE' ? 'success' : 'destructive'}>
-                {state.loading ? 'Đang kiểm tra...' : state.status}
-              </Badge>
-            </div>
-            {state.error && (
-              <p className="text-xs text-red-500 bg-red-50 p-3 rounded-lg border border-red-200" role="alert">
-                Lưu ý: {state.error} (Hệ thống đang tự động sử dụng Mock Adapter để đảm bảo trải nghiệm liên tục).
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </LearnerTemplate>
-  );
+  return <main className="max-w-xl mx-auto p-8 space-y-5"><Link to="/" className="pill-button">← Trang chủ</Link><h1 className="text-2xl font-bold">Kiểm tra kết nối hệ thống</h1><section className="surface p-6 space-y-4">
+    <p>Auth: <strong>{authMode}</strong> — không fallback demo khi mất kết nối.</p>
+    <p>Nguồn dữ liệu: <strong>{useMock ? 'Dữ liệu mẫu (mock)' : 'API backend thật'}</strong></p>
+    <p>Backend: <strong>{state.loading ? 'Đang kiểm tra...' : state.app}</strong></p>
+    <p>Database: <strong>{state.loading ? 'Đang kiểm tra...' : state.database}</strong></p>
+    {state.error && <p className="form-error" role="alert">{state.error}</p>}
+  </section></main>;
 }

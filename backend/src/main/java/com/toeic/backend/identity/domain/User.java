@@ -19,7 +19,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
     @Column(name = "full_name", nullable = false, length = 150)
@@ -67,6 +67,15 @@ public class User {
         return userId;
     }
 
+    public static User fromGoogle(String email, String fullName, OffsetDateTime now, boolean authoritativeEmail) {
+        var user = new User(email, null, fullName);
+        user.status = "ACTIVE";
+        user.emailVerifiedAt = authoritativeEmail ? now : null;
+        user.createdAt = now;
+        user.updatedAt = now;
+        return user;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -109,11 +118,38 @@ public class User {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public void activateWithoutEmailVerification(OffsetDateTime now) {
+        if (!"PENDING".equals(status)) throw new IllegalStateException("Only pending accounts can activate");
+        this.status = "ACTIVE";
+        this.updatedAt = now;
+    }
+
+    public void recordEmailProof(OffsetDateTime now) {
+        this.emailVerifiedAt = now;
+        this.updatedAt = now;
+    }
+
     public void recordLogin(OffsetDateTime now) {
         if (!"ACTIVE".equals(status)) {
             throw new IllegalStateException("Only active accounts can log in");
         }
         this.lastLoginAt = now;
+        this.updatedAt = now;
+    }
+
+    public void updateFullName(String fullName, OffsetDateTime now) {
+        if (fullName == null || fullName.isBlank() || fullName.length() > 150) {
+            throw new IllegalArgumentException("Invalid full name");
+        }
+        this.fullName = fullName.strip();
+        this.updatedAt = now;
+    }
+
+    public void changePasswordHash(String hash, OffsetDateTime now) {
+        if (hash == null || !hash.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}") || now == null) {
+            throw new IllegalArgumentException("Invalid password hash");
+        }
+        this.passwordHash = hash;
         this.updatedAt = now;
     }
     public Set<Role> getRoles() {

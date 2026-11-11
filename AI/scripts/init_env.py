@@ -1,16 +1,70 @@
-"""Create a local .env with random internal keys. Never overwrite existing secrets."""
+"""Chuẩn bị .env Gemini; giữ key hợp lệ và không xóa index của provider cũ."""
 
+import io
 import secrets
 from pathlib import Path
 
+from dotenv import dotenv_values
+from sqlalchemy.engine import URL
+
 ROOT = Path(__file__).resolve().parents[1]
-target = ROOT / ".env"
-if target.exists():
-    print(".env already exists; kept unchanged.")
-else:
-    content = (ROOT / ".env.example").read_text(encoding="utf-8")
-    content = content.replace("AI_SERVICE_KEY=\n", f"AI_SERVICE_KEY={secrets.token_urlsafe(32)}\n")
-    content = content.replace("AI_ADMIN_KEY=\n", f"AI_ADMIN_KEY={secrets.token_urlsafe(32)}\n")
-    with target.open("x", encoding="utf-8") as stream:
-        stream.write(content)
-    print("Created AI/.env with random internal keys. Set GOOGLE_API_KEY before using Gemini.")
+
+
+def initialize(root: Path = ROOT):
+    target = root / ".env"
+    exists = target.exists()
+    content = (target if exists else root / ".env.example").read_text(encoding="utf-8")
+    values = dotenv_values(stream=io.StringIO(content))
+    defaults = {
+        "GOOGLE_API_KEY": "",
+        "GEMINI_CHAT_MODEL": "gemini-3.5-flash-lite",
+        "GEMINI_EMBEDDING_MODEL": "models/gemini-embedding-001",
+        "AI_SERVICE_KEY": secrets.token_urlsafe(32),
+        "AI_ADMIN_KEY": secrets.token_urlsafe(32),
+        "POSTGRES_PASSWORD": secrets.token_urlsafe(32),
+    }
+    lines = content.splitlines()
+    for name, default in defaults.items():
+        if name not in values:
+            lines.append(f"{name}={default}")
+        elif name == "POSTGRES_PASSWORD" and not values[name]:
+            lines = [f"{name}={default}" if line.startswith(f"{name}=") else line for line in lines]
+            values[name] = default
+        elif name in {"AI_SERVICE_KEY", "AI_ADMIN_KEY"} and (
+            len(values[name] or "") < 24
+            or name == "AI_ADMIN_KEY"
+            and values[name] == values.get("AI_SERVICE_KEY")
+        ):
+            lines = [f"{name}={default}" if line.startswith(f"{name}=") else line for line in lines]
+            values[name] = default
+    # Keep old index files; only migrate the three known default SQLite URLs.
+    if values.get("DATABASE_URL") in {
+        None,
+        "",
+        "sqlite:///./data/ai.db",
+        "sqlite:///./data/ai-openai.db",
+        "sqlite:///./data/ai-gemini.db",
+    }:
+        password = values.get("POSTGRES_PASSWORD") or defaults["POSTGRES_PASSWORD"]
+        database_url = URL.create(
+            "postgresql+psycopg",
+            username="toeic_ai",
+            password=password,
+            host="localhost",
+            port=5433,
+            database="toeic_ai",
+        ).render_as_string(hide_password=False)
+        lines = [
+            f"DATABASE_URL={database_url}" if line.startswith("DATABASE_URL=") else line
+            for line in lines
+        ]
+        if "DATABASE_URL" not in values:
+            lines.append(f"DATABASE_URL={database_url}")
+    updated = "\n".join(lines) + "\n"
+    if not exists or updated != content:
+        target.write_text(updated, encoding="utf-8")
+    print("Prepared AI/.env; valid keys kept. Set GOOGLE_API_KEY locally before the live demo.")
+
+
+if __name__ == "__main__":
+    initialize()
