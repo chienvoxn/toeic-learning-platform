@@ -1,7 +1,12 @@
 
 import { apiRequest } from '@/services/apiClient';
 
-const ratings = { AGAIN: 1, HARD: 2, GOOD: 3, EASY: 4 };
+const ratings = {
+  AGAIN: 1,
+  HARD: 2,
+  GOOD: 3,
+  EASY: 4,
+};
 
 const mapDeck = (deck) => ({
   id: deck.deckId,
@@ -24,9 +29,22 @@ const mapCard = (card) => ({
   note: card.note || '',
 });
 
+const mapReviewStatus = (state) => {
+  if (!state) return 'new';
+
+  const status = state.status ?? state.reviewStatus;
+
+  if (typeof status === 'string') {
+    return status.toLowerCase();
+  }
+
+  return 'learning';
+};
+
 export class RemoteVocabularyRepository {
   async getCatalogDecks() {
     const decks = await apiRequest('/vocabulary/catalog/decks');
+
     return decks.map((deck) => ({
       id: deck.deckId,
       title: deck.name,
@@ -51,6 +69,7 @@ export class RemoteVocabularyRepository {
     const deck = await apiRequest(
       `/vocabulary-decks/${deckId}`
     );
+
     return mapDeck(deck);
   }
 
@@ -58,14 +77,52 @@ export class RemoteVocabularyRepository {
     const cards = await apiRequest(
       `/vocabulary-decks/${deckId}/flashcards`
     );
-    return cards.map(mapCard);
+
+    return Promise.all(
+      cards.map(async (card) => {
+        const mappedCard = mapCard(card);
+
+        try {
+          const reviewState = await this.getReviewState(
+            card.vocabularyId
+          );
+
+          return {
+            ...mappedCard,
+            status: mapReviewStatus(reviewState),
+            reviewState,
+          };
+        } catch (error) {
+          // 404: Vocabulary has not been reviewed yet.
+          // 401/403 and other errors must propagate.
+          if (error?.status === 404) {
+            return {
+              ...mappedCard,
+              status: 'new',
+              reviewState: null,
+            };
+          }
+
+          throw error;
+        }
+      })
+    );
   }
 
   async rateCard(cardId, rating) {
-    const normalized = typeof rating === 'string' ? ratings[rating.toUpperCase()] : rating;
-    if (!Number.isInteger(normalized) || normalized < 1 || normalized > 4) {
+    const normalized =
+      typeof rating === 'string'
+        ? ratings[rating.toUpperCase()]
+        : rating;
+
+    if (
+      !Number.isInteger(normalized) ||
+      normalized < 1 ||
+      normalized > 4
+    ) {
       throw new Error('Đánh giá ôn tập không hợp lệ.');
     }
+
     return apiRequest(`/vocabularies/${cardId}/reviews`, {
       method: 'POST',
       body: { rating: normalized },
@@ -73,21 +130,33 @@ export class RemoteVocabularyRepository {
   }
 
   async createDeck(name, description) {
-    return apiRequest('/vocabulary-decks', { method: 'POST', body: { name, description } });
-  }
-
-  async createVocabulary(payload) {
-    return apiRequest('/vocabularies', { method: 'POST', body: payload });
-  }
-
-  async addToDeck(deckId, vocabularyId) {
-    return apiRequest(`/vocabulary-decks/${deckId}/vocabularies`, {
-      method: 'POST', body: { vocabularyId },
+    return apiRequest('/vocabulary-decks', {
+      method: 'POST',
+      body: { name, description },
     });
   }
 
+  async createVocabulary(payload) {
+    return apiRequest('/vocabularies', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  async addToDeck(deckId, vocabularyId) {
+    return apiRequest(
+      `/vocabulary-decks/${deckId}/vocabularies`,
+      {
+        method: 'POST',
+        body: { vocabularyId },
+      }
+    );
+  }
+
   async getReviewState(cardId) {
-    return apiRequest(`/vocabularies/${cardId}/review-state`);
+    return apiRequest(
+      `/vocabularies/${cardId}/review-state`
+    );
   }
 
   async getRecommendations() {
@@ -109,17 +178,28 @@ export class RemoteVocabularyRepository {
   }
 
   async getLearningSession(deckId) {
-    return apiRequest(`/vocabulary-decks/${deckId}/learning-session`);
+    return apiRequest(
+      `/vocabulary-decks/${deckId}/learning-session`
+    );
   }
 
   async saveLearningSession(deckId, data) {
-    return apiRequest(`/vocabulary-decks/${deckId}/learning-session`, {
-      method: 'PUT', body: data,
-    });
+    return apiRequest(
+      `/vocabulary-decks/${deckId}/learning-session`,
+      {
+        method: 'PUT',
+        body: data,
+      }
+    );
   }
 
   async clearLearningSession(deckId) {
-    return apiRequest(`/vocabulary-decks/${deckId}/learning-session`, { method: 'DELETE' });
+    return apiRequest(
+      `/vocabulary-decks/${deckId}/learning-session`,
+      {
+        method: 'DELETE',
+      }
+    );
   }
 
   async getDueReviews() {
