@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PracticeSubmissionIntegrationTest extends PracticeTestSupport {
     @Autowired PracticeSubmissionService submissions;
+    @Autowired com.toeic.backend.assessment.infrastructure.PracticeAnswerRepository answerRepository;
     private UUID choice(UUID version,String label) {
         return jdbc.queryForObject("select choice_id from question_choices where question_version_id=? and choice_label=?",UUID.class,version,label);
     }
@@ -47,6 +48,12 @@ class PracticeSubmissionIntegrationTest extends PracticeTestSupport {
         assertEquals(5,count("select count(*) from attempt_answers where attempt_id=? and is_correct is not null and correct_choice_id is not null",attempt));
         assertEquals(3,count("select count(*) from attempt_part_results where attempt_id=?",attempt));
         assertEquals(2,count("select sum(correct_count)::integer from attempt_part_results where attempt_id=?",attempt));
+        var partSnapshots=new TransactionTemplate(transactions).execute(status->answerRepository.partResults(attempt));
+        assertNotNull(partSnapshots);
+        assertEquals(List.of(1,2,5),partSnapshots.stream().map(p->p.partNumber()).toList());
+        assertEquals(List.of(2,1,2),partSnapshots.stream().map(p->p.totalQuestions()).toList());
+        assertEquals(List.of(1,0,1),partSnapshots.stream().map(p->p.correctCount()).toList());
+        assertEquals(List.of("50.00","0.00","50.00"),partSnapshots.stream().map(p->p.accuracy().toPlainString()).toList());
         assertEquals(result.toString(),tree(call(get(API+"/"+attempt+"/result"),token).andExpect(status().isOk())).toString());
         safe(read(token,attempt));
     }

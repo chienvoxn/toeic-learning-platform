@@ -12,18 +12,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.*;
 
 @Service
-@PreAuthorize("hasAuthority('practice:manage:self') and @practiceAccess.isActor(#actorId)")
+@PreAuthorize("hasAnyAuthority('practice:manage:self','exam:manage:self') and @practiceAccess.isActor(#actorId)")
 public class PracticeSessionService {
     private final PracticeAttemptRepository attempts;
     private final PracticeQuestionCatalog catalog;
     private final PracticeUnitSelector selector;
     private final Clock clock;
     private final PracticeAnswerRepository answers;
+    private final PracticeAccess access;
     public PracticeSessionService(PracticeAttemptRepository attempts,PracticeQuestionCatalog catalog,PracticeUnitSelector selector,Clock clock,
-            PracticeAnswerRepository answers) {
-        this.attempts=attempts;this.catalog=catalog;this.selector=selector;this.clock=clock;this.answers=answers;
+            PracticeAnswerRepository answers,PracticeAccess access) {
+        this.attempts=attempts;this.catalog=catalog;this.selector=selector;this.clock=clock;this.answers=answers;this.access=access;
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
+    @PreAuthorize("hasAuthority('practice:manage:self') and @practiceAccess.isActor(#actorId)")
     public PracticeSessionDtos.Session create(UUID actorId,PracticeStartQuery query) {
         if(query==null)throw PracticeException.invalid();
         var criteria=new PracticeQuestionCatalog.Criteria(new HashSet<>(query.partNumbers()),query.topicId(),query.difficulty());
@@ -40,7 +42,9 @@ public class PracticeSessionService {
     public PracticeSessionDtos.Session get(UUID actorId,UUID attemptId) {
         return view(actorId,attempts.findOwn(actorId,attemptId).orElseThrow(PracticeException::missing));
     }
-    private PracticeSessionDtos.Session view(UUID actorId,PracticeAttempt attempt) {
+    PracticeSessionDtos.Session view(UUID actorId,PracticeAttempt attempt) {
+        if(!attempt.getUserId().equals(actorId))throw PracticeException.missing();
+        access.requireSource(actorId,attempt.getSourceType());
         var questions=new ArrayList<PracticeSessionDtos.Question>();
         for(var pin:attempt.getQuestions()) {
             var question=catalog.read(actorId,pin.getQuestionVersionId(),pin.getGroupVersionId());
@@ -51,6 +55,7 @@ public class PracticeSessionService {
         var selections=attempt.getQuestions().stream().filter(q->saved.containsKey(q.getQuestionVersionId()))
                 .map(q->{var a=saved.get(q.getQuestionVersionId());return new PracticeSessionDtos.SavedAnswer(a.questionVersionId(),a.selectedChoiceId(),a.updatedAt());}).toList();
         return new PracticeSessionDtos.Session(attempt.getAttemptId(),attempt.getSourceType(),attempt.getStatus(),attempt.getStartedAt(),
-                attempt.getExpiresAt(),!OffsetDateTime.now(clock).isBefore(attempt.getExpiresAt()),attempt.getTotalQuestions(),questions,selections);
+                attempt.getExpiresAt(),!OffsetDateTime.now(clock).isBefore(attempt.getExpiresAt()),attempt.getTotalQuestions(),questions,selections,
+                SectionDtos.configuration(attempt));
     }
 }

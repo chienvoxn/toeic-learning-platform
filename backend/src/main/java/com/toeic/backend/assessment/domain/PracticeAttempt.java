@@ -23,6 +23,8 @@ public class PracticeAttempt {
     @Column(name = "correct_count") private Integer correctCount;
     @Column(name = "listening_correct_count") private Integer listeningCorrectCount;
     @Column(name = "reading_correct_count") private Integer readingCorrectCount;
+    @Column(name = "section_type") private String sectionType;
+    @Column(name = "configured_duration_seconds") private Integer configuredDurationSeconds;
     @OneToMany(mappedBy = "attempt", cascade = CascadeType.PERSIST)
     @OrderBy("questionOrder ASC") private List<PracticeQuestionSnapshot> questions = new ArrayList<>();
 
@@ -49,6 +51,18 @@ public class PracticeAttempt {
         }
     }
     public UUID getAttemptId() { return attemptId; }
+    public static PracticeAttempt section(UUID actor,OffsetDateTime started,String type,int minutes,List<Pin> pins) {
+        if(type==null||!Set.of("LISTENING","READING").contains(type)||minutes<1||minutes>120||pins==null||pins.size()>100) {
+            throw new IllegalArgumentException("Invalid Section configuration");
+        }
+        var attempt=new PracticeAttempt(actor,started,started.plusMinutes(minutes),pins);
+        attempt.attemptType="SECTION";attempt.sourceType="SECTION_SNAPSHOT";
+        attempt.sectionType=type;attempt.configuredDurationSeconds=minutes*60;
+        return attempt;
+    }
+    public boolean isSection() { return "SECTION_SNAPSHOT".equals(sourceType); }
+    public String getSectionType() { return sectionType; }
+    public Integer getConfiguredDurationSeconds() { return configuredDurationSeconds; }
     public UUID getUserId() { return userId; }
     public UUID getTestVersionId() { return testVersionId; }
     public String getSourceType() { return sourceType; }
@@ -61,12 +75,13 @@ public class PracticeAttempt {
     public Integer getListeningCorrectCount() { return listeningCorrectCount; }
     public Integer getReadingCorrectCount() { return readingCorrectCount; }
     public void completeGrading(OffsetDateTime submitted, int correct, int listening, int reading) {
-        if (!"IN_PROGRESS".equals(status) || submitted.isBefore(startedAt) || !submitted.isBefore(expiresAt)
+        if (!"IN_PROGRESS".equals(status) || submitted.isBefore(startedAt) || !isSection() && !submitted.isBefore(expiresAt)
                 || correct < 0 || correct > totalQuestions || listening < 0 || reading < 0 || listening + reading != correct) {
             throw new IllegalStateException("Invalid practice grading transition");
         }
         submittedAt = submitted;
-        durationSeconds = Math.toIntExact(java.time.temporal.ChronoUnit.SECONDS.between(startedAt, submitted));
+        var elapsedUntil=isSection()&&submitted.isAfter(expiresAt)?expiresAt:submitted;
+        durationSeconds = Math.toIntExact(java.time.temporal.ChronoUnit.SECONDS.between(startedAt, elapsedUntil));
         correctCount = correct;
         listeningCorrectCount = listening;
         readingCorrectCount = reading;

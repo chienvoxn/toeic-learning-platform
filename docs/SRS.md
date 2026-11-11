@@ -102,6 +102,8 @@
 
 ### UC-05 — Thực hiện Section Test
 
+**EXAM-01 — quyết định sản phẩm vừa chốt 2026-11-11:** thay luồng TestVersion fixed DESIGN dưới đây cho phạm vi EXAM-01 bằng snapshot từ ngân hàng published, chưa phụ thuộc EXAM-04. LISTENING đủ Part 1–4 hoặc READING đủ Part 5–7; chọn nguyên nhóm/thứ tự nghiệp vụ, đúng tổng hoặc 409; cấu hình nguyên 1–100 câu/1–120 phút là giới hạn sản phẩm, không là cấu trúc TOEIC chính thức. Server pin version/order/config/startedAt/expiresAt. Save/thay/bỏ chỉ trước hạn, submit lần đầu sau hạn được chấm đáp án đã lưu, không nhận answers trong submit. Atomic/idempotent, owner + permission đúng source, raw total/accuracy/Part statistics, key/explanation chỉ sau submit, không quy đổi TOEIC hoặc mở media path. Chưa tự chốt khi không có request (EXAM-03). [Contract, demo và trạng thái backend/UI](EXAM01_Section_Attempts.md).
+
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

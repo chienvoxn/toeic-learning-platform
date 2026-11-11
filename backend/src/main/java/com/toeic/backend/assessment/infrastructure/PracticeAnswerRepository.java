@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.*;
 @Repository
 @Transactional(propagation = Propagation.MANDATORY)
 public class PracticeAnswerRepository {
+    public record PartResult(int partNumber, int totalQuestions, int correctCount, java.math.BigDecimal accuracy) { }
     public record Answer(UUID questionVersionId, UUID selectedChoiceId, Boolean correct, OffsetDateTime updatedAt,
             UUID correctChoiceId, String explanation, Integer partNumber) {
         @Override public String toString() { return "PracticeAnswer[redacted]"; }
@@ -61,5 +62,13 @@ public class PracticeAnswerRepository {
                 insert into attempt_part_results(attempt_part_result_id,attempt_id,part_id,total_questions,correct_count,accuracy)
                 values (?,?,?,?,?,?)
                 """, UUID.randomUUID(), attemptId, partId, total, correct, accuracy);
+    }
+    /** Đọc snapshot thống kê Part đã lưu, không tính lại từ đáp án hiện hành của QuestionBank. */
+    public List<PartResult> partResults(UUID attemptId) {
+        return jdbc.query("""
+                select p.part_number,r.total_questions,r.correct_count,r.accuracy
+                from attempt_part_results r join toeic_parts p on p.part_id=r.part_id
+                where r.attempt_id=? order by p.part_number
+                """, (rs,row)->new PartResult(rs.getInt(1),rs.getInt(2),rs.getInt(3),rs.getBigDecimal(4)),attemptId);
     }
 }

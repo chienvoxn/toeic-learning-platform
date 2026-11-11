@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.*;
 /** Public QuestionBank contract for practice; independent of Teacher question:read and authoring grants. */
 @Service
 @Transactional(propagation=Propagation.MANDATORY)
-@PreAuthorize("hasAuthority('practice:manage:self') and @practiceAccess.isActor(#actorId)")
+@PreAuthorize("hasAnyAuthority('practice:manage:self','exam:manage:self') and @practiceAccess.isActor(#actorId)")
 public class PracticeQuestionCatalog {
     public record Criteria(Set<Integer> partNumbers,Integer topicId,String difficulty) {
         public Criteria { partNumbers=Set.copyOf(partNumbers); }

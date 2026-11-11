@@ -52,7 +52,7 @@ public class IdentitySecurityConfig {
                         .requestMatchers("/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
                                 "/api/v1/teacher/question-groups", "/api/v1/teacher/question-groups/**")
                         .hasAnyAuthority("question:manage:self", "question:manage:any")
-                        .requestMatchers("/api/v1/attempts", "/api/v1/attempts/**").hasAuthority("practice:manage:self")
+                        .requestMatchers("/api/v1/attempts", "/api/v1/attempts/**").hasAnyAuthority("practice:manage:self", "exam:manage:self")
                         .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me/bookmarks").hasAuthority("content:bookmark:self")

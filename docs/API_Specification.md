@@ -151,6 +151,8 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.4 Tests/Blueprint/Attempts
 
+**EXAM-01 runtime — quyết định sản phẩm 2026-11-11:** [Section Listening/Reading, payload và kiểm thử](EXAM01_Section_Attempts.md). Dùng chung năm route `/attempts` bên dưới, thêm sourceType=SECTION_SNAPSHOT với section `{type,questionCount,durationMinutes}`. LISTENING đủ Part 1–4; READING đủ Part 5–7; tổng 1–100 và 1–120 phút là giới hạn sản phẩm, nguyên nhóm/đúng tổng hoặc 409 SECTION_QUESTIONS_INSUFFICIENT. Permission exam:manage:self mặc định LEARNER; mỗi attempt kiểm permission đúng source sau ownership, không dùng union endpoint để bypass. Pin version/group/order + cấu hình/server expiry V27. Save chỉ trước hạn, submit lần đầu sau hạn được chấm các lựa chọn đã lưu; không nhận body. Không worker tự chốt (EXAM-03) hoặc phụ thuộc CRUD TestVersion (EXAM-04), không quy đổi TOEIC.
+
 **Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.
 
 | Method | Path | Access | Request | R | Error |
@@ -351,6 +353,8 @@ Response questions không chứa `isCorrect`, explanation hoặc hidden grading 
 
 ### 4.4 Autosave Answer
 
+**EXAM-01:** cùng PUT/allowlist và DTO SavedAnswer; source Section yêu cầu exam:manage:self. Từ expiresAt chặn cả chọn/thay/bỏ chọn với 409 ATTEMPT_EXPIRED. Sau GRADED luôn 409 ATTEMPT_NOT_EDITABLE. Không trả key/explanation trong safe GET session dù đã submit. POST/GET Section session và cấu hình: xem [EXAM-01](EXAM01_Section_Attempts.md).
+
 **PRAC-02 runtime — quyết định sản phẩm vừa chốt 2026-11-11.** Chỉ từng câu, không batch/clientSequence. Không nhận trường lạ/trùng, omitted selectedChoiceId hoặc query params; sai payload/kiểu/UUID trả 400. Membership theo pin, choice sai version trả 422 CHOICE_VERSION_MISMATCH; câu ngoài snapshot trả 404 ATTEMPT_QUESTION_NOT_FOUND sau ownership check.
 
 ```json
@@ -363,6 +367,8 @@ Response questions không chứa `isCorrect`, explanation hoặc hidden grading 
 `selectedChoiceId=null` bỏ chọn, giữ row với answered_at NULL. Server khóa attempt, rồi kiểm IN_PROGRESS và now < expiresAt, membership snapshot/choice đúng pin. GET `/attempts/{id}` bổ sung `answers: [SavedAnswer]` theo thứ tự snapshot, gồm các câu đã lưu/bỏ chọn; không trả key/explanation/transcript/media path. clientSequence/revision vẫn ngoài phạm vi.
 
 ### 4.5 Submit / Result
+
+**EXAM-01:** khác Practice ở expiry: Section IN_PROGRESS **được submit lần đầu sau hạn**, chỉ chấm lựa chọn server đã lưu, không body/query/answers. submittedAt là giờ server thực nộp; duration_seconds đã dùng được chặn tối đa configured_duration_seconds. GRADED replay trước expiry check, không chấm lại. Section result thêm `section` (config đã pin) và `parts` (mọi Part bắt buộc, order tăng): mỗi Part có partNumber/totalQuestions/correctCount/incorrectCount/unansweredCount/rawScore/accuracy. Raw đúng=1, sai/bỏ trống=0; accuracy % đúng/tổng, HALF_UP 2 chữ số. Snapshot key/explanation/Part V26 và part results có sẵn được tái sử dụng; không transcript/assets/media path/điểm TOEIC. Practice giữ response cũ (không thêm section/parts NULL) và vẫn từ chối submit mới sau hạn. GET result trước submit 409 RESULT_NOT_READY; không tự chốt khi đọc. [Ví dụ đầy đủ](EXAM01_Section_Attempts.md).
 
 **PRAC-02 runtime:** POST không body/query; cùng permission/ownership như lưu đáp án. Chấm và lưu trong một transaction với khóa attempt dùng chung autosave. GET result dùng REPEATABLE_READ. Cả hai trả cùng DTO GRADED, không cần Idempotency-Key; replay theo attempt, không chấm lại. Submit mới sau hạn 409 ATTEMPT_EXPIRED; GRADED được replay trước expiry check kể cả đã quá hạn. Trước submit GET result trả 409 RESULT_NOT_READY, không key/explanation. Lưu sau submit (kể cả null) trả 409 ATTEMPT_NOT_EDITABLE.
 
