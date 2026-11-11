@@ -702,29 +702,27 @@
 @media (prefers-reduced-motion: reduce) {
   .learner-sidebar { transition: none; }
 }
+
 .integration-notice { padding: 12px 16px; margin-bottom: 18px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #475569; font-size: 13px; }
 .auth-recovery { max-width: 520px; margin: 80px auto; padding: 24px; }
 .auth-password-section {
+  padding: 24px;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
-
 .auth-password-section h2 {
   font-size: 20px;
   font-weight: 700;
   line-height: 1.4;
+  margin-bottom: 12px;
 }
-
 .auth-password-section > p {
   font-size: 13px;
+  color: #64748b;
   line-height: 1.6;
 }
-.auth-password-section > p { font-size: 13px; color: #64748b; }
 .profile-initial { display: grid; place-items: center; width: 100%; height: 100%; font-size: 32px; font-weight: 800; background: #e0e7ff; color: #312e81; border-radius: 50%; }
-/* ======================================
-   Profile typography consistency
-   Keep original TV4 layout and colors
-   ====================================== */
 
+/* Profile typography consistency — original TV4 layout preserved */
 .profile-grid,
 .profile-grid button,
 .profile-grid input,
@@ -732,103 +730,85 @@
 .profile-grid select {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
-
 .profile-card h1 {
   font-size: 22px;
   font-weight: 700;
   line-height: 1.4;
 }
-
 .profile-edit-button {
   font-size: 13px;
   font-weight: 600;
 }
-
 .profile-bio,
 .profile-privacy,
 .profile-streak {
   font-size: 13px;
   line-height: 1.6;
 }
-
 .profile-privacy strong {
   font-size: 12px;
   font-weight: 600;
 }
-
 .profile-stat-row p {
   font-size: 13px;
   line-height: 1.5;
 }
-
 .profile-stat-row strong {
   font-size: 14px;
   font-weight: 700;
 }
-
 .profile-stat-tabs button,
 .profile-ranking-tabs button {
   font-size: 14px;
   font-weight: 600;
 }
-
 .profile-stat-line,
 .profile-rank {
   font-size: 14px;
 }
-
 .profile-ranking > p,
 .profile-empty {
   font-size: 13px;
   line-height: 1.6;
 }
-
 .profile-lessons h2 {
   font-size: 20px;
   font-weight: 700;
 }
-
 .profile-lessons > a {
   font-size: 13px;
   font-weight: 600;
 }
-
 .profile-form > label,
 .profile-target label,
 .profile-target summary {
   font-size: 13px;
 }
-
 .profile-form > input,
 .profile-form > textarea,
 .profile-target select {
   font-size: 14px;
 }
-
 .profile-form-actions > button:first-child {
   font-size: 14px;
   font-weight: 600;
 }
-
 .profile-contract-note,
 .profile-form > small {
   font-size: 12px;
 }
 
-/* Learning Analytics - preserve original Profile layout */
-
+/* Learning Analytics — retain original Profile layout */
 .profile-learning-section {
   width: 100%;
   max-width: 1200px;
   margin-top: 24px;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
-
 .profile-learning-section h2 {
   font-size: 20px;
   font-weight: 700;
 }
-
 .profile-learning-section p {
   line-height: 1.6;
 }
