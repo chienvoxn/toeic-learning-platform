@@ -4,6 +4,8 @@ import HomePage from '../pages/HomePage';
 import HealthPage from '../pages/HealthPage';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+import VerifyEmailPage from '../pages/auth/VerifyEmailPage';
+import RequireAuth from '../features/auth/RequireAuth';
 import ProfilePage from '../pages/profile/ProfilePage';
 import SettingsPage from '../pages/profile/SettingsPage';
 import TestCatalogPage from '../pages/assessment/TestCatalogPage';
@@ -36,8 +38,14 @@ export const router = createBrowserRouter([
       { path: '/dashboard', element: <Navigate to="/" replace /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
-      { path: '/profile', element: <ProfilePage /> },
-      { path: '/settings', element: <SettingsPage /> },
+      { path: '/verify-email', element: <VerifyEmailPage /> },
+      { element: <RequireAuth />, children: [
+        { path: '/profile', element: <ProfilePage /> },
+        { path: '/settings', element: <SettingsPage /> },
+        { path: '/attempts/:attemptId', element: <AttemptPage /> },
+        { path: '/attempts/:attemptId/result', element: <ResultPage /> },
+        { path: '/vocabulary/:deckId/review', element: <VocabReviewPage /> },
+      ] },
       { path: '/onboarding', element: <OnboardingPage /> },
 
       // Content Catalog (Figma MainScreen 1-3)
@@ -50,13 +58,10 @@ export const router = createBrowserRouter([
       // Assessment Routes
       { path: '/tests', element: <TestCatalogPage /> },
       { path: '/tests/:testId/overview', element: <TestOverviewPage /> },
-      { path: '/attempts/:attemptId', element: <AttemptPage /> },
-      { path: '/attempts/:attemptId/result', element: <ResultPage /> },
 
       // Vocabulary SRS Routes
       { path: '/vocabulary', element: <VocabDeckListPage /> },
       { path: '/vocabulary/:deckId', element: <VocabDeckDetailPage /> },
-      { path: '/vocabulary/:deckId/review', element: <VocabReviewPage /> },
 
       // Listening Practice Routes
       { path: '/listening', element: <ListeningHubPage /> },

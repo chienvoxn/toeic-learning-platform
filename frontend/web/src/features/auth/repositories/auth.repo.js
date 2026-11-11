@@ -1,7 +1,8 @@
 import { FakeAuthRepository } from './auth.fake';
 import { RemoteAuthRepository } from './auth.api';
+import { isRemoteAuth } from '../config';
 
-const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
+const isMock = !isRemoteAuth;
 
 class AuthRepositoryFactory {
   static instance = null;

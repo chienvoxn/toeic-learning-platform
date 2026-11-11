@@ -4,6 +4,7 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { authErrorMessage, passwordError } from '@/features/auth/errors';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -15,16 +16,23 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   async function handleSubmit(e) {
-    e.preventDefault(); setLoading(true); setError('');
-    try { await register({ fullName, email, password, targetScore: 750 }); navigate('/'); }
-    catch (err) { setError(err.message || 'Không thể tạo tài khoản.'); }
+    e.preventDefault(); setError('');
+    const validation = passwordError(password);
+    if (validation) { setError(validation); return; }
+    setLoading(true);
+    try {
+      const result = await register({ fullName, email, password });
+      sessionStorage.setItem('identity.pendingEmail', result.email);
+      navigate('/verify-email');
+    }
+    catch (err) { setError(authErrorMessage(err)); }
     finally { setLoading(false); }
   }
   return <main className="register-page"><header><Link to="/login" aria-label="Quay lại"><ArrowLeft size={24} /></Link><Link className="register-login" to="/login">ĐĂNG NHẬP</Link></header>
     <form className="register-form" onSubmit={handleSubmit}><h1>Tạo hồ sơ</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <label className="sr-only" htmlFor="register-name">Tên</label><Input id="register-name" maxLength={100} autoComplete="name" placeholder="Tên (tùy chọn)" value={fullName} onChange={e => setFullName(e.target.value)} />
-      <label className="sr-only" htmlFor="register-email">Email</label><Input id="register-email" type="email" autoComplete="email" required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+      <label className="sr-only" htmlFor="register-name">Họ và tên</label><Input id="register-name" required maxLength={150} autoComplete="name" placeholder="Họ và tên" value={fullName} onChange={e => setFullName(e.target.value)} />
+      <label className="sr-only" htmlFor="register-email">Email</label><Input id="register-email" type="email" autoComplete="email" maxLength={255} required placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
       <div className="password-field"><label className="sr-only" htmlFor="register-password">Mật khẩu</label><Input id="register-password" type={visible ? 'text' : 'password'} autoComplete="new-password" minLength={8} required placeholder="Mật khẩu" value={password} onChange={e => setPassword(e.target.value)} /><button type="button" className="icon-button" aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={22} /> : <Eye size={22} />}</button></div>
       <Button type="submit" disabled={loading}>{loading ? 'ĐANG TẠO...' : 'TẠO TÀI KHOẢN'}</Button>
       <p>Bằng cách đăng ký, bạn đồng ý với <strong>Điều khoản</strong> và <strong>Chính sách bảo mật</strong> của chúng tôi.</p>

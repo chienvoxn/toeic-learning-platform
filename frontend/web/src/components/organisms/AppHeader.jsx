@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, Bell, Search, Flame } from 'lucide-react';
 import { Brand } from '@/components/atoms/Brand';
+import { isRemoteAuth } from '@/features/auth/config';
 
 export function AppHeader({ menuOpen = false, onMenu }) {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function AppHeader({ menuOpen = false, onMenu }) {
       <div className="notification-wrap"><button type="button" className="icon-button" aria-label="Thông báo" aria-expanded={notifications} onClick={() => setNotifications(!notifications)}><Bell size={19} /></button>
         {notifications && <div className="notification-popover" role="status">Bạn chưa có thông báo mới.</div>}
       </div>
-      <Link className="daily-pill" to="/">🎯 0/3</Link>
+      {!isRemoteAuth && <Link className="daily-pill" to="/">🎯 0/3</Link>}
       <Link className="streak-pill" to="/profile" aria-label="Chuỗi ngày học"><Flame size={16} /></Link>
     </div>
   </header>;

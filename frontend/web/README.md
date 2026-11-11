@@ -1,16 +1,27 @@
-# React + Vite
+# Frontend web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite web. Tích hợp Identity thật và hướng dẫn chạy/kiểm chứng: [Web Auth Integration](../../docs/WEB_Auth_Integration.md).
 
-Currently, two official plugins are available:
+```powershell
+Copy-Item .env.example .env.local
+npm ci
+npm run dev -- --host 127.0.0.1 --strictPort
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Web: http://127.0.0.1:5173
+- Vite proxy /api → http://localhost:8080; API base /api/v1.
+- VITE_AUTH_MODE=remote (mặc định): Identity thật; không fallback user demo khi lỗi.
+- VITE_AUTH_MODE=mock: demo auth riêng, không gửi OTP thật/đổi mật khẩu.
+- VITE_USE_MOCK=true: assessment/content/vocabulary/games còn demo; không chi phối auth.
+- SMTP local: Mailpit 127.0.0.1:1025, mailbox http://127.0.0.1:8025.
 
-## React Compiler
+Backend cần PostgreSQL và DB_PASSWORD hoặc cấu hình datasource kiểm thử riêng như tài liệu. Không reset database cá nhân.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```powershell
+npm run lint
+npm run build
+npm test
+npm run test:auth:e2e
+```
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+npm test là contract test với transport stub. test:auth:e2e dùng Chrome, frontend/backend/Mailpit thật và DB toeic_web_auth_test riêng; xem biến WEB_AUTH_* và fixture trong tài liệu trước khi chạy. Không lưu trace/screenshot/video chứa thông tin đăng nhập. Kết quả và giới hạn nằm trong tài liệu tích hợp.

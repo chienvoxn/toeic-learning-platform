@@ -32,8 +32,8 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    const result = await logout();
+    navigate('/login', { state: { logoutFailed: result?.revocationFailed } });
   };
 
   return (
@@ -55,9 +55,9 @@ export default function SettingsPage() {
             </div>
             <div>
               <strong className="text-sm font-extrabold text-gray-900 block">{user?.fullName || 'Học viên'}</strong>
-              <span className="text-xs text-gray-400">{user?.email || 'learner@example.com'}</span>
+              <span className="text-xs text-gray-400">{user?.email}</span>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-blue-600">
-                <Target size={12} /> Mục tiêu: {user?.targetScore || 850}+ TOEIC
+                <Target size={12} /> Mục tiêu: {user?.targetScore ?? 'Chưa đặt'} TOEIC
               </div>
             </div>
           </div>
@@ -71,6 +71,7 @@ export default function SettingsPage() {
           </Link>
         </div>
 
+        <p className="integration-notice">Các tùy chọn học tập, âm thanh và nhắc nhở bên dưới là demo/local, chưa được lưu qua Identity.</p>
         {/* Learning Targets Section */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs space-y-3">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
