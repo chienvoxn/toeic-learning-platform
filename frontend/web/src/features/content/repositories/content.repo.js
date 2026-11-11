@@ -1,7 +1,7 @@
 import { FakeContentRepository } from './content.fake';
 import { RemoteContentRepository } from './content.api';
 
-const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
+import { useMock as isMock } from '@/lib/runtime-config';
 
 class ContentRepositoryFactory {
   static instance = null;

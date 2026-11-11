@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "toeic-ai-service"
-version = "0.1.0"
+version = "0.2.0"
 description = "TOEIC tutor API using LangChain and Gemini"
 requires-python = ">=3.11"
 dependencies = [
@@ -12,8 +12,10 @@ dependencies = [
   "uvicorn[standard]>=0.34,<1",
   "pydantic-settings>=2.7,<3",
   "langchain-google-genai>=4,<5",
+  "langchain-core>=1.7,<2",
   "langchain-text-splitters>=1,<2",
   "sqlalchemy>=2.0.36,<3",
+  "alembic>=1.17,<2",
   "pgvector>=0.3.6,<1",
   "psycopg[binary]>=3.2,<4",
   "pypdf>=6,<7",
@@ -25,6 +27,10 @@ dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.setuptools.data-files]
+"share/toeic-ai/migrations" = ["migrations/*.sql", "migrations/env.py", "migrations/script.py.mako"]
+"share/toeic-ai/migrations/versions" = ["migrations/versions/*.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

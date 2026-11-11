@@ -66,8 +66,8 @@ class QuestionPersistenceIntegrationTest {
         var failure = assertThrows(PersistenceException.class, operation::run);
         Throwable cause = failure;
         while (cause != null && !(cause instanceof SQLException)) { cause = cause.getCause(); }
-        assertInstanceOf(SQLException.class, cause);
-        assertEquals(expected, ((SQLException) cause).getSQLState());
+        var sqlException = assertInstanceOf(SQLException.class, cause);
+        assertEquals(expected, sqlException.getSQLState());
     }
 
     @Test
@@ -105,7 +105,7 @@ class QuestionPersistenceIntegrationTest {
         assertEquals("No choice count policy implied", metadata.getType().getDescription());
         assertEquals(AUTHOR, metadata.getCreatedBy());
         assertNotNull(metadata.getCreatedAt());
-        assertEquals(List.of("A", "B"), stored.getChoices().stream().map(QuestionChoice::getLabel).toList());
+        assertEquals(List.of("A", "B"), stored.getChoices().stream().map(element -> element.getLabel()).toList());
         assertTrue(stored.getChoices().stream().allMatch(choice -> choice.getQuestionVersionId().equals(stored.getQuestionVersionId())));
         assertEquals(firstCorrect, stored.answerKey().correctChoiceIds());
         assertEquals("ANSWER_SECRET_1", stored.getExplanation());
@@ -116,13 +116,13 @@ class QuestionPersistenceIntegrationTest {
         assertEquals("Passage 1", stored.getGroupVersion().getPassageText());
         assertEquals("Passage 2", stored2.getGroupVersion().getPassageText());
         assertEquals(List.of(IMAGE, OTHER, AUDIO), stored.getGroupVersion().getResources().stream()
-                .map(QuestionGroupResource::getResourceId).toList());
-        assertEquals(List.of(AUDIO, IMAGE), stored.getResources().stream().map(QuestionResource::getResourceId).toList());
-        assertEquals(List.of(OTHER), stored2.getResources().stream().map(QuestionResource::getResourceId).toList());
+                .map(element -> element.getResourceId()).toList());
+        assertEquals(List.of(AUDIO, IMAGE), stored.getResources().stream().map(element -> element.getResourceId()).toList());
+        assertEquals(List.of(OTHER), stored2.getResources().stream().map(element -> element.getResourceId()).toList());
         assertEquals(List.of(AUDIO, IMAGE), assets.findForQuestionVersion(stored.getQuestionVersionId()).stream()
-                .map(QuestionAssetMetadata::resourceId).toList());
+                .map(element -> element.resourceId()).toList());
         assertEquals(List.of(IMAGE, OTHER, AUDIO), assets.findForGroupVersion(passage1.getGroupVersionId()).stream()
-                .map(QuestionAssetMetadata::resourceId).toList());
+                .map(element -> element.resourceId()).toList());
         var media = assets.findForQuestionVersion(stored2.getQuestionVersionId()).getFirst();
         assertEquals(OTHER, media.resourceId());
         assertNull(media.fileSize());

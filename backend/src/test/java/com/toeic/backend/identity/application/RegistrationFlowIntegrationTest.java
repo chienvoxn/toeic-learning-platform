@@ -1,280 +1,139 @@
 package com.toeic.backend.identity.application;
 
-import com.toeic.backend.identity.infrastructure.OtpMailService;
-import com.toeic.backend.identity.infrastructure.UserRepository;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import com.toeic.backend.identity.domain.User;
+import com.toeic.backend.identity.infrastructure.*;
+import java.time.OffsetDateTime;
+import java.util.*;
+import org.junit.jupiter.api.*;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.test.context.*;
+import org.springframework.boot.webmvc.test.autoconfigure.*;
+import org.springframework.context.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.security.SecureRandom;
-import java.util.Locale;
-import java.util.UUID;
-
+import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.jpa.show-sql=false")
+@SpringBootTest(properties = {"spring.jpa.show-sql=false", "debug=false"})
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Import(RegistrationFlowIntegrationTest.TestBeans.class)
 class RegistrationFlowIntegrationTest {
-
-    @TestConfiguration
-    static class TestBeans {
-
-        @Bean
-        @Primary
-        OtpMailService testMail() {
-            return mock(OtpMailService.class);
-        }
-
-        @Bean
-        @Primary
-        SecureRandom testRandom() {
-            return mock(SecureRandom.class);
+    @TestConfiguration static class TestBeans {
+        @Bean @Primary OtpMailService testMail() { return mock(OtpMailService.class); }
+        @Bean @Primary java.security.SecureRandom testRandom() {
+            return new java.security.SecureRandom() {
+                private final java.util.concurrent.atomic.AtomicInteger sequence = new java.util.concurrent.atomic.AtomicInteger();
+                @Override public int nextInt(int bound) { return Math.floorMod(sequence.incrementAndGet(), bound); }
+            };
         }
     }
-
-    @Autowired
-    RegistrationService registration;
-
-    @Autowired
-    EmailVerificationService verification;
-
-    @Autowired
-    UserRepository users;
-
-    @Autowired
-    OtpMailService mail;
-
-    @Autowired
-    SecureRandom random;
-
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
-    JdbcTemplate jdbc;
-
-    private final String email = UUID.randomUUID() + "@example.com";
-    private final String password = "TestPass123!";
-
-    @BeforeEach
-    void prepare() {
-        reset(mail, random);
-        when(random.nextInt(1_000_000)).thenReturn(123456, 654321);
+    @Autowired RegistrationService registration;
+    @Autowired PasswordResetService reset;
+    @Autowired UserRepository users;
+    @Autowired OtpMailService mail;
+    @Autowired PasswordEncoder encoder;
+    @Autowired JdbcTemplate jdbc;
+    @Autowired AuthService auth;
+    @Autowired SessionAuthenticationService sessions;
+    @Autowired MockMvc mvc;
+    @Autowired ObjectMapper json;
+    private String email, password;
+    @BeforeEach void prepare() { reset(mail); email = UUID.randomUUID() + "@example.com"; password = UUID.randomUUID().toString(); }
+    @AfterEach void cleanup() {
+        users.findByEmail(email).ifPresent(user -> {
+            var id = user.getUserId();
+            for (var table : List.of("auth_sessions", "password_reset_otps", "email_verification_otps", "user_roles")) jdbc.update("delete from " + table + " where user_id=?", id);
+            jdbc.update("delete from users where user_id=?", id);
+        });
     }
-
-    @AfterEach
-    void cleanup() {
-        jdbc.update("""
-                delete from email_verification_otps
-                where user_id in (
-                    select user_id from users where email = ?
-                )
-                """, email);
-
-        jdbc.update("""
-                delete from user_roles
-                where user_id in (
-                    select user_id from users where email = ?
-                )
-                """, email);
-
-        jdbc.update("delete from users where email = ?", email);
+    private User register() { return registration.register(email.toUpperCase(Locale.ROOT), password, " Learner "); }
+    private String requestCode() {
+        clearInvocations(mail); reset.request(email);
+        var code = ArgumentCaptor.forClass(String.class); verify(mail).sendPasswordReset(eq(email), code.capture());
+        return code.getValue();
     }
+    private void allowResend(User user) { jdbc.update("update password_reset_otps set created_at=created_at-interval '2 minutes' where user_id=?", user.getUserId()); }
+    private int count(String table, User user) { return jdbc.queryForObject("select count(*) from " + table + " where user_id=?", Integer.class, user.getUserId()); }
 
-    @Test
-    void registrationHashesPasswordAndOtpAndAssignsLearner() {
-        var user = registration.register(
-                email.toUpperCase(Locale.ROOT),
-                password,
-                " Learner "
-        );
-
+    @Test void registrationIsActiveWithoutEmailOtpAndCanLoginImmediately() {
+        var user = register();
         var stored = users.findByEmail(email).orElseThrow();
-
-        assertEquals("PENDING", stored.getStatus());
-        assertEquals("Learner", stored.getFullName());
-        assertNotEquals(password, stored.getPasswordHash());
-        assertTrue(encoder.matches(password, stored.getPasswordHash()));
-
-        String otpHash = jdbc.queryForObject("""
-                select otp_hash from email_verification_otps
-                where user_id = ?
-                """, String.class, user.getUserId());
-
-        assertNotEquals("123456", otpHash);
-        assertTrue(encoder.matches("123456", otpHash));
-
-        Long roleCount = jdbc.queryForObject("""
-                select count(*)
-                from user_roles ur
-                join roles r on r.role_id = ur.role_id
-                where ur.user_id = ? and r.name = 'LEARNER'
-                """, Long.class, user.getUserId());
-
-        assertEquals(1L, roleCount.longValue());
-        verify(mail).sendVerification(email, "123456");
-
-        var error = assertThrows(
-                RegistrationException.class,
-                () -> registration.register(
-                        email.toUpperCase(Locale.ROOT),
-                        password,
-                        "Other"
-                )
-        );
-
-        assertEquals("EMAIL_EXISTS", error.getCode());
+        assertEquals("ACTIVE", stored.getStatus()); assertNull(stored.getEmailVerifiedAt());
+        assertEquals("Learner", stored.getFullName()); assertTrue(encoder.matches(password, stored.getPasswordHash()));
+        assertEquals(0, count("email_verification_otps", user)); assertEquals(0, count("password_reset_otps", user));
+        assertNotNull(auth.login(email, password).accessToken()); verifyNoInteractions(mail);
+        assertEquals("EMAIL_EXISTS", assertThrows(RegistrationException.class, this::register).getCode());
     }
-
-    @Test
-    void incorrectAttemptCountCommitsEvenWhenVerificationThrows() {
-        var user = registration.register(email, password, "Learner");
-
-        for (int i = 0; i < 5; i++) {
-            var error = assertThrows(
-                    OtpRejectedException.class,
-                    () -> verification.verify(email, "000000")
-            );
-            assertEquals("OTP_INVALID", error.getCode());
-        }
-
-        Integer attempts = jdbc.queryForObject("""
-                select failed_attempts from email_verification_otps
-                where user_id = ?
-                """, Integer.class, user.getUserId());
-
-        assertEquals(5, attempts.intValue());
-
-        var error = assertThrows(
-                OtpRejectedException.class,
-                () -> verification.verify(email, "123456")
-        );
-
-        assertEquals("OTP_UNAVAILABLE", error.getCode());
-        assertEquals(
-                "PENDING",
-                users.findByEmail(email).orElseThrow().getStatus()
-        );
+    @Test void registrationWorksWhenSmtpIsUnavailable() {
+        doThrow(new RegistrationException("MAIL_UNAVAILABLE", "Test mail failure", HttpStatus.SERVICE_UNAVAILABLE)).when(mail).sendPasswordReset(anyString(), anyString());
+        assertEquals("ACTIVE", register().getStatus()); verifyNoInteractions(mail);
     }
-
-    @Test
-    void correctCodeActivatesAccountAndCannotBeReused() {
-        var user = registration.register(email, password, "Learner");
-
-        verification.verify(email, "123456");
-
-        var stored = users.findByEmail(email).orElseThrow();
-        assertEquals("ACTIVE", stored.getStatus());
-        assertNotNull(stored.getEmailVerifiedAt());
-
-        Integer consumed = jdbc.queryForObject("""
-                select count(*) from email_verification_otps
-                where user_id = ? and used_at is not null
-                """, Integer.class, user.getUserId());
-
-        assertEquals(1, consumed.intValue());
-
-        assertThrows(
-                OtpRejectedException.class,
-                () -> verification.verify(email, "123456")
-        );
+    @Test void resetOtpIsHashedSingleUseAndRevokesAllSessions() {
+        var user = register(); var first = auth.login(email, password); var second = auth.login(email, password);
+        var code = requestCode();
+        String stored = jdbc.queryForObject("select otp_hash from password_reset_otps where user_id=?", String.class, user.getUserId());
+        assertNotEquals(code, stored); assertTrue(encoder.matches(code, stored));
+        var next = UUID.randomUUID().toString(); reset.reset(email, code, next);
+        assertThrows(AuthException.class, () -> auth.login(email, password)); assertNotNull(auth.login(email, next).accessToken());
+        assertThrows(AuthException.class, () -> sessions.authenticate(first.accessToken()));
+        assertThrows(AuthException.class, () -> sessions.authenticate(second.accessToken()));
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, UUID.randomUUID().toString()));
+        assertNotNull(users.findByEmail(email).orElseThrow().getEmailVerifiedAt());
     }
-
-    @Test
-    void resendInvalidatesPreviousCodeAndAppliesCooldown() {
-        var user = registration.register(email, password, "Learner");
-
-        var error = assertThrows(
-                RegistrationException.class,
-                () -> verification.resend(email)
-        );
-
-        assertEquals("OTP_RESEND_TOO_SOON", error.getCode());
-
-        jdbc.update("""
-                update email_verification_otps
-                set created_at = created_at - interval '2 minutes'
-                where user_id = ?
-                """, user.getUserId());
-
-        verification.resend(email);
-        verify(mail).sendVerification(email, "654321");
-
-        Integer invalidated = jdbc.queryForObject("""
-                select count(*) from email_verification_otps
-                where user_id = ? and used_at is not null
-                """, Integer.class, user.getUserId());
-
-        assertEquals(1, invalidated.intValue());
-
-        assertThrows(
-                OtpRejectedException.class,
-                () -> verification.verify(email, "123456")
-        );
-
-        verification.verify(email, "654321");
-
-        assertEquals(
-                "ACTIVE",
-                users.findByEmail(email).orElseThrow().getStatus()
-        );
+    @Test void failedAttemptCountersCommitAndStopBruteForce() {
+        var user = register(); var code = requestCode(); var wrong = code.equals("000000") ? "999999" : "000000";
+        for (int attempt = 0; attempt < 5; attempt++) assertEquals("PASSWORD_RESET_INVALID", assertThrows(OtpRejectedException.class, () -> reset.reset(email, wrong, password)).getCode());
+        assertEquals(5, jdbc.queryForObject("select failed_attempts from password_reset_otps where user_id=?", Integer.class, user.getUserId()));
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, password));
+        assertNotNull(auth.login(email, password).accessToken());
     }
-
-    @Test
-    void expiredCodeDoesNotActivateUser() {
-        var user = registration.register(email, password, "Learner");
-
-        jdbc.update("""
-                update email_verification_otps
-                set created_at = current_timestamp - interval '10 minutes',
-                    expires_at = current_timestamp - interval '5 minutes'
-                where user_id = ?
-                """, user.getUserId());
-
-        var error = assertThrows(
-                OtpRejectedException.class,
-                () -> verification.verify(email, "123456")
-        );
-
-        assertEquals("OTP_EXPIRED", error.getCode());
-        assertEquals(
-                "PENDING",
-                users.findByEmail(email).orElseThrow().getStatus()
-        );
+    @Test void resendEnforcesCooldownAndInvalidatesPreviousCode() {
+        var user = register(); var first = requestCode();
+        reset.request(email); verify(mail, times(1)).sendPasswordReset(eq(email), anyString());
+        allowResend(user); var second = requestCode();
+        if (first.equals(second)) { allowResend(user); second = requestCode(); }
+        var newest = second;
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, first, password));
+        reset.reset(email, newest, UUID.randomUUID().toString());
     }
-
-    @Test
-    void smtpFailureRollsBackRegistration() {
-        doThrow(new RegistrationException(
-                "MAIL_UNAVAILABLE",
-                "Test SMTP failure",
-                HttpStatus.SERVICE_UNAVAILABLE
-        )).when(mail).sendVerification(anyString(), anyString());
-
-        assertThrows(
-                RegistrationException.class,
-                () -> registration.register(email, password, "Learner")
-        );
-
-        assertFalse(users.existsByEmail(email));
+    @Test void expiredCodeDoesNotChangePassword() {
+        var user = register(); var code = requestCode();
+        jdbc.update("update password_reset_otps set created_at=now()-interval '10 minutes',expires_at=now()-interval '5 minutes' where user_id=?", user.getUserId());
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, UUID.randomUUID().toString()));
+        assertNotNull(auth.login(email, password).accessToken());
     }
-
-    @Test
-    void unknownResendDoesNotSendAnything() {
-        verification.resend(email);
-
-        verifyNoInteractions(mail);
+    @Test void legacyRegistrationOtpCannotResetPassword() {
+        var user = register();
+        jdbc.update("insert into email_verification_otps(otp_id,user_id,otp_hash,created_at,expires_at) values (?,?,?,now(),now()+interval '5 minutes')", UUID.randomUUID(), user.getUserId(), encoder.encode("123456"));
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, "123456", UUID.randomUUID().toString()));
+    }
+    @Test void invalidPasswordDoesNotConsumeValidCode() {
+        register(); var code = requestCode();
+        assertThrows(RegistrationException.class, () -> reset.reset(email, code, "ậ".repeat(30)));
+        reset.reset(email, code, UUID.randomUUID().toString());
+    }
+    @Test void unknownBlockedAndGoogleOnlyAccountsDoNotSendResetMail() {
+        reset.request(email); verifyNoInteractions(mail);
+        var user = register(); jdbc.update("update users set status='BLOCKED' where user_id=?", user.getUserId());
+        reset.request(email); verifyNoInteractions(mail);
+        jdbc.update("update users set status='ACTIVE',password_hash=null where user_id=?", user.getUserId());
+        reset.request(email); verifyNoInteractions(mail);
+    }
+    @Test void mailFailureRollsBackOtpAndPublicResponseDoesNotExposeAccount() throws Exception {
+        var user = register();
+        doThrow(new RegistrationException("MAIL_UNAVAILABLE", "Mail failed", HttpStatus.SERVICE_UNAVAILABLE)).when(mail).sendPasswordReset(anyString(), anyString());
+        String existing = mvc.perform(post("/api/v1/auth/forgot-password").contentType(APPLICATION_JSON).content(json.writeValueAsString(Map.of("email", email))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String missing = mvc.perform(post("/api/v1/auth/forgot-password").contentType(APPLICATION_JSON).content(json.writeValueAsString(Map.of("email", "unknown-" + email))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(existing, missing); assertEquals(0, count("password_reset_otps", user));
     }
 }

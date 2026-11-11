@@ -1,4 +1,4 @@
-"""Persistent vector index. PostgreSQL uses pgvector; SQLite is a small-corpus dev fallback."""
+"""pgvector repository. SQLite is available only as an explicit test double."""
 
 import math
 from datetime import UTC, datetime
@@ -18,6 +18,7 @@ from sqlalchemy import (
     create_engine,
     delete,
     insert,
+    inspect,
     select,
     text,
 )
@@ -25,6 +26,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.pool import StaticPool
 
 from app.config import Settings
+from app.infrastructure.migrations import check_current_revision, validate_index_configuration
 from app.schemas import Citation, DocumentInfo
 
 
@@ -54,7 +56,7 @@ class VectorStore:
                 options["poolclass"] = StaticPool
             else:
                 Path(url.database).parent.mkdir(parents=True, exist_ok=True)
-        self.engine = create_engine(settings.database_url, **options)
+        self.engine = create_engine(settings.database_url, hide_parameters=True, **options)
         self.postgres = self.engine.dialect.name == "postgresql"
         metadata = MetaData()
         self.config = Table(
@@ -92,13 +94,38 @@ class VectorStore:
             ),
             Column("position", Integer, nullable=False),
         )
-        if self.postgres:
-            with self.engine.begin() as connection:
-                connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        metadata.create_all(self.engine)
+        # Runtime never creates/alters PostgreSQL tables or extensions.
+        if not self.postgres:
+            if not settings.allow_sqlite_for_tests:
+                self.engine.dispose()
+                raise ValueError("SQLite is only allowed in tests")
+            metadata.create_all(self.engine)
+        else:
+            inspector = inspect(self.engine)
+            if not all(
+                inspector.has_table(name)
+                for name in (
+                    "rag_alembic_version",
+                    "rag_index_config",
+                    "rag_documents",
+                    "rag_chunks",
+                )
+            ):
+                self.engine.dispose()
+                raise IndexConfigurationError("Run python -m alembic upgrade head before startup")
         with self.engine.begin() as connection:
+            if self.postgres:
+                try:
+                    check_current_revision(connection)
+                    validate_index_configuration(connection, settings)
+                except ValueError as exc:
+                    raise IndexConfigurationError(str(exc)) from exc
             signature = connection.scalar(select(self.config.c.signature))
             if signature is None:
+                if self.postgres:
+                    raise IndexConfigurationError(
+                        "Run python -m alembic upgrade head before startup"
+                    )
                 # One-time initialization is idempotent across concurrent workers.
                 statement = (
                     "INSERT INTO rag_index_config (id, signature) VALUES (1, :signature) "
@@ -139,6 +166,7 @@ class VectorStore:
         identifier = str(document_id)
         # All embeddings have been created/validated before touching the old index.
         with self.engine.begin() as connection:
+            self._lock_document(connection, document_id)
             connection.execute(delete(self.chunks).where(self.chunks.c.document_id == identifier))
             connection.execute(delete(self.documents).where(self.documents.c.id == identifier))
             connection.execute(
@@ -183,6 +211,7 @@ class VectorStore:
 
     def delete_document(self, document_id: UUID) -> bool:
         with self.engine.begin() as connection:
+            self._lock_document(connection, document_id)
             connection.execute(
                 delete(self.chunks).where(self.chunks.c.document_id == str(document_id))
             )
@@ -190,6 +219,12 @@ class VectorStore:
                 delete(self.documents).where(self.documents.c.id == str(document_id))
             )
             return result.rowcount > 0
+
+    def _lock_document(self, connection, document_id: UUID):
+        if self.postgres:
+            # Locks missing rows too, so first insert/replace/delete serialize.
+            key = int.from_bytes(document_id.bytes[:4], "big", signed=True)
+            connection.execute(text("SELECT pg_advisory_xact_lock(724019, :key)"), {"key": key})
 
     def search(self, vector: list[float], allowed_ids: list[UUID], top_k: int) -> list[Citation]:
         if not allowed_ids:

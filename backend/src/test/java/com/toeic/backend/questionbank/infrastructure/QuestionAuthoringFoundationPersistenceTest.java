@@ -75,13 +75,13 @@ class QuestionAuthoringFoundationPersistenceTest {
     void rejectedBatchLeavesPersistedDraftChoicesUnchangedAfterFlushAndReload() {
         var version = version(question(), 1, "ORIGINAL");
         entityManager.flush();
-        var oldIds = version.getChoices().stream().map(QuestionChoice::getChoiceId).toList();
+        var oldIds = version.getChoices().stream().map(element -> element.getChoiceId()).toList();
         assertThrows(IllegalArgumentException.class, () -> version.addChoices(List.of(
                 new QuestionChoiceDraft("C", "New", false, 3), new QuestionChoiceDraft("A", "Duplicate", true, 4))));
         entityManager.flush();
         entityManager.clear();
         var stored = versions.findById(version.getQuestionVersionId()).orElseThrow();
-        assertEquals(oldIds, stored.getChoices().stream().map(QuestionChoice::getChoiceId).toList());
+        assertEquals(oldIds, stored.getChoices().stream().map(element -> element.getChoiceId()).toList());
         assertEquals("ORIGINAL", stored.getExplanation());
     }
 

@@ -14,7 +14,7 @@ export function useContentCatalog() {
     let active = true;
     contentRepo.getCategories().then((cats) => {
       if (active) setCategories(cats);
-    });
+    }).catch(err => { if (active) setError(err.message); });
     return () => {
       active = false;
     };
@@ -48,10 +48,11 @@ export function useContentCatalog() {
 
   const toggleBookmark = async (id) => {
     try {
-      const updated = await contentRepo.toggleBookmark(id);
-      setContents((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      const current = contents.find(item => item.id === id);
+      const updated = await contentRepo.toggleBookmark(id, current?.isBookmarked);
+      setContents((prev) => prev.map((item) => (item.id === id ? { ...item, ...updated } : item)));
     } catch (err) {
-      console.error('Lỗi khi bookmark:', err);
+      setError(err.message || 'Không lưu được bookmark. Vui lòng thử lại.');
     }
   };
 

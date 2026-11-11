@@ -39,10 +39,10 @@ class QuestionReadPromptMapperTest {
         var prompt = prompts.toPrompt(version, Set.of(questionAsset, foreignAsset), Set.of(groupAsset, foreignAsset));
         var serialized = json.writeValueAsString(prompt);
         assertEquals(List.of(questionAsset), prompt.resourceIds());
-        assertEquals(List.of(groupAsset), prompt.passage().resources().stream().map(QuestionPrompt.Resource::resourceId).toList());
+        assertEquals(List.of(groupAsset), prompt.passage().resources().stream().map(element -> element.resourceId()).toList());
         assertEquals(2, prompt.passage().resources().getFirst().displayOrder());
         assertEquals(group.getGroupVersionId(), prompt.passage().groupVersionId());
-        assertEquals(List.of("A", "B"), prompt.choices().stream().map(QuestionPrompt.Choice::label).toList());
+        assertEquals(List.of("A", "B"), prompt.choices().stream().map(element -> element.label()).toList());
         for (var hidden : List.of(privateQuestionAsset.toString(), privateGroupAsset.toString(), foreignAsset.toString(),
                 "ANSWER_SECRET_EXPLANATION", "isCorrect", "correctChoiceIds", "answerKey", "explanation", "storageUrl", "transcript")) {
             assertFalse(serialized.contains(hidden), "Unexpected hidden data: " + hidden);

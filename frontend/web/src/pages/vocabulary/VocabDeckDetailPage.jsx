@@ -4,12 +4,15 @@ import { ChevronLeft, Layers, Volume2, Sparkles, BookOpen, CheckCircle, Clock } 
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
+import VocabularyEditor from '@/components/organisms/VocabularyEditor';
+import { useMock } from '@/lib/runtime-config';
 
 export default function VocabDeckDetailPage() {
   const { deckId } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -28,7 +31,7 @@ export default function VocabDeckDetailPage() {
     return () => {
       active = false;
     };
-  }, [deckId]);
+  }, [deckId, revision]);
 
   const speak = (text) => {
     if ('speechSynthesis' in window) {
@@ -118,6 +121,7 @@ export default function VocabDeckDetailPage() {
           </div>
         </div>
 
+        {!useMock && <VocabularyEditor deckId={deckId} onSaved={() => setRevision(value => value + 1)} />}
         {/* Word Groups Section (matching Frame 6.png) */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">

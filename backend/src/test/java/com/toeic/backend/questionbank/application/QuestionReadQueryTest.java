@@ -19,7 +19,7 @@ class QuestionReadQueryTest {
         assertNull(query.partId());
         assertNull(query.topicId());
         var orders = query.pageable().getSort().toList();
-        assertEquals(List.of("publishedAt", "question.questionId"), orders.stream().map(Sort.Order::getProperty).toList());
+        assertEquals(List.of("publishedAt", "question.questionId"), orders.stream().map(element -> element.getProperty()).toList());
         assertEquals(Sort.Direction.DESC, orders.getFirst().getDirection());
         assertEquals(Sort.Direction.ASC, orders.getLast().getDirection());
     }

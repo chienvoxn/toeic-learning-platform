@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableConfigurationProperties(RegistrationProperties.class)
+@EnableConfigurationProperties(PasswordResetProperties.class)
 public class RegistrationConfig {
 
     @Bean

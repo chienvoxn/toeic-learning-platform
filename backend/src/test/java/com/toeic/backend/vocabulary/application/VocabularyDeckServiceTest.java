@@ -34,13 +34,11 @@ class VocabularyDeckServiceTest {
     private VocabularyDeckService deckService;
 
     private UUID userId;
-    private UUID otherUserId;
     private VocabularyDeck deck;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-        otherUserId = UUID.randomUUID();
 
         deck = new VocabularyDeck(
                 userId,

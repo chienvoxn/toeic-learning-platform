@@ -7,3 +7,6 @@ data/
 
 # Trained model artifact
 vocabulary_model.json
+
+# Local Python virtual environment
+.venv/

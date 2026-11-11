@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-
+import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/vocabulary-decks/{deckId}")
 public class DeckFlashcardController {
@@ -29,7 +29,7 @@ public class DeckFlashcardController {
     public ResponseEntity<Void> addVocabulary(
             @AuthenticationPrincipal SessionPrincipal principal,
             @PathVariable UUID deckId,
-            @RequestBody AddDeckVocabularyRequest request
+            @Valid @RequestBody AddDeckVocabularyRequest request
     ) {
         flashcardService.addVocabulary(
                 principal.userId(),

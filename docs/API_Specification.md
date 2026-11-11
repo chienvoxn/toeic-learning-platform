@@ -43,7 +43,15 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
-| `POST` | `/auth/register` | Guest | RegisterRequest | 201 UserSummary | 409 EMAIL_EXISTS |
+| `POST` | `/auth/register` | Guest | RegisterRequest | 201 UserSummary, ACTIVE ngay, không OTP | 409 EMAIL_EXISTS |
+
+| `POST` | `/auth/forgot-password` | Guest | email | 200 generic Message | 400 VALIDATION_ERROR |
+
+| `POST` | `/auth/reset-password` | Guest | email, otp, newPassword | 204, thu hồi phiên, không tự login | 400 VALIDATION_ERROR / PASSWORD_RESET_INVALID |
+
+| `POST` | `/auth/google/challenge` | Guest | — | 200 challenge + HttpOnly binding cookie | 503 GOOGLE_NOT_CONFIGURED |
+
+| `POST` | `/auth/google` | Guest | challengeId, credential, currentPassword? + binding cookie | 200 LoginResponse | 401 GOOGLE_CREDENTIAL_INVALID; 409 GOOGLE_LINK_REQUIRED |
 
 | `POST` | `/auth/login` | Guest | LoginRequest | 200 LoginResponse | 400 VALIDATION_ERROR; 401 INVALID_CREDENTIALS |
 
@@ -247,6 +255,11 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.8 AI Tutor
 
+**RAG internal runtime:** Python tách Knowledge ingestion và Tutor querying, LangChain + pgvector,
+khóa admin/service riêng; [contract, migration và giới hạn](RAG_Tutor.md).
+Các route `/internal/v1/*` không mở public, không thay thế auth/quota/history của Spring Boot.
+Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần triển khai Python này hiện thực.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
@@ -282,6 +295,16 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 ## 4. DTO schema definitions (contract draft)
 
 ### 4.1 Authentication
+
+**Policy mới:** register trả ACTIVE ngay, không gửi OTP. Gỡ verify-email/resend-otp;
+thay bằng public POST `/auth/forgot-password` và `/auth/reset-password`, OTP chỉ
+khôi phục mật khẩu. [Payload, lỗi và transaction](Password_Recovery.md) ưu tiên
+hơn các ví dụ OTP đăng ký lịch sử.
+
+**Google OIDC runtime:** public POST `/api/v1/auth/google/challenge` và
+`/api/v1/auth/google`, nonce/cookie binding, xác minh ID token và xác nhận mật khẩu
+khi link theo [Google_OAuth2.md](Google_OAuth2.md). Login/me bổ sung
+`user.localLoginEnabled`; không thay bearer/OTP contract hiện hữu.
 
 ```json
 // POST /auth/register

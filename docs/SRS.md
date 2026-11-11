@@ -1,5 +1,10 @@
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
+> **Chính sách tài khoản mới 2026-11-11:** đăng ký ACTIVE ngay, đăng nhập không OTP;
+> OTP chỉ dùng quên mật khẩu theo [Password_Recovery.md](Password_Recovery.md).
+> Chính sách này thay thế các mô tả xác minh đăng ký cũ bên dưới. Google OAuth2 vẫn
+> yêu cầu ID token hợp lệ và xác nhận mật khẩu khi link email trùng, không thêm OTP.
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** SRS là nguồn yêu cầu nghiệp vụ; HLD/LLD/API là thiết kế đề xuất triển khai. BR-02, BR-07–10, BR-15–18 và BR-22 là các điểm giao cắt quan trọng. ERD v1.6 đã bổ sung `question_versions.status`, nhưng `review_history.rating` vẫn là `integer`, chưa tương thích trực tiếp với API rating dạng chuỗi. Không coi các quyết định còn [OPEN] là yêu cầu đã phê duyệt.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -55,6 +60,11 @@
 
 ### UC-02 — Đăng nhập và phân quyền
 
+**Google OAuth2/OIDC:** bổ sung đăng nhập Google cho web theo [contract và policy](Google_OAuth2.md).
+Google subject là định danh; email local trùng không tự link, cần mật khẩu hiện tại;
+Đăng ký ACTIVE ngay; OTP chỉ dùng quên mật khẩu. Google-only mới chỉ nhận LEARNER và dùng session opaque.
+Nonce một lần/cookie binding bảo vệ callback; không mở quyền Google APIs.
+
 **Actor chính:** Learner. **Tiền điều kiện:** tài khoản tồn tại.
 
 **Luồng chính:**
@@ -88,6 +98,12 @@
 ### UC-04 — Luyện tập TOEIC theo Part
 
 **PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11:** lưu từng câu trong pin của attempt, null bỏ chọn; đúng 1, sai/bỏ trống 0; rawScore, correct/incorrect/unanswered và tỷ lệ đúng trên tổng câu, chưa quy đổi TOEIC. Submit đồng bộ/chấm/lưu nguyên tử, idempotent đọc kết quả đã lưu, tuần tự hóa với save; đã submit không sửa, chỉ owner có permission được xem key/explanation từ pin. IN_PROGRESS hết hạn không lưu/submit; GRADED vẫn replay sau hạn. Không tự trả transcript/media URL/path. [Contract và kiểm thử PRAC-02](PRAC02_Answers_Submission_Grading.md).
+**Cập nhật yêu cầu guest:** Người dùng có thể thi thử mà không đăng nhập. Bản web
+hiện mở luồng công khai với một đề Reading mẫu, lưu/chấm trên trình duyệt, không
+ghi lịch sử tài khoản và không quy đổi điểm TOEIC. Đây là ngoại lệ cho phần luyện
+thử local; luồng thi lưu trên server dưới đây vẫn chưa được hiện thực. Khi triển
+khai guest server cần đặc tả định danh khách, ownership, snapshot và thời gian
+server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
