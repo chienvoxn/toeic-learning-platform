@@ -4,6 +4,7 @@ import com.toeic.backend.questionbank.application.PracticeQuestionViewMapper;
 import com.toeic.backend.questionbank.application.QuestionPrompt;
 import java.time.OffsetDateTime;
 import java.util.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public final class PracticeSessionDtos {
     private PracticeSessionDtos() { }
@@ -18,7 +19,8 @@ public final class PracticeSessionDtos {
     }
     public record SavedAnswer(UUID questionVersionId,UUID selectedChoiceId,OffsetDateTime updatedAt) { }
     public record Session(UUID attemptId,String sourceType,String status,OffsetDateTime startedAt,OffsetDateTime expiresAt,
-            boolean expired,int totalQuestions,List<Question> questions,List<SavedAnswer> answers) {
+            boolean expired,int totalQuestions,List<Question> questions,List<SavedAnswer> answers,
+            @JsonInclude(JsonInclude.Include.NON_NULL) SectionDtos.Configuration section) {
         public Session { questions=List.copyOf(questions);answers=List.copyOf(answers); }
     }
 }

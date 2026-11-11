@@ -7,6 +7,7 @@ const { RemoteAuthRepository } = await loadBrowserModule('features/auth/reposito
 const { RemoteVocabularyRepository } = await loadBrowserModule('features/vocabulary/repositories/vocabulary.api.js');
 const { RemoteContentRepository } = await loadBrowserModule('features/content/repositories/content.api.js');
 const { apiRequest, healthApi } = await loadBrowserModule('services/apiClient.js');
+const { readSession, saveSession, clearSession, SESSION_ENDED } = await loadBrowserModule('features/auth/session.js');
 const originalFetch = globalThis.fetch;
 let requests, queue, storage;
 const user = { userId: 'user-1', email: 'learner@example.com', fullName: 'Học viên', roles: ['LEARNER'], targetScore: null };
@@ -36,18 +37,18 @@ test('registration creates an active account and login works without OTP', async
   assert.equal(storage.size, 0);
   assert.deepEqual(bodyAt(0), { email: user.email, fullName: user.fullName, password });
   assert.equal(requests[0].url, '/api/v1/auth/register');
-  reply({ accessToken: token, expiresIn: 900, user });
+  reply({ accessToken: token, tokenType: 'Bearer', expiresIn: 900, user }); reply(user);
   const result = await repo.login({ email: user.email, password });
-  assert.equal(result.user.id, user.userId); assert.equal(storage.get('auth_token'), token);
+  assert.equal(result.user.id, user.userId); assert.equal(readSession()?.accessToken, token);
   reply(user);
   assert.equal((await repo.getCurrentUser()).id, user.userId);
-  assert.equal(requests[2].headers.Authorization, `Bearer ${token}`);
+  assert.equal(requests[3].headers.Authorization, `Bearer ${token}`);
   reply(null, 204); await repo.logout();
   assert.equal(storage.size, 0); assert.equal(await repo.getCurrentUser(), null);
-  assert.equal(requests.length, 4, 'no verification or resend request during registration/login');
+  assert.equal(requests.length, 5, 'no verification or resend request during registration/login');
 });
 test('forgot-password and reset-password are public and do not send old bearer tokens', async () => {
-  storage.set('auth_token', randomUUID());
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   const repo = new RemoteAuthRepository(), newPassword = randomUUID();
   reply({ message: 'If the account exists, a code will be sent.' });
   await repo.forgotPassword(user.email);
@@ -59,24 +60,24 @@ test('forgot-password and reset-password are public and do not send old bearer t
   assert.ok(requests.every(request => !request.headers.Authorization));
 });
 test('401 clears the expired session; 403 keeps it', async () => {
-  const token = randomUUID(); storage.set('auth_token', token);
-  let expired = 0; window.addEventListener('auth:expired', () => expired++);
+  const token = randomUUID(); saveSession({ accessToken: token, tokenType: 'Bearer', expiresIn: 900 });
+  let expired = 0; window.addEventListener(SESSION_ENDED, () => expired++);
   reply({ code: 'FORBIDDEN', message: 'Forbidden' }, 403);
   await assert.rejects(apiRequest('/users/me'), error => error.status === 403);
-  assert.equal(storage.get('auth_token'), token);
+  assert.equal(readSession()?.accessToken, token);
   reply({ code: 'TOKEN_EXPIRED', message: 'Expired' }, 401);
   await assert.rejects(apiRequest('/users/me'), error => error.code === 'TOKEN_EXPIRED');
   assert.equal(storage.size, 0); assert.equal(expired, 1);
 });
 test('a late 401 does not clear a newer login session', async () => {
   const newToken = randomUUID();
-  storage.set('auth_token', randomUUID());
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   globalThis.fetch = async () => {
-    storage.set('auth_token', newToken);
+    saveSession({ accessToken: newToken, tokenType: 'Bearer', expiresIn: 900 });
     return new Response(JSON.stringify({ code: 'INVALID_TOKEN' }), { status: 401 });
   };
   await assert.rejects(apiRequest('/users/me'));
-  assert.equal(storage.get('auth_token'), newToken);
+  assert.equal(readSession()?.accessToken, newToken);
 });
 test('profile update uses camelCase and preserves an explicit null target', async () => {
   reply({ ...user, fullName: 'Tên mới' });
@@ -86,16 +87,16 @@ test('profile update uses camelCase and preserves an explicit null target', asyn
 });
 
 test('a late successful me response cannot restore a logged-out user', async () => {
-  storage.set('auth_token', randomUUID());
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   globalThis.fetch = async () => {
-    storage.delete('auth_token');
+    clearSession();
     return new Response(JSON.stringify(user));
   };
   assert.equal(await new RemoteAuthRepository().getCurrentUser(), null);
   assert.equal(storage.has('auth_user'), false);
 });
 test('password change uses the real endpoint and removes the local session', async () => {
-  storage.set('auth_token', randomUUID()); reply(null, 204);
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 }); reply(null, 204);
   const current = randomUUID(), next = randomUUID();
   await new RemoteAuthRepository().changePassword(current, next);
   assert.equal(requests[0].url, '/api/v1/users/me/password');
@@ -103,7 +104,7 @@ test('password change uses the real endpoint and removes the local session', asy
   assert.equal(storage.size, 0);
 });
 test('health uses unversioned endpoints without a bearer', async () => {
-  storage.set('auth_token', randomUUID()); reply({ status: 'UP' }); reply({ status: 'UP' });
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 }); reply({ status: 'UP' }); reply({ status: 'UP' });
   await healthApi.check(); await healthApi.database();
   assert.deepEqual(requests.map(request => request.url), ['/api/health', '/api/health/database']);
   assert.ok(requests.every(request => !request.headers.Authorization));
@@ -168,7 +169,7 @@ test('failed registration does not establish a session', async () => {
 });
 
 test('failed logout clears local state even if backend is unavailable', async () => {
-  storage.set('auth_token', randomUUID());
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   globalThis.fetch = async () => { throw new TypeError('Connection failed'); };
   await assert.rejects(new RemoteAuthRepository().logout(), error => error.code === 'NETWORK_ERROR');
   assert.equal(storage.size, 0);
@@ -181,7 +182,7 @@ test('flashcard permission errors are not treated as new words', async () => {
 });
 
 test('Google challenge and login use browser cookies and never send a stale app bearer', async () => {
-  storage.set('auth_token', randomUUID());
+  saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   const repo = new RemoteAuthRepository();
   const challengeId = randomUUID(), credential = randomUUID(), accessToken = randomUUID();
   reply({ challengeId, clientId: 'test-client.apps.googleusercontent.com', nonce: randomUUID(), expiresIn: 300 });
@@ -189,24 +190,24 @@ test('Google challenge and login use browser cookies and never send a stale app 
   assert.equal(requests[0].url, '/api/v1/auth/google/challenge');
   assert.equal(requests[0].credentials, 'same-origin');
   assert.equal(requests[0].headers.Authorization, undefined);
-  reply({ accessToken, user: { ...user, localLoginEnabled: false } });
+  reply({ accessToken, tokenType: 'Bearer', expiresIn: 900, user: { ...user, localLoginEnabled: false } }); reply({ ...user, localLoginEnabled: false });
   const result = await repo.loginWithGoogle({ credential, challengeId });
   assert.equal(requests[1].url, '/api/v1/auth/google');
   assert.deepEqual(bodyAt(1), { credential, challengeId });
   assert.equal(requests[1].credentials, 'same-origin');
   assert.equal(requests[1].headers.Authorization, undefined);
   assert.equal(result.user.localLoginEnabled, false);
-  assert.equal(storage.get('auth_token'), accessToken);
+  assert.equal(readSession()?.accessToken, accessToken);
 });
 
 test('Google account linking requires explicit password proof and keeps existing session on failure', async () => {
   const repo = new RemoteAuthRepository();
   const challengeId = randomUUID(), credential = randomUUID(), currentPassword = randomUUID();
-  const previousToken = randomUUID(); storage.set('auth_token', previousToken);
+  const previousToken = randomUUID(); saveSession({ accessToken: previousToken, tokenType: 'Bearer', expiresIn: 900 });
   reply({ code: 'GOOGLE_LINK_REQUIRED', message: 'Confirm account password' }, 409);
   await assert.rejects(repo.loginWithGoogle({ credential, challengeId }), error => error.code === 'GOOGLE_LINK_REQUIRED');
-  assert.equal(storage.get('auth_token'), previousToken);
-  reply({ accessToken: randomUUID(), user });
+  assert.equal(readSession()?.accessToken, previousToken);
+  reply({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900, user }); reply(user);
   await repo.loginWithGoogle({ credential, challengeId, currentPassword });
   assert.deepEqual(bodyAt(1), { credential, challengeId, currentPassword });
 });

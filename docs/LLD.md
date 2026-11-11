@@ -341,6 +341,8 @@ sequenceDiagram
 
 ### 5.2 Autosave đồng thời Submit
 
+**EXAM-01 runtime — quyết định 2026-11-11:** SectionSessionService tạo bằng PracticeQuestionCatalog/PracticeUnitSelector đủ mọi Part, pin nguồn/order/config/server expiry, persist cùng transaction. PracticeSessionService/Submissions dùng chung routes/repository và requireSource guard (practice hoặc exam permission theo persisted source); endpoint union không bypass quyền theo source. AttemptGrading đã tách từ PRAC-02, không tạo grading thứ hai; Section result thêm persisted Part statistics. Save recheck now sau parent lock và chặn từ deadline, submit Section được chấm muộn, Practice vẫn từ chối; GET/result không tự chốt, worker EXAM-03 chưa có. V27 không sửa migration cũ. [Contract và test](EXAM01_Section_Attempts.md).
+
 **Runtime PRAC-02 — sản phẩm chốt 2026-11-11:** PracticeSubmissionService dùng READ_COMMITTED + cùng parent row lock cho save/submit, actor/permission và ownership/source ở DB. Save kiểm thời gian sau khóa, membership pin và composite choice. Submit chấm đồng bộ, lưu answer grading snapshots V26, part results và header GRADED cùng transaction; không worker/outbox hoặc intermediate SUBMITTED persisted. GRADED replay kết quả đã lưu trước expiry check; result REPEATABLE_READ chỉ cho owner có permission. Đúng=1, sai/bỏ trống=0, accuracy đúng/tổng (phần trăm 2 chữ số); explanation chỉ trong result sau submit. HLD Phần B §25 có cùng override runtime; diagrams/Idempotency-Key/background bên dưới là DESIGN cho Test tương lai. [Chi tiết](PRAC02_Answers_Submission_Grading.md).
 
 ```mermaid

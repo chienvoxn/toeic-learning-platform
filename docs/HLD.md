@@ -219,6 +219,8 @@ sequenceDiagram
 
 ### 7.2 Autosave, submit, expiry, grading
 
+**EXAM-01 runtime — sản phẩm chốt 2026-11-11:** Section sinh từ published bank độc lập TestVersion/EXAM-04, source SECTION_SNAPSHOT, bắt buộc đủ mọi Part trong LISTENING/READING và tổng chính xác nguyên nhóm. Pin cấu hình V27 và snapshot V10; source Section cũng có test_version_id NULL. Reuse catalog/selector và AttemptGrading, cùng row lock save/submit; chỉ save trước hạn nhưng submit lần đầu sau hạn được chấm đáp án đã lưu. Grade/header/part results/key snapshots commit nguyên tử, replay persisted result; không tự chốt khi không có request (EXAM-03), không score conversion. Đây là quyết định bổ sung vào invariants hai nguồn cũ và ngoại lệ runtime Section cho expiry sequence DESIGN bên dưới. [Chi tiết](EXAM01_Section_Attempts.md).
+
 ```mermaid
 stateDiagram-v2
     [*] --> CREATED

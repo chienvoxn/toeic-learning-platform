@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AuthProvider } from '@/features/auth/hooks/useAuth';
+import { AuthProvider } from '@/features/auth/AuthProvider';
 import { LearnerLayoutContext } from './layout-context';
 
 export function AppProviders({ children }) {

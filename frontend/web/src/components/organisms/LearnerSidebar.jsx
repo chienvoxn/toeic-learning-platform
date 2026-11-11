@@ -39,7 +39,7 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
         <div className="sidebar-personal">
           {navItem(['Ghi chú của tôi', null, 'imgSvg11'])}
           {navItem(['Từ vựng của tôi', '/vocabulary?view=personal', 'imgSvg5'])}
-          <button type="button" className="sidebar-link logout-link" title="Đăng xuất" onClick={async () => { await logout(); navigate('/login'); }}><FigmaAsset name="imgSvg12" /><span>Đăng xuất</span></button>
+          <button type="button" className="sidebar-link logout-link" title={user ? 'Đăng xuất' : 'Đăng nhập'} onClick={async () => { const result = user ? await logout() : null; navigate('/login', { state: { logoutFailed: result?.revocationFailed } }); }}><FigmaAsset name="imgSvg12" /><span>{user ? 'Đăng xuất' : 'Đăng nhập'}</span></button>
         </div>
         {notice && <div className="sidebar-notice" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Đóng thông báo">×</button></div>}
       </div>

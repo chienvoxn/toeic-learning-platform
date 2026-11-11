@@ -1,4 +1,4 @@
-import { toClientUser } from '../api/auth.mapper';
+import { toDemoUser as toClientUser } from '../api/auth.mapper';
 
 const delay = (ms = 350) => new Promise(res => setTimeout(res, ms));
 
@@ -52,6 +52,10 @@ export class FakeAuthRepository {
     localStorage.setItem('auth_user', JSON.stringify(user));
     return { user, token };
   }
+
+  async changePassword() { throw new Error('Đổi mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async forgotPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async resetPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
 
   async loginWithGoogle() {
     await delay(350);

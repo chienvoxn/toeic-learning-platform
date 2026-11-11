@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { healthApi } from '@/services/apiClient';
 import { useMock } from '@/lib/runtime-config';
+import { authMode } from '@/features/auth/config';
 
 export default function HealthPage() {
   const [state, setState] = useState({ loading: true });
@@ -17,6 +18,7 @@ export default function HealthPage() {
     return () => controller.abort();
   }, []);
   return <main className="max-w-xl mx-auto p-8 space-y-5"><Link to="/" className="pill-button">← Trang chủ</Link><h1 className="text-2xl font-bold">Kiểm tra kết nối hệ thống</h1><section className="surface p-6 space-y-4">
+    <p>Auth: <strong>{authMode}</strong> — không fallback demo khi mất kết nối.</p>
     <p>Nguồn dữ liệu: <strong>{useMock ? 'Dữ liệu mẫu (mock)' : 'API backend thật'}</strong></p>
     <p>Backend: <strong>{state.loading ? 'Đang kiểm tra...' : state.app}</strong></p>
     <p>Database: <strong>{state.loading ? 'Đang kiểm tra...' : state.database}</strong></p>

@@ -53,3 +53,7 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the Oxlint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+
+## Bảo toàn và tích hợp web-auth local
+
+Xem [WEB_Auth_Integration](../../docs/WEB_Auth_Integration.md). `VITE_AUTH_MODE=remote` là mặc định, độc lập với `VITE_USE_MOCK`. Phiên remote dùng token và hạn server, restore bằng GET me, không fallback tài khoản mẫu. `npm run test:auth:e2e` cần frontend/backend thật và DB kiểm thử riêng.

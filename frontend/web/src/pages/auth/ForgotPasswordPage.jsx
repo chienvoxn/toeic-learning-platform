@@ -4,7 +4,8 @@ import AuthTemplate from '@/components/templates/AuthTemplate';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useMock } from '@/lib/runtime-config';
+import { isRemoteAuth } from '@/features/auth/config';
+import { passwordError } from '@/features/auth/errors';
 
 export default function ForgotPasswordPage() {
   const { forgotPassword, resetPassword } = useAuth();
@@ -32,7 +33,8 @@ export default function ForgotPasswordPage() {
   async function submit(event) {
     event.preventDefault(); setError('');
     if (password !== confirmation) { setError('Mật khẩu xác nhận chưa khớp.'); return; }
-    if (new TextEncoder().encode(password).length > 72) { setError('Mật khẩu không được vượt quá 72 byte UTF-8.'); return; }
+    const validation = passwordError(password);
+    if (validation) { setError(validation); return; }
     setBusy(true);
     try {
       await resetPassword(email, otp, password);
@@ -43,7 +45,7 @@ export default function ForgotPasswordPage() {
   }
   return <AuthTemplate title="Quên mật khẩu" subtitle="Nhận mã xác nhận qua email để đặt lại mật khẩu">
     <p className="text-sm mb-4">Tài khoản đăng nhập bằng Google có thể tiếp tục dùng nút Google ở trang đăng nhập.</p>
-    {useMock ? <p role="status">Khôi phục mật khẩu chỉ có trong chế độ kết nối máy chủ thật.</p> : <>
+    {!isRemoteAuth ? <p role="status">Khôi phục mật khẩu chỉ có trong chế độ kết nối máy chủ thật.</p> : <>
       {message && <p role="status" className="text-sm mb-3">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <form className="email-login" onSubmit={stage === 'request' ? requestCode : submit}>

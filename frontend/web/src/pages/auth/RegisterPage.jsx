@@ -4,7 +4,8 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useMock } from '@/lib/runtime-config';
+import { isRemoteAuth } from '@/features/auth/config';
+import { authErrorMessage, passwordError } from '@/features/auth/errors';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -19,10 +20,11 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault(); setLoading(true); setError('');
     if (password !== confirmation) { setError('Mật khẩu xác nhận chưa khớp.'); setLoading(false); return; }
-    if (new TextEncoder().encode(password).length > 72) { setError('Mật khẩu không được vượt quá 72 byte UTF-8.'); setLoading(false); return; }
-    try { await register({ fullName, email, password, targetScore: 750 }); navigate(useMock ? '/' : '/login', { replace: true, state: { email, message: 'Tạo tài khoản thành công. Bạn có thể đăng nhập ngay, không cần OTP.' } }); }
-    catch (err) { setError(err.message || 'Không thể tạo tài khoản.'); }
-    finally { setLoading(false); }
+    const validation = passwordError(password);
+    if (validation) { setError(validation); setLoading(false); return; }
+    try { await register({ fullName, email, password }); navigate(isRemoteAuth ? '/login' : '/', { replace: true, state: { email, message: 'Tạo tài khoản thành công. Bạn có thể đăng nhập ngay, không cần OTP.' } }); }
+    catch (err) { setError(authErrorMessage(err)); }
+    finally { setLoading(false); setPassword(''); setConfirmation(''); }
   }
   return <main className="register-page"><header><Link to="/login" aria-label="Quay lại"><ArrowLeft size={24} /></Link><Link className="register-login" to="/login">ĐĂNG NHẬP</Link></header>
     <form className="register-form" onSubmit={handleSubmit}><h1>Đăng ký tài khoản</h1>

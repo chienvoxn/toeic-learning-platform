@@ -1,5 +1,7 @@
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **EXAM-01 V27 runtime — sản phẩm chốt 2026-11-11:** attempts thêm section_type VARCHAR(20) và configured_duration_seconds INTEGER nullable cho rows cũ; SECTION_SNAPSHOT bắt buộc attempt_type=SECTION, test_version_id NULL, section_type LISTENING/READING, duration 60–7200 giây/bội 60, total_questions 1–100, expires_at = started_at + configured_duration_seconds. Source khác giữ hai cột NULL. questionCount pin bằng total_questions, Part bắt buộc suy từ section_type, tập/order version pin bằng snapshots V10. Không backfill/sửa V1–V26. V27 seed exam:manage:self chỉ mặc định LEARNER. Membership đủ mọi Part và feasibility nguyên nhóm được application enforce; chấm/answer/part results dùng V5/V26. [Contract/schema/kiểm thử](EXAM01_Section_Attempts.md).
+
 > **PRAC-02 V26 runtime — quyết định sản phẩm 2026-11-11:** giữ bảng V5/V10, thêm attempt_answers.correct_choice_id UUID nullable với composite FK `(question_version_id,correct_choice_id)` → question_choices, explanation_snapshot TEXT nullable và part_number_snapshot INTEGER nullable/check 1–7. Không backfill key/kết quả cũ, không sửa V1–V23. Trước submit is_correct/key/part snapshot NULL; submit tạo cả row bỏ trống, lưu bool/key/explanation/Part và attempt_part_results cùng header GRADED trong một transaction. Khóa parent/ownership/source, kiểm membership ở application và composite FK choice DB; không global FK answers→practice snapshot vì còn source TEST_VERSION DESIGN. rawScore/count/accuracy suy từ kết quả đúng/sai đã persisted, không từ đáp án current published. [API, quyết định và kiểm thử](PRAC02_Answers_Submission_Grading.md).
 > **V25:** tạo `password_reset_otps`, không tái sử dụng OTP xác minh cũ; chuyển user
 > PENDING có local password sang ACTIVE mà không giả lập email proof, giữ tài khoản
@@ -377,6 +379,8 @@ Table attempts {
   test_version_id uuid
   attempt_type varchar(30) [not null]
   attempt_source_type varchar(30) [not null]
+  section_type varchar(20) // V27, NULL ngoài SECTION_SNAPSHOT
+  configured_duration_seconds integer // V27, Section 60..7200, bội 60
   expires_at timestamptz [not null]
   max_attempts_snapshot integer
   status varchar(20) [not null]

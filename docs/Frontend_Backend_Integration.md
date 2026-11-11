@@ -3,6 +3,7 @@
 ## Cấu hình
 
 Frontend `frontend/web` mặc định dùng API thật (`VITE_USE_MOCK=false`), base `/api/v1`.
+Auth dùng `VITE_AUTH_MODE=remote` mặc định và độc lập với mock module; phiên browser là `toeic.remote.session`, restore bằng GET me. Bản local trước đồng bộ và kết quả kiểm chứng merge: [WEB_Auth_Integration.md](WEB_Auth_Integration.md).
 Vite proxy `/api` sang `http://localhost:8080`. Không có fallback tự động sang mock
 khi API lỗi. Nếu đổi biến môi trường frontend, khởi động lại Vite.
 

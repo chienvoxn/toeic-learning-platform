@@ -9,6 +9,7 @@ public class PracticeException extends RuntimeException {
     public static PracticeException invalid() { return new PracticeException(400,"VALIDATION_ERROR","Du lieu luyen tap khong hop le."); }
     public static PracticeException missing() { return new PracticeException(404,"ATTEMPT_NOT_FOUND","Khong tim thay luot luyen tap."); }
     public static PracticeException insufficient() { return new PracticeException(409,"PRACTICE_QUESTIONS_INSUFFICIENT","Khong du bo cau hoi phu hop."); }
+    public static PracticeException sectionInsufficient() { return new PracticeException(409,"SECTION_QUESTIONS_INSUFFICIENT","Khong co to hop du moi Part va dung tong so cau cua Section."); }
     public static PracticeException notEditable() { return new PracticeException(409,"ATTEMPT_NOT_EDITABLE","Luot luyen tap khong con cho phep ghi dap an."); }
     public static PracticeException expired() { return new PracticeException(409,"ATTEMPT_EXPIRED","Luot luyen tap da het han."); }
     public static PracticeException questionMissing() { return new PracticeException(404,"ATTEMPT_QUESTION_NOT_FOUND","Khong tim thay cau hoi trong luot luyen tap."); }

@@ -1,88 +1,68 @@
-import { apiRequest } from '@/services/apiClient';
-import { toClientUser } from '../api/auth.mapper';
+import { apiRequest } from '../../../services/apiClient.js';
+import { toClientUser } from '../api/auth.mapper.js';
+import { readSession, saveSession, clearSession } from '../session.js';
 
 export class RemoteAuthRepository {
   async login({ email, password }) {
-    const data = await apiRequest('/auth/login', {
-      method: 'POST',
-      token: null,
-      body: { email, password },
-    });
-    localStorage.setItem('auth_token', data.accessToken);
-    const user = toClientUser(data.user);
-    localStorage.setItem('auth_user', JSON.stringify(user));
-    return { user, token: data.accessToken };
+    const data = await apiRequest('/auth/login', { method: 'POST', auth: false, body: { email, password } });
+    return this.startSession(data);
   }
 
-  async register(payload) {
-    const data = await apiRequest('/auth/register', {
-      method: 'POST',
-      token: null,
-      body: {
-        email: payload.email,
-        password: payload.password,
-        fullName: payload.fullName,
-      },
-    });
-    return data;
+  register({ email, password, fullName }) {
+    return apiRequest('/auth/register', { method: 'POST', auth: false, body: { email, password, fullName } });
   }
 
   forgotPassword(email) {
-    return apiRequest('/auth/forgot-password', { method: 'POST', token: null, body: { email } });
+    return apiRequest('/auth/forgot-password', { method: 'POST', auth: false, body: { email } });
   }
 
   resetPassword(email, otp, newPassword) {
-    return apiRequest('/auth/reset-password', { method: 'POST', token: null, body: { email, otp, newPassword } });
+    return apiRequest('/auth/reset-password', { method: 'POST', auth: false, body: { email, otp, newPassword } });
   }
 
   googleChallenge() {
-    return apiRequest('/auth/google/challenge', { method: 'POST', token: null, credentials: 'same-origin' });
+    return apiRequest('/auth/google/challenge', { method: 'POST', auth: false, credentials: 'same-origin' });
   }
 
   async loginWithGoogle({ credential, challengeId, currentPassword }) {
-    const data = await apiRequest('/auth/google', {
-      method: 'POST', token: null, credentials: 'same-origin',
-      body: { credential, challengeId, ...(currentPassword ? { currentPassword } : {}) },
-    });
-    const user = toClientUser(data.user);
-    localStorage.setItem('auth_token', data.accessToken);
-    localStorage.setItem('auth_user', JSON.stringify(user));
-    return { user, token: data.accessToken };
+    const data = await apiRequest('/auth/google', { method: 'POST', auth: false, credentials: 'same-origin',
+      body: { credential, challengeId, ...(currentPassword !== undefined ? { currentPassword } : {}) } });
+    return this.startSession(data);
+  }
+
+  async startSession(data) {
+    saveSession(data);
+    try { return { user: await this.getCurrentUser() }; }
+    catch (error) { clearSession(data.accessToken); throw error; }
   }
 
   async getCurrentUser() {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return null;
-    const data = await apiRequest('/users/me');
-    if (localStorage.getItem('auth_token') !== token) return null;
-    const user = toClientUser(data);
-    localStorage.setItem('auth_user', JSON.stringify(user));
-    return user;
+    const session = readSession();
+    if (!session) return null;
+    if (session.expiresAt <= Date.now()) { clearSession(session.accessToken); return null; }
+    const user = await apiRequest('/users/me', { token: session.accessToken });
+    // A successful response can also arrive after logout or a different login.
+    return readSession()?.accessToken === session.accessToken ? toClientUser(user) : null;
   }
 
   async logout() {
-    try {
-      await apiRequest('/auth/logout', { method: 'POST' });
-    } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-    }
+    const token = readSession()?.accessToken;
+    try { if (token) await apiRequest('/auth/logout', { method: 'POST', token }); }
+    finally { clearSession(token); }
   }
 
   async updateProfile(updates) {
-    const data = await apiRequest('/users/me', {
-      method: 'PATCH',
-      body: {
-        ...(updates.fullName !== undefined ? { fullName: updates.fullName } : {}),
-        ...(updates.targetScore !== undefined ? { targetScore: updates.targetScore } : {}),
-      },
-    });
-    return toClientUser(data);
+    const body = {};
+    for (const key of ['fullName', 'targetScore']) {
+      if (Object.hasOwn(updates, key) && updates[key] !== undefined) body[key] = updates[key];
+    }
+    return toClientUser(await apiRequest('/users/me', { method: 'PATCH', body }));
   }
 
   async changePassword(currentPassword, newPassword) {
-    await apiRequest('/users/me/password', { method: 'POST', body: { currentPassword, newPassword } });
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+    if (typeof currentPassword === 'object') ({ currentPassword, newPassword } = currentPassword);
+    const token = readSession()?.accessToken;
+    await apiRequest('/users/me/password', { method: 'POST', token, body: { currentPassword, newPassword } });
+    clearSession(token);
   }
 }

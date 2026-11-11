@@ -21,7 +21,7 @@ import OnboardingPage from '../pages/onboarding/OnboardingPage';
 import ListeningHubPage from '../pages/listening/ListeningHubPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
-import RequireAuth from '../components/templates/RequireAuth';
+import RequireAuth from '../features/auth/RequireAuth';
 import UnavailablePage from '../pages/UnavailablePage';
 import { useMock } from '../lib/runtime-config';
 import ContentDetailPage from '../pages/content/ContentDetailPage';
