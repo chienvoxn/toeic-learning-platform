@@ -87,6 +87,8 @@
 
 ### UC-04 — Luyện tập TOEIC theo Part
 
+**PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11:** lưu từng câu trong pin của attempt, null bỏ chọn; đúng 1, sai/bỏ trống 0; rawScore, correct/incorrect/unanswered và tỷ lệ đúng trên tổng câu, chưa quy đổi TOEIC. Submit đồng bộ/chấm/lưu nguyên tử, idempotent đọc kết quả đã lưu, tuần tự hóa với save; đã submit không sửa, chỉ owner có permission được xem key/explanation từ pin. IN_PROGRESS hết hạn không lưu/submit; GRADED vẫn replay sau hạn. Không tự trả transcript/media URL/path. [Contract và kiểm thử PRAC-02](PRAC02_Answers_Submission_Grading.md).
+
 **Actor chính:** Learner. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

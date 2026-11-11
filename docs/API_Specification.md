@@ -151,7 +151,7 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.4 Tests/Blueprint/Attempts
 
-**Runtime PRAC-01:** chỉ POST `/attempts` và GET `/attempts/{id}` cho PRACTICE_SNAPSHOT theo §4.3 và [tài liệu PRAC-01](PRAC01_Practice_Sessions.md). Các Test/Blueprint/answer/submit/result/list trong bảng còn DESIGN.
+**Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.
 
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
@@ -176,11 +176,11 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 | `GET` | `/attempts/{id}` | practice:manage:self + Owner | — | 200 PracticeSession, gồm expired | 400/401/403/404; 409 snapshot hỏng |
 
-| `PUT` | `/attempts/{id}/answers/{questionVersionId}` | Owner | SaveAnswerRequest | 200 SavedAnswer | 409 ATTEMPT_NOT_EDITABLE |
+| `PUT` | `/attempts/{id}/answers/{questionVersionId}` | practice:manage:self + Owner | selectedChoiceId UUID/null | 200 SavedAnswer | 400/401/403/404/422; 409 ATTEMPT_NOT_EDITABLE hoặc ATTEMPT_EXPIRED |
 
-| `POST` | `/attempts/{id}/submit` | Owner | Idempotency-Key | 200 SubmissionReceipt | 409 |
+| `POST` | `/attempts/{id}/submit` | practice:manage:self + Owner | Không body/query; không yêu cầu Idempotency-Key | 200 PracticeResult (GRADED), replay cùng kết quả | 400/401/403/404; 409 ATTEMPT_EXPIRED/ATTEMPT_NOT_EDITABLE hoặc snapshot hỏng |
 
-| `GET` | `/attempts/{id}/result` | Owner | — | 200 AttemptResult | 409 RESULT_NOT_READY |
+| `GET` | `/attempts/{id}/result` | practice:manage:self + Owner | — | 200 PracticeResult đã lưu | 400/401/403/404; 409 RESULT_NOT_READY hoặc snapshot hỏng |
 
 | `GET` | `/attempts` | Learner | page,size,status | 200 Page<AttemptSummary> | 400 |
 
@@ -336,7 +336,7 @@ Do not log password or tokens. Refresh token endpoint/policy remains [OPEN]. Cur
 
 Thứ tự nội bộ group lấy từ question_versions.group_question_order (V23), không thời gian tạo/UUID. Group legacy thiếu hoặc trùng vị trí current members không được chọn; không backfill/suy vị trí, chưa thêm API authoring vị trí. Snapshot lưu thứ tự và không đổi khi reload.
 
-**PRAC-01 runtime — quyết định sản phẩm chốt 2026-11-10, không phải AC backlog:** POST `/attempts` và GET `/attempts/{id}` hiện thực theo [contract, payload, transaction và kiểm thử](PRAC01_Practice_Sessions.md). Chỉ sourceType=PRACTICE_SNAPSHOT, request practice.partNumbers là Part 1–7 (không trùng), questionCount integer 1–200, optional topicId/difficulty; partIds trong DESIGN cũ không là alias runtime. Tìm tổ hợp chính xác nguyên nhóm, mỗi Part có câu, tổng đúng yêu cầu hoặc 409 PRACTICE_QUESTIONS_INSUFFICIENT; không tham lam. Permission practice:manage:self mặc định chỉ LEARNER, grant hợp lệ cho role khác được dùng; 401/403/own 404. Snapshot pin version/group/order, đọc lại sau archive/republish không repin/fallback; media visibility kiểm lại, không đáp án/lời giải/transcript/URL/path. Server expiry 24h, hết hạn vẫn GET với expired=true; PRAC-02 phải chặn ghi sau expiresAt. TEST_VERSION, answer/submit/result/list endpoints còn DESIGN.
+**PRAC-01 runtime — quyết định sản phẩm chốt 2026-11-10, không phải AC backlog:** POST `/attempts` và GET `/attempts/{id}` hiện thực theo [contract, payload, transaction và kiểm thử](PRAC01_Practice_Sessions.md). Chỉ sourceType=PRACTICE_SNAPSHOT, request practice.partNumbers là Part 1–7 (không trùng), questionCount integer 1–200, optional topicId/difficulty; partIds trong DESIGN cũ không là alias runtime. Tìm tổ hợp chính xác nguyên nhóm, mỗi Part có câu, tổng đúng yêu cầu hoặc 409 PRACTICE_QUESTIONS_INSUFFICIENT; không tham lam. Permission practice:manage:self mặc định chỉ LEARNER, grant hợp lệ cho role khác được dùng; 401/403/own 404. Snapshot pin version/group/order, đọc lại sau archive/republish không repin/fallback; media visibility kiểm lại, không đáp án/lời giải/transcript/URL/path. Server expiry 24h, hết hạn vẫn GET với expired=true; PRAC-02 chặn ghi sau expiresAt theo §4.4/4.5. TEST_VERSION/list endpoints còn DESIGN; answer/submit/result đã có runtime PRAC-02.
 
 ```json
 // Mock test — DESIGN, chưa triển khai trong PRAC-01
@@ -351,26 +351,36 @@ Response questions không chứa `isCorrect`, explanation hoặc hidden grading 
 
 ### 4.4 Autosave Answer
 
+**PRAC-02 runtime — quyết định sản phẩm vừa chốt 2026-11-11.** Chỉ từng câu, không batch/clientSequence. Không nhận trường lạ/trùng, omitted selectedChoiceId hoặc query params; sai payload/kiểu/UUID trả 400. Membership theo pin, choice sai version trả 422 CHOICE_VERSION_MISMATCH; câu ngoài snapshot trả 404 ATTEMPT_QUESTION_NOT_FOUND sau ownership check.
+
 ```json
 // PUT /attempts/{attemptId}/answers/{questionVersionId}
-{"selectedChoiceId":"<uuid>","clientSequence":3}
+{"selectedChoiceId":"<uuid>"}
 // 200 SavedAnswer
-{"attemptId":"<uuid>","questionVersionId":"<uuid>","selectedChoiceId":"<uuid>","savedAt":"2026-10-28T01:03:00Z"}
+{"questionVersionId":"<uuid>","selectedChoiceId":"<uuid>","updatedAt":"2026-11-11T01:03:00Z"}
 ```
 
-`selectedChoiceId=null` biểu diễn bỏ chọn. Server kiểm tra choice thuộc đúng questionVersion và attempt snapshot; status IN_PROGRESS; thời gian chưa hết. `clientSequence` là [DESIGN] chưa có cột persisted revision trong DBML.
+`selectedChoiceId=null` bỏ chọn, giữ row với answered_at NULL. Server khóa attempt, rồi kiểm IN_PROGRESS và now < expiresAt, membership snapshot/choice đúng pin. GET `/attempts/{id}` bổ sung `answers: [SavedAnswer]` theo thứ tự snapshot, gồm các câu đã lưu/bỏ chọn; không trả key/explanation/transcript/media path. clientSequence/revision vẫn ngoài phạm vi.
 
 ### 4.5 Submit / Result
 
+**PRAC-02 runtime:** POST không body/query; cùng permission/ownership như lưu đáp án. Chấm và lưu trong một transaction với khóa attempt dùng chung autosave. GET result dùng REPEATABLE_READ. Cả hai trả cùng DTO GRADED, không cần Idempotency-Key; replay theo attempt, không chấm lại. Submit mới sau hạn 409 ATTEMPT_EXPIRED; GRADED được replay trước expiry check kể cả đã quá hạn. Trước submit GET result trả 409 RESULT_NOT_READY, không key/explanation. Lưu sau submit (kể cả null) trả 409 ATTEMPT_NOT_EDITABLE.
+
 ```json
-// POST /attempts/{attemptId}/submit; header Idempotency-Key: <uuid>
-// 200
-{"attemptId":"<uuid>","status":"SUBMITTED","submittedAt":"2026-10-28T01:45:00Z"}
-// GET /attempts/{attemptId}/result, after grading
-{"attemptId":"<uuid>","status":"GRADED","totalQuestions":100,"correctCount":82,"listeningCorrectCount":41,"readingCorrectCount":41,"listeningEstimatedScore":null,"readingEstimatedScore":null,"totalEstimatedScore":null,"scoreConversionTableId":null,"scoreLabel":"ESTIMATED_ONLY_IF_AVAILABLE"}
+// POST /attempts/{attemptId}/submit hoặc GET /attempts/{attemptId}/result; 200
+{
+  "attemptId":"<uuid>","status":"GRADED","submittedAt":"2026-11-11T01:45:00Z",
+  "totalQuestions":3,"correctCount":1,"incorrectCount":1,"unansweredCount":1,
+  "rawScore":1,"accuracy":33.33,"listeningCorrectCount":1,"readingCorrectCount":0,
+  "questions":[{
+    "order":1,"questionVersionId":"<pinned-uuid>","partNumber":2,
+    "selectedChoiceId":"<uuid>","correctChoiceId":"<uuid>",
+    "isCorrect":true,"outcome":"CORRECT","explanation":"Giải thích của version đã pin"
+  }]
+}
 ```
 
-Submit retry returns same logical receipt. Result scores null if conversion unavailable. For full TOEIC, counts are by skill; sample numbers here are illustrative, not a formal score mapping.
+Mảng ví dụ rút gọn; runtime đủ totalQuestions theo order snapshot. Đúng = 1, sai/bỏ trống = 0; rawScore = correctCount. incorrectCount chỉ các câu đã chọn sai, không gồm unansweredCount. accuracy là phần trăm đúng trên **tổng câu**, làm tròn HALF_UP 2 số thập phân (0–100). outcome CORRECT/INCORRECT/UNANSWERED; câu chưa trả lời có selectedChoiceId NULL, isCorrect false. Key và explanation (có thể NULL) cho mọi câu được snapshot vào attempt_answers V26 lúc submit, từ exact question/group version đã pin; result/replay chỉ đọc snapshot kết quả, không gọi current published hoặc chấm lại. Không transcript/assets/media URL/path, không điểm quy đổi TOEIC/score-conversion fields. Luồng TEST_VERSION, worker/outbox và quy đổi điểm trong DESIGN cũ chưa triển khai.
 
 ### 4.6 SRS
 
@@ -440,6 +450,8 @@ Submit retry returns same logical receipt. Result scores null if conversion unav
 - Start attempt: serialize max-attempts check and creation. Retry with same key must not consume another slot.
 - Autosave: transaction checks status/expiry and validates snapshot membership. Race with submit serialized via attempt row lock.
 - Submit: idempotent state transition; repeated call returns same receipt; grading background job can retry safely.
+
+**Ngoại lệ runtime PRACTICE_SNAPSHOT PRAC-02:** quyết định sản phẩm 2026-11-11 tại §4.5 dùng grading đồng bộ cùng transaction và replay PracticeResult đã lưu theo attempt; không worker/outbox, bảng idempotency hay key replay HTTP tổng quát. DESIGN background/Idempotency-Key phía trên còn áp dụng làm đề xuất cho luồng Test tương lai.
 - Publish: optimistic locking or row lock prevents two publish operations racing; preserve immutable version references.
 - Notifications: mark read idempotent, outbox event consumer deduplicates.
 
