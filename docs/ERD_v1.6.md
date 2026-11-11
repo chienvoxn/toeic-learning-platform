@@ -1,5 +1,6 @@
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **PRAC-02 V26 runtime — quyết định sản phẩm 2026-11-11:** giữ bảng V5/V10, thêm attempt_answers.correct_choice_id UUID nullable với composite FK `(question_version_id,correct_choice_id)` → question_choices, explanation_snapshot TEXT nullable và part_number_snapshot INTEGER nullable/check 1–7. Không backfill key/kết quả cũ, không sửa V1–V23. Trước submit is_correct/key/part snapshot NULL; submit tạo cả row bỏ trống, lưu bool/key/explanation/Part và attempt_part_results cùng header GRADED trong một transaction. Khóa parent/ownership/source, kiểm membership ở application và composite FK choice DB; không global FK answers→practice snapshot vì còn source TEST_VERSION DESIGN. rawScore/count/accuracy suy từ kết quả đúng/sai đã persisted, không từ đáp án current published. [API, quyết định và kiểm thử](PRAC02_Answers_Submission_Grading.md).
 > **V25:** tạo `password_reset_otps`, không tái sử dụng OTP xác minh cũ; chuyển user
 > PENDING có local password sang ACTIVE mà không giả lập email proof, giữ tài khoản
 > bị khóa. Không sửa migration cũ. [Policy mới](Password_Recovery.md).
@@ -399,6 +400,9 @@ Table attempt_answers {
   question_version_id uuid [not null]
   selected_choice_id uuid
   is_correct boolean
+  correct_choice_id uuid // V26, nullable, composite FK cùng question_version_id
+  explanation_snapshot text // V26, nullable
+  part_number_snapshot integer // V26, nullable, 1..7
   answered_at timestamptz
   updated_at timestamptz [not null]
   indexes {

@@ -571,6 +571,8 @@ MVP dùng **in-app notification**; không bắt buộc push/email. `notification
 
 ## 25. Updated sequence: submit/grading with outbox
 
+**PRAC-02 runtime — quyết định sản phẩm vừa chốt 2026-11-11:** PRACTICE_SNAPSHOT thay sequence DESIGN bên dưới bằng grading đồng bộ trong cùng transaction. PracticeSubmissionService khóa attempt FOR UPDATE có ownership/source predicate, replay GRADED trước expiry check; IN_PROGRESS hết hạn từ chối submit/lưu. Đọc exact pinned key qua public application contract QuestionBank, lưu correctness/key/explanation/Part V26 + part results/header GRADED nguyên tử; crash trước commit rollback và retry, sau commit đọc lại kết quả đã lưu. Cùng khóa với save: save commit trước thì được chấm, submit chốt trước thì save sau bị từ chối. Không intermediate SUBMITTED persisted, worker/outbox/notification hoặc quy đổi TOEIC trong PRAC-02. Diagram bên dưới giữ làm DESIGN cho Test/EXAM tương lai; không ghi đè quyết định practice này. [Contract và kiểm thử](PRAC02_Answers_Submission_Grading.md).
+
 ```mermaid
 sequenceDiagram
   participant U as Learner

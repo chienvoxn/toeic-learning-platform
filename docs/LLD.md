@@ -341,6 +341,8 @@ sequenceDiagram
 
 ### 5.2 Autosave đồng thời Submit
 
+**Runtime PRAC-02 — sản phẩm chốt 2026-11-11:** PracticeSubmissionService dùng READ_COMMITTED + cùng parent row lock cho save/submit, actor/permission và ownership/source ở DB. Save kiểm thời gian sau khóa, membership pin và composite choice. Submit chấm đồng bộ, lưu answer grading snapshots V26, part results và header GRADED cùng transaction; không worker/outbox hoặc intermediate SUBMITTED persisted. GRADED replay kết quả đã lưu trước expiry check; result REPEATABLE_READ chỉ cho owner có permission. Đúng=1, sai/bỏ trống=0, accuracy đúng/tổng (phần trăm 2 chữ số); explanation chỉ trong result sau submit. HLD Phần B §25 có cùng override runtime; diagrams/Idempotency-Key/background bên dưới là DESIGN cho Test tương lai. [Chi tiết](PRAC02_Answers_Submission_Grading.md).
+
 ```mermaid
 sequenceDiagram
  actor L as Learner
