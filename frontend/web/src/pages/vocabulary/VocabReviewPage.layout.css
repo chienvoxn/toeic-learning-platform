@@ -1,0 +1,27 @@
+/* Scoped layout adjustments for vocabulary flashcard learning. */
+.review-back-button { border: 0; cursor: pointer; font: inherit; }
+.review-study { min-width: 0; }
+.review-study .flashcard { min-height: 360px; }
+.review-actions-area { margin-top: 18px; width: 100%; }
+.review-rating-buttons { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; min-height: 90px; align-items: stretch; }
+.review-rating-buttons button { width: 100%; min-width: 0; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font: inherit; }
+.review-rating-buttons button:disabled { opacity: .45; cursor: not-allowed; }
+.review-rating-buttons button strong { font-weight: 700; }
+.review-rating-buttons button small { font-size: .8rem; }
+.review-exit-row { width: 100%; display: flex; justify-content: center; padding: 18px 0 24px; }
+.review-exit-button { min-width: 150px; text-align: center; font: inherit; cursor: pointer; }
+.review-reinforce-action { min-height: 90px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; }
+.review-reinforce-action small { color: #64748b; }
+.review-modal-backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, .56); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.review-modal { background: #fff; color: #17243d; border-radius: 18px; width: min(100%, 520px); padding: 28px; box-shadow: 0 20px 70px rgba(0,0,0,.2); font-family: inherit; }
+.review-modal h2 { margin: 0 0 14px; font-size: 1.3rem; font-weight: 700; }
+.review-modal p { line-height: 1.6; margin: 0 0 12px; }
+.review-modal-note { color: #64748b; font-size: .9rem; }
+.review-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.review-modal-actions button { border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; background: #fff; font: inherit; cursor: pointer; }
+.review-modal-actions .review-modal-primary { background: #195cff; color: #fff; border-color: #195cff; }
+@media (max-width: 680px) { .review-rating-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); } .review-modal-actions button { flex: 1 1 auto; } }
+
+.review-learning-hint { margin: 12px 0 0; text-align: center; color: #64748b; font: inherit; font-size: .875rem; line-height: 1.5; }
+.review-actions-area { min-height: 160px; }
+.review-exit-row { position: relative; }
