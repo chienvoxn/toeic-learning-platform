@@ -1,6 +1,6 @@
 import { isRemoteAuth } from '@/features/auth/config';
 import { authErrorMessage } from '@/features/auth/errors';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Save, X, Camera, ImagePlus, Lock } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
@@ -10,7 +10,7 @@ import { figmaAsset } from '@/lib/figma-assets';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
+import ProfileLearningPanel from './ProfileLearningPanel';
 
 function ProfileContent({ user, updateProfile }) {
   const mock = !isRemoteAuth;
@@ -25,36 +25,6 @@ function ProfileContent({ user, updateProfile }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [learningOverview, setLearningOverview] = useState(null);
-  const [learningStreak, setLearningStreak] = useState(null);
-  const [learningError, setLearningError] = useState('');
-  const [learningLoading, setLearningLoading] = useState(false);
-
-  useEffect(() => {
-    if (mock || !user?.id) return undefined;
-    let active = true;
-    // Fetch independently: one unavailable endpoint must not suppress the other.
-    setLearningLoading(true);
-    setLearningError('');
-    Promise.allSettled([
-      vocabularyRepo.getLearningOverview(),
-      vocabularyRepo.getLearningStreak(30),
-    ]).then(([overviewResult, streakResult]) => {
-      if (!active) return;
-      setLearningOverview(overviewResult.status === 'fulfilled' ? overviewResult.value : null);
-      setLearningStreak(streakResult.status === 'fulfilled' ? streakResult.value : null);
-      if (overviewResult.status === 'rejected' || streakResult.status === 'rejected') {
-        setLearningError('Một số thống kê học tập chưa tải được.');
-      }
-    }).finally(() => {
-      if (active) setLearningLoading(false);
-    });
-    return () => { active = false; };
-  }, [mock, user?.id]);
-
-  const streakDays = learningStreak?.currentStreakDays ?? learningStreak?.currentStreak;
-  const longestDays = learningStreak?.longestStreakDays ?? learningStreak?.longestStreak;
-
   async function save(e) {
     e.preventDefault(); setLoading(true); setError('');
     try { const updates = mock ? { bio, avatarUrl: avatar, coverUrl: cover, privateProfile } : {};
@@ -76,7 +46,7 @@ function ProfileContent({ user, updateProfile }) {
   }
   function cancel() { setFullName(user?.fullName || ''); setTargetScore(user?.targetScore ?? ''); setBio(user?.bio || ''); setAvatar(user?.avatarUrl || ''); setCover(user?.coverUrl || ''); setPrivateProfile(!!user?.privateProfile); setEditing(false); setError(''); }
   return <div className="profile-grid"><section className="profile-card surface">
-    {message && <p className="profile-message" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}{learningError && <p className="form-error" role="status">{learningError}</p>}
+    {message && <p className="profile-message" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}
     <button type="button" className="pill-button profile-edit-button" onClick={() => { setEditing(true); setMessage(''); }}><Pencil size={13} />CHỈNH SỬA</button>
     {!editing && cover && <img className="profile-cover" src={cover} alt="Ảnh nền hồ sơ" />}
     <div className="profile-avatar-row"><div className="profile-avatar"><img src={avatar || figmaAsset('dashboard','imgAvatar')} alt="Ảnh đại diện" />{editing && <label className="avatar-upload" title={mock ? 'Đổi ảnh đại diện' : 'Chưa hỗ trợ tải ảnh lên máy chủ'}><Camera size={15} /><input className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" disabled={!mock} onChange={e => loadImage(e,setAvatar)} /></label>}</div><FigmaAsset screen="profile-edit" name="imgSvg15" alt="Parroto" className="profile-parroto" /></div>
@@ -87,8 +57,8 @@ function ProfileContent({ user, updateProfile }) {
       {!mock && <p className="profile-contract-note">Ảnh, mô tả và quyền riêng tư chưa được máy chủ hỗ trợ.</p>}
       <details className="profile-target"><summary>Mục tiêu học tập</summary><label htmlFor="target-score">Điểm TOEIC mục tiêu</label><Input id="target-score" type="number" min={10} max={990} step={5} value={targetScore} placeholder="Chưa đặt mục tiêu" onChange={e => setTargetScore(e.target.value)} /></details>
       <div className="profile-form-actions"><Button type="submit" className="navy-button" disabled={loading}><Save size={15} />{loading ? 'ĐANG LƯU...' : 'LƯU'}</Button><Button variant="outline" type="button" onClick={cancel} aria-label="Hủy chỉnh sửa"><X size={18} /></Button></div>
-    </form> : <><h1>{user?.fullName || 'Học viên'} {mock && <small>Lv.1</small>}</h1>{user?.bio && <p className="profile-bio">{user.bio}</p>}<div className="profile-privacy"><Lock size={14} />Quyền riêng tư hồ sơ<strong>{user?.privateProfile ? 'Riêng tư' : 'Công khai'}</strong></div><div className="profile-streak">{mock ? `🔥 ${user?.streakDays ?? 0}` : learningLoading ? 'Đang tải chuỗi học tập...' : streakDays != null ? `🔥 ${streakDays} ngày liên tiếp${longestDays != null ? ` · Dài nhất: ${longestDays} ngày` : ''}` : 'Chưa có dữ liệu chuỗi học tập từ máy chủ.'}</div><div className="profile-stat-row"><div><span>🎯</span><p>Mục tiêu TOEIC<strong>{user?.targetScore ?? 'Chưa đặt mục tiêu'}</strong></p></div><div><span>📧</span><p>Tài khoản<strong>{user?.email || 'Chưa đăng nhập'}</strong></p></div></div><div className="profile-stat-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div><div className="profile-stat-line"><span>🎓 Tổng số bài học</span><strong>0</strong></div><div className="profile-stat-line"><span>📖 Tổng số câu</span><strong>0</strong></div>{!mock && <><div className="profile-stat-line"><span>📚 Từ vựng đã ôn</span><strong>{learningOverview?.reviewedVocabularies ?? (learningLoading ? "Đang tải..." : "—")}</strong></div><div className="profile-stat-line"><span>🔁 Lượt ôn tập từ vựng</span><strong>{learningOverview?.totalReviews ?? (learningLoading ? "Đang tải..." : "—")}</strong></div></>}<div className="profile-rank"><small>Cấp độ hiện tại</small><p>🛡 Chưa có hạng</p></div></>}
-  </section><div className="profile-right"><section className="profile-ranking surface"><div className="profile-ranking-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}</div><p>Chưa có lịch sử xếp hạng.</p></section><section className="profile-lessons surface"><h2>Tiến độ bài học</h2><div className="progress-status"><span>✓ Đã hoàn thành</span><span>◷ Đang học</span></div><p className="profile-empty">Chưa có tiến độ bài học.</p><Link to="/listening?mode=shadowing" className="pill-button">Khám phá bài học</Link></section></div></div>;
+    </form> : <><h1>{user?.fullName || 'Học viên'} {mock && <small>Lv.1</small>}</h1>{user?.bio && <p className="profile-bio">{user.bio}</p>}<div className="profile-privacy"><Lock size={14} />Quyền riêng tư hồ sơ<strong>{user?.privateProfile ? 'Riêng tư' : 'Công khai'}</strong></div><div className="profile-streak">{mock ? `🔥 ${user?.streakDays ?? 0} ngày liên tiếp` : 'Thống kê từ vựng và chuỗi học tập nằm ở phần bên phải.'}</div><div className="profile-stat-row"><div><span>🎯</span><p>Mục tiêu TOEIC<strong>{user?.targetScore ?? 'Chưa đặt mục tiêu'}</strong></p></div><div><span>📧</span><p>Tài khoản<strong>{user?.email || 'Chưa đăng nhập'}</strong></p></div></div><div className="profile-stat-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div><div className="profile-stat-line"><span>🎓 Tổng số bài học</span><strong>—</strong></div><div className="profile-stat-line"><span>📖 Tổng số câu</span><strong>—</strong></div><div className="profile-rank"><small>Cấp độ hiện tại</small><p>🛡 Chưa có hạng</p></div></>}
+  </section><div className="profile-right">{!mock && <ProfileLearningPanel userId={user?.id} />}<section className="profile-ranking surface"><div className="profile-ranking-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}</div><p>Chưa có dữ liệu xếp hạng từ hệ thống.</p></section><section className="profile-lessons surface"><h2>Tiến độ bài học</h2><div className="progress-status"><span>✓ Đã hoàn thành</span><span>◷ Đang học</span></div><p className="profile-empty">Chưa có dữ liệu tiến độ Nghe chép/Nhại theo từ API hiện tại. Phần học từ vựng được hiển thị riêng phía trên.</p><Link to="/listening?mode=shadowing" className="pill-button">Khám phá bài học</Link></section></div></div>;
 }
 
 export default function ProfilePage() {
