@@ -10,7 +10,7 @@ import { figmaAsset } from '@/lib/figma-assets';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-
+import ProfileLearningPanel from './ProfileLearningPanel';
 function ProfileContent({ user, updateProfile }) {
   const mock = !isRemoteAuth;
   const [editing, setEditing] = useState(false);
@@ -44,7 +44,8 @@ function ProfileContent({ user, updateProfile }) {
     const reader = new FileReader(); reader.onload = () => setter(reader.result); reader.readAsDataURL(file);
   }
   function cancel() { setFullName(user?.fullName || ''); setTargetScore(user?.targetScore ?? ''); setBio(user?.bio || ''); setAvatar(user?.avatarUrl || ''); setCover(user?.coverUrl || ''); setPrivateProfile(!!user?.privateProfile); setEditing(false); setError(''); }
-  return <div className="profile-grid"><section className="profile-card surface">
+  return <>
+    <div className="profile-grid"><section className="profile-card surface">
     {message && <p className="profile-message" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}
     <button type="button" className="pill-button profile-edit-button" onClick={() => { setEditing(true); setMessage(''); }}><Pencil size={13} />CHỈNH SỬA</button>
     {!editing && cover && <img className="profile-cover" src={cover} alt="Ảnh nền hồ sơ" />}
@@ -57,9 +58,18 @@ function ProfileContent({ user, updateProfile }) {
       <details className="profile-target"><summary>Mục tiêu học tập</summary><label htmlFor="target-score">Điểm TOEIC mục tiêu</label><Input id="target-score" type="number" min={10} max={990} step={5} value={targetScore} placeholder="Chưa đặt mục tiêu" onChange={e => setTargetScore(e.target.value)} /></details>
       <div className="profile-form-actions"><Button type="submit" className="navy-button" disabled={loading}><Save size={15} />{loading ? 'ĐANG LƯU...' : 'LƯU'}</Button><Button variant="outline" type="button" onClick={cancel} aria-label="Hủy chỉnh sửa"><X size={18} /></Button></div>
     </form> : <><h1>{user?.fullName || 'Học viên'} {mock && <small>Lv.1</small>}</h1>{user?.bio && <p className="profile-bio">{user.bio}</p>}<div className="profile-privacy"><Lock size={14} />Quyền riêng tư hồ sơ<strong>{user?.privateProfile ? 'Riêng tư' : 'Công khai'}</strong></div><div className="profile-streak">{mock ? `🔥 ${user?.streakDays ?? 0}` : 'Streak và XP: chưa có dữ liệu từ máy chủ.'}</div><div className="profile-stat-row"><div><span>🎯</span><p>Mục tiêu TOEIC<strong>{user?.targetScore ?? 'Chưa đặt mục tiêu'}</strong></p></div><div><span>📧</span><p>Tài khoản<strong>{user?.email || 'Chưa đăng nhập'}</strong></p></div></div><div className="profile-stat-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t}</button>)}</div><div className="profile-stat-line"><span>🎓 Tổng số bài học</span><strong>0</strong></div><div className="profile-stat-line"><span>📖 Tổng số câu</span><strong>0</strong></div><div className="profile-rank"><small>Cấp độ hiện tại</small><p>🛡 Chưa có hạng</p></div></>}
-  </section><div className="profile-right"><section className="profile-ranking surface"><div className="profile-ranking-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}</div><p>Chưa có lịch sử xếp hạng.</p></section><section className="profile-lessons surface"><h2>Tiến độ bài học</h2><div className="progress-status"><span>✓ Đã hoàn thành</span><span>◷ Đang học</span></div><p className="profile-empty">Chưa có tiến độ bài học.</p><Link to="/listening?mode=shadowing" className="pill-button">Khám phá bài học</Link></section></div></div>;
+  </section><div className="profile-right"><section className="profile-ranking surface"><div className="profile-ranking-tabs">{['Nghe chép', 'Nhại theo'].map(t => <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}</div><p>Chưa có lịch sử xếp hạng.</p></section><section className="profile-lessons surface"><h2>Tiến độ bài học</h2><div className="progress-status"><span>✓ Đã hoàn thành</span><span>◷ Đang học</span></div><p className="profile-empty">Chưa có tiến độ bài học.</p><Link to="/listening?mode=shadowing" className="pill-button">Khám phá bài học</Link></section></div></div>
+    {!mock && user?.id && (
+      <section
+        className="profile-learning-section"
+        aria-label="Thống kê học từ vựng"
+        style={{ width: '100%', maxWidth: 1200, marginTop: 24 }}
+      >
+        <ProfileLearningPanel userId={user.id} />
+      </section>
+    )}
+  </>;
 }
-
 export default function ProfilePage() {
   const { user, loading, updateProfile } = useAuth();
   return <LearnerTemplate variant="profile">{loading ? <LoadingSpinner text="Đang tải hồ sơ..." /> : <ProfileContent key={user?.id || 'guest'} user={user} updateProfile={updateProfile} />}</LearnerTemplate>;
