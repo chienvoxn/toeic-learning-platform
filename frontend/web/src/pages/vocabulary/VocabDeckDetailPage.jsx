@@ -15,6 +15,8 @@ import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
 import { reviewProgress, reviewAction } from '@/features/vocabulary/reviewProgress';
+import VocabularyEditor from '@/components/organisms/VocabularyEditor';
+import { useMock } from '@/lib/runtime-config';
 
 function statusFor(state, now) {
   if (!state) return { label: 'Chưa học', style: 'bg-gray-100 text-gray-600' };
@@ -38,6 +40,7 @@ export default function VocabDeckDetailPage() {
   const [sessionProgress, setSessionProgress] = useState(null);
   const [stateWarning, setStateWarning] = useState('');
   const [statesLoading, setStatesLoading] = useState(true);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -106,7 +109,7 @@ export default function VocabDeckDetailPage() {
     return () => {
       active = false;
     };
-  }, [deckId]);
+  }, [deckId, revision]);
 
   const speak = (text) => {
     if (!text || !('speechSynthesis' in window)) return;
@@ -248,6 +251,10 @@ export default function VocabDeckDetailPage() {
             </div>
           </div>
         </div>
+
+        {!useMock && (
+          <VocabularyEditor deckId={deckId} onSaved={() => setRevision(value => value + 1)} />
+        )}
 
         {/* Vocabulary Groups */}
         <div className="space-y-6">

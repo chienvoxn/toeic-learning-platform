@@ -52,7 +52,7 @@ class QuestionAuthoringRepositoryTest {
         entityManager.flush();
         entityManager.clear();
         var expected = List.of(first.getQuestionId(), second.getQuestionId()).stream()
-                .sorted(java.util.Comparator.comparing(UUID::toString)).toList();
+                .sorted(java.util.Comparator.comparing((UUID id) -> id.toString())).toList();
         var page0 = questions.findByCreator(AUTHOR, PageRequest.of(0, 1));
         var page1 = questions.findByCreator(AUTHOR, PageRequest.of(1, 1));
         var page2 = questions.findByCreator(AUTHOR, PageRequest.of(2, 1));
@@ -86,9 +86,9 @@ class QuestionAuthoringRepositoryTest {
         entityManager.flush();
         entityManager.clear();
         var expected = List.of(first.getQuestionId(), second.getQuestionId()).stream()
-                .sorted(java.util.Comparator.comparing(UUID::toString).reversed()).toList();
+                .sorted(java.util.Comparator.comparing((UUID id) -> id.toString()).reversed()).toList();
         var actual = questions.findByCreator(AUTHOR, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "questionId")));
-        assertEquals(expected, actual.getContent().stream().map(Question::getQuestionId).toList());
+        assertEquals(expected, actual.getContent().stream().map(element -> element.getQuestionId()).toList());
         // @Repository translates argument errors at its proxy boundary; retain the exact cause check.
         var invalidSort = assertThrows(org.springframework.dao.InvalidDataAccessApiUsageException.class,
                 () -> questions.findByCreator(AUTHOR, PageRequest.of(0, 20, Sort.by("questionText"))));
@@ -120,12 +120,12 @@ class QuestionAuthoringRepositoryTest {
         entityManager.flush();
         entityManager.clear();
         assertEquals(List.of(1, 2), versions.findAllForQuestion(first.getQuestionId()).stream()
-                .map(QuestionVersion::getVersionNumber).toList());
+                .map(element -> element.getVersionNumber()).toList());
         assertTrue(versions.findAllForQuestion(first.getQuestionId()).stream()
                 .allMatch(version -> version.getQuestion().getQuestionId().equals(first.getQuestionId())));
         assertTrue(versions.findAllForQuestion(UUID.randomUUID()).isEmpty());
         assertEquals(List.of(1, 2), groups.findAllVersions(group.getGroupId()).stream()
-                .map(QuestionGroupVersion::getVersionNumber).toList());
+                .map(element -> element.getVersionNumber()).toList());
         assertTrue(groups.findAllVersions(group.getGroupId()).stream()
                 .allMatch(version -> version.getGroup().getGroupId().equals(group.getGroupId())));
         assertTrue(groups.findAllVersions(UUID.randomUUID()).isEmpty());

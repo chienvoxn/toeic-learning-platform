@@ -2,6 +2,7 @@ package com.toeic.backend.assessment.application;
 
 import com.toeic.backend.assessment.domain.PracticeAttempt;
 import com.toeic.backend.assessment.infrastructure.PracticeAttemptRepository;
+import com.toeic.backend.assessment.infrastructure.PracticeAnswerRepository;
 import com.toeic.backend.questionbank.application.PracticeQuestionCatalog;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -17,8 +18,10 @@ public class PracticeSessionService {
     private final PracticeQuestionCatalog catalog;
     private final PracticeUnitSelector selector;
     private final Clock clock;
-    public PracticeSessionService(PracticeAttemptRepository attempts,PracticeQuestionCatalog catalog,PracticeUnitSelector selector,Clock clock) {
-        this.attempts=attempts;this.catalog=catalog;this.selector=selector;this.clock=clock;
+    private final PracticeAnswerRepository answers;
+    public PracticeSessionService(PracticeAttemptRepository attempts,PracticeQuestionCatalog catalog,PracticeUnitSelector selector,Clock clock,
+            PracticeAnswerRepository answers) {
+        this.attempts=attempts;this.catalog=catalog;this.selector=selector;this.clock=clock;this.answers=answers;
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
     public PracticeSessionDtos.Session create(UUID actorId,PracticeStartQuery query) {
@@ -44,7 +47,10 @@ public class PracticeSessionService {
             questions.add(PracticeSessionDtos.Question.from(pin.getQuestionOrder(),question));
         }
         if(questions.isEmpty()||questions.size()!=attempt.getTotalQuestions())throw new PracticeQuestionCatalog.Unavailable(false);
+        var saved=answers.find(attempt.getAttemptId());
+        var selections=attempt.getQuestions().stream().filter(q->saved.containsKey(q.getQuestionVersionId()))
+                .map(q->{var a=saved.get(q.getQuestionVersionId());return new PracticeSessionDtos.SavedAnswer(a.questionVersionId(),a.selectedChoiceId(),a.updatedAt());}).toList();
         return new PracticeSessionDtos.Session(attempt.getAttemptId(),attempt.getSourceType(),attempt.getStatus(),attempt.getStartedAt(),
-                attempt.getExpiresAt(),!OffsetDateTime.now(clock).isBefore(attempt.getExpiresAt()),attempt.getTotalQuestions(),questions);
+                attempt.getExpiresAt(),!OffsetDateTime.now(clock).isBefore(attempt.getExpiresAt()),attempt.getTotalQuestions(),questions,selections);
     }
 }

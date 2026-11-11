@@ -77,4 +77,18 @@ public class PracticeQuestionCatalog {
             return mapper.from(version,assets.findReadableForQuestionVersion(questionVersionId),group==null?List.of():assets.findReadableForGroupVersion(groupVersionId));
         } catch(IllegalArgumentException|IllegalStateException ex) { throw new Unavailable(false); }
     }
+    /** Chỉ dùng nội bộ cho chấm bài; controller trước submit tiếp tục dùng safe read(). */
+    public MarkingKey markingKey(UUID actorId,UUID questionVersionId,UUID groupVersionId) {
+        var version=versions.findById(questionVersionId).orElseThrow(()->new Unavailable(false));
+        var group=version.getGroupVersion();
+        if(!Objects.equals(groupVersionId,group==null?null:group.getGroupVersionId()))throw new Unavailable(false);
+        var key=version.answerKey();
+        if(key.correctChoiceIds().size()!=1)throw new Unavailable(false);
+        var part=version.getQuestion().getPart();
+        return new MarkingKey(version.getQuestion().getQuestionId(),questionVersionId,part.getPartId(),part.getPartNumber(),
+                key.correctChoiceIds().iterator().next(),key.explanation());
+    }
+    public record MarkingKey(UUID questionId,UUID questionVersionId,int partId,int partNumber,UUID correctChoiceId,String explanation) {
+        @Override public String toString() { return "MarkingKey[redacted]"; }
+    }
 }

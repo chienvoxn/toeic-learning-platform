@@ -4,6 +4,8 @@ import { BookOpen, Headphones, ChevronRight } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { FigmaAsset } from '@/components/atoms/FigmaAsset';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import ConnectedDashboard from './ConnectedDashboard';
+import { useMock } from '@/lib/runtime-config';
 
 const lessons = [
   ['imgLesson', 'Evacuate residents to safety | Today', 'B2', 'YouTube'],
@@ -14,7 +16,7 @@ const lessons = [
   ['imgWinterFinland', 'Freezing cold? This town in Finland is keeping...', 'B2', 'YouTube'],
 ];
 
-export default function HomePage() {
+function MockHomePage() {
   const { user } = useAuth();
   const [days] = useState(() => Array.from({ length: 90 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 89 + i); return d; }));
   const today = days[89].toLocaleDateString('sv-SE');
@@ -32,4 +34,8 @@ export default function HomePage() {
       <section className="activity-card surface"><h2>📅 90 ngày gần nhất</h2><p>Bấm vào một ngày để xem chi tiết. Ô càng đậm = học càng nhiều.</p><div className="activity-columns"><div className="activity-calendar"><div className="month-labels">{[0, 30, 60, 89].map(i => <span key={i}>Tháng {days[i].getMonth() + 1}</span>)}</div><div className="calendar-grid">{days.map((d, i) => <button type="button" key={i} className={`${selectedDay === i ? 'selected' : ''} ${i === 89 && checkedIn ? 'studied' : ''}`} aria-label={d.toLocaleDateString('vi-VN')} aria-pressed={selectedDay === i} title={d.toLocaleDateString('vi-VN')} onClick={() => setSelectedDay(i)} />)}</div><div className="calendar-legend">Ít <i /><i /><i /><i className="studied" /> Nhiều <span>□ Đã điểm danh</span></div></div><div className="activity-day"><strong>{days[selectedDay].toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>{selectedDay === 89 && <span>Hôm nay</span>}<p>{selectedDay === 89 && checkedIn ? 'Bạn đã điểm danh hôm nay.' : 'Không có hoạt động nào ngày này.'}</p></div><div className="activity-summary"><h3>TỔNG KẾT 90 NGÀY</h3><div>📈 <p>Ngày có học<strong>{checkedIn ? 1 : 0} / 90</strong></p></div><div>◷ <p>Thời gian học<strong>0p</strong></p></div><div>📊 <p>Chuỗi dài nhất<strong>{user?.streakDays ?? 0} ngày</strong></p></div></div></div></section>
     </div>
   </LearnerTemplate>;
+}
+
+export default function HomePage() {
+  return useMock ? <MockHomePage /> : <ConnectedDashboard />;
 }

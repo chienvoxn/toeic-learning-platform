@@ -16,8 +16,9 @@ public final class PracticeSessionDtos {
                     v.questionType(),v.difficulty(),v.questionText(),v.choices(),v.assets(),v.passage());
         }
     }
+    public record SavedAnswer(UUID questionVersionId,UUID selectedChoiceId,OffsetDateTime updatedAt) { }
     public record Session(UUID attemptId,String sourceType,String status,OffsetDateTime startedAt,OffsetDateTime expiresAt,
-            boolean expired,int totalQuestions,List<Question> questions) {
-        public Session { questions=List.copyOf(questions); }
+            boolean expired,int totalQuestions,List<Question> questions,List<SavedAnswer> answers) {
+        public Session { questions=List.copyOf(questions);answers=List.copyOf(answers); }
     }
 }

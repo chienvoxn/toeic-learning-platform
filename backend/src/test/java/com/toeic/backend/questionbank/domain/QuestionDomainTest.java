@@ -21,7 +21,7 @@ class QuestionDomainTest {
         var b = version.addChoice("B", "Choice B", true, 1);
         assertEquals(java.util.Set.of(a.getChoiceId(), b.getChoiceId()), version.answerKey().correctChoiceIds());
         assertEquals("HIDDEN_EXPLANATION", version.answerKey().explanation());
-        assertEquals(java.util.List.of("B", "A"), version.getChoices().stream().map(QuestionChoice::getLabel).toList());
+        assertEquals(java.util.List.of("B", "A"), version.getChoices().stream().map(element -> element.getLabel()).toList());
         assertEquals("QuestionAnswerKey[redacted]", version.answerKey().toString());
     }
 

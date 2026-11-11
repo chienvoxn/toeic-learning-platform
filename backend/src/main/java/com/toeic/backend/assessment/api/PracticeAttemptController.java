@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/attempts")
 public class PracticeAttemptController {
     private final PracticeSessionService service;
-    public PracticeAttemptController(PracticeSessionService service) { this.service=service; }
+    private final PracticeSubmissionService submissions;
+    public PracticeAttemptController(PracticeSessionService service,PracticeSubmissionService submissions) { this.service=service;this.submissions=submissions; }
     private static void noParams(MultiValueMap<String,String> params) { if(!params.isEmpty())throw PracticeException.invalid(); }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -24,5 +25,23 @@ public class PracticeAttemptController {
     public PracticeSessionDtos.Session get(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID id,
             @RequestParam MultiValueMap<String,String> params) {
         noParams(params);return service.get(actor.userId(),id);
+    }
+    @PutMapping("/{id}/answers/{questionVersionId}")
+    public PracticeSessionDtos.SavedAnswer save(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID id,
+            @PathVariable UUID questionVersionId,@RequestParam MultiValueMap<String,String> params,
+            @RequestBody SavePracticeAnswerRequest request) {
+        noParams(params);return submissions.save(actor.userId(),id,questionVersionId,request.choiceId());
+    }
+    @PostMapping("/{id}/submit")
+    public PracticeResultDtos.Result submit(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID id,
+            @RequestParam MultiValueMap<String,String> params,@RequestBody(required=false) byte[] body) {
+        noParams(params);
+        if(body!=null&&body.length>0)throw PracticeException.invalid();
+        return submissions.submit(actor.userId(),id);
+    }
+    @GetMapping("/{id}/result")
+    public PracticeResultDtos.Result result(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID id,
+            @RequestParam MultiValueMap<String,String> params) {
+        noParams(params);return submissions.result(actor.userId(),id);
     }
 }

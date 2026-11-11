@@ -1,11 +1,13 @@
 
 import { apiRequest } from '@/services/apiClient';
 
+const ratings = { AGAIN: 1, HARD: 2, GOOD: 3, EASY: 4 };
+
 const mapDeck = (deck) => ({
   id: deck.deckId,
   title: deck.name,
   description: deck.description,
-  category: 'TỪ VỰNG',
+  category: 'Cá nhân',
   totalCards: null,
 });
 
@@ -19,6 +21,7 @@ const mapCard = (card) => ({
   exampleVi: '',
   image: null,
   collocations: card.note,
+  note: card.note || '',
 });
 
 export class RemoteVocabularyRepository {
@@ -59,9 +62,27 @@ export class RemoteVocabularyRepository {
   }
 
   async rateCard(cardId, rating) {
+    const normalized = typeof rating === 'string' ? ratings[rating.toUpperCase()] : rating;
+    if (!Number.isInteger(normalized) || normalized < 1 || normalized > 4) {
+      throw new Error('Đánh giá ôn tập không hợp lệ.');
+    }
     return apiRequest(`/vocabularies/${cardId}/reviews`, {
       method: 'POST',
-      body: { rating },
+      body: { rating: normalized },
+    });
+  }
+
+  async createDeck(name, description) {
+    return apiRequest('/vocabulary-decks', { method: 'POST', body: { name, description } });
+  }
+
+  async createVocabulary(payload) {
+    return apiRequest('/vocabularies', { method: 'POST', body: payload });
+  }
+
+  async addToDeck(deckId, vocabularyId) {
+    return apiRequest(`/vocabulary-decks/${deckId}/vocabularies`, {
+      method: 'POST', body: { vocabularyId },
     });
   }
 

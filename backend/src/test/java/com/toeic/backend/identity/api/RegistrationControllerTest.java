@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.toeic.backend.identity.application.EmailVerificationService;
+import com.toeic.backend.identity.application.PasswordResetService;
 import com.toeic.backend.identity.application.RegistrationException;
 import com.toeic.backend.identity.application.RegistrationService;
 import com.toeic.backend.identity.domain.User;
@@ -24,8 +24,8 @@ class RegistrationControllerTest {
     private final RegistrationService registration =
             mock(RegistrationService.class);
 
-    private final EmailVerificationService verification =
-            mock(EmailVerificationService.class);
+    private final PasswordResetService verification =
+            mock(PasswordResetService.class);
 
     private MockMvc mvc;
 
@@ -33,16 +33,21 @@ class RegistrationControllerTest {
     void setup() {
         mvc = MockMvcBuilders
                 .standaloneSetup(
-                        new RegistrationController(registration, verification)
+                        new RegistrationController(registration), new PasswordResetController(verification)
                 )
                 .setControllerAdvice(new RegistrationExceptionHandler())
                 .build();
     }
 
+    private User activeUser(String email, String passwordHash, String name) {
+        var user = new User(email, passwordHash, name);
+        user.activateWithoutEmailVerification(java.time.OffsetDateTime.now());
+        return user;
+    }
     @Test
     void returnsCreatedWithoutLeakingHashes() throws Exception {
         when(registration.register(anyString(), anyString(), anyString()))
-                .thenReturn(new User(
+                .thenReturn(activeUser(
                         "learner@example.com",
                         "secret-hash",
                         "Learner"
@@ -58,7 +63,7 @@ class RegistrationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.otp").doesNotExist())
@@ -84,12 +89,12 @@ class RegistrationControllerTest {
 
     @Test
     void rejectsInvalidOtpFormat() throws Exception {
-        mvc.perform(post("/api/v1/auth/verify-email")
+        mvc.perform(post("/api/v1/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "email": "learner@example.com",
-                                  "otp": "12ab"
+                                  "otp": "12ab", "newPassword": "ValidPassword123"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())

@@ -1,7 +1,7 @@
 import { FakeGameRepository } from './game.fake';
 import { RemoteGameRepository } from './game.api';
 
-const isMock = import.meta.env.VITE_USE_MOCK !== 'false';
+import { useMock as isMock } from '@/lib/runtime-config';
 
 class GameRepositoryFactory {
   static instance = null;

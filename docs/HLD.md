@@ -1,5 +1,12 @@
 # SOFTWARE ARCHITECTURE DOCUMENT (SAD / HLD v1.0)
 
+> **Policy mới:** đăng ký/login không OTP; chỉ recovery dùng OTP riêng. V25 và
+> `PasswordResetService` thay xác minh đăng ký cũ. [Contract](Password_Recovery.md).
+
+> **Google OIDC runtime:** Web GIS → backend verify ID token + one-use browser-bound
+> nonce → session opaque hiện hữu. Không dùng Google token làm Bearer nghiệp vụ hoặc
+> auto-link email trùng. [Thiết kế, policy và cấu hình](Google_OAuth2.md).
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** Phần B (HLD v1.1) có ưu tiên khi xung đột với Phần A (v1.0). Tên module code chuẩn hóa theo LLD là `content` (thay cho `learning` ở các đoạn HLD cũ); `notification` là module riêng. Chuẩn lỗi API là `code`, `message`, `traceId`, `details` (thay cho `requestId`/`timestamp` trong đề xuất cũ). Baseline dữ liệu tham chiếu hiện tại là ERD v1.6, không còn v1.2/v1.3. Chưa có bằng chứng migration chạy thành công.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -563,6 +570,8 @@ MVP dùng **in-app notification**; không bắt buộc push/email. `notification
 - AI không được tự chấm điểm hoặc cập nhật review state.
 
 ## 25. Updated sequence: submit/grading with outbox
+
+**PRAC-02 runtime — quyết định sản phẩm vừa chốt 2026-11-11:** PRACTICE_SNAPSHOT thay sequence DESIGN bên dưới bằng grading đồng bộ trong cùng transaction. PracticeSubmissionService khóa attempt FOR UPDATE có ownership/source predicate, replay GRADED trước expiry check; IN_PROGRESS hết hạn từ chối submit/lưu. Đọc exact pinned key qua public application contract QuestionBank, lưu correctness/key/explanation/Part V26 + part results/header GRADED nguyên tử; crash trước commit rollback và retry, sau commit đọc lại kết quả đã lưu. Cùng khóa với save: save commit trước thì được chấm, submit chốt trước thì save sau bị từ chối. Không intermediate SUBMITTED persisted, worker/outbox/notification hoặc quy đổi TOEIC trong PRAC-02. Diagram bên dưới giữ làm DESIGN cho Test/EXAM tương lai; không ghi đè quyết định practice này. [Contract và kiểm thử](PRAC02_Answers_Submission_Grading.md).
 
 ```mermaid
 sequenceDiagram

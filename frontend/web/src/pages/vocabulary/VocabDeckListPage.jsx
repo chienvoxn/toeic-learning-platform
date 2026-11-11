@@ -16,6 +16,8 @@ import { FigmaAsset } from '@/components/atoms/FigmaAsset';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
 import { reviewProgress, reviewAction, clearReviewSession } from '@/features/vocabulary/reviewProgress';
+import DeckEditor from '@/components/organisms/DeckEditor';
+import { useMock } from '@/lib/runtime-config';
 
 export default function VocabDeckListPage() {
   const [decks, setDecks] = useState([]);
@@ -413,6 +415,8 @@ export default function VocabDeckListPage() {
             </section>
           </div>
         )}
+
+        {!useMock && <DeckEditor />}
 
         {/* PERSONAL DECKS */}
         <section className="personal-decks surface">

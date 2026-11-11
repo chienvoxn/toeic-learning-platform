@@ -1,5 +1,12 @@
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
+> **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
+> consume và revoke sessions cùng transaction. [Thiết kế V25](Password_Recovery.md).
+
+> **Google OIDC runtime:** `GoogleIdTokenVerifier`, `GoogleAuthService`, `SessionIssuer`
+> và V24 bổ sung login Google, binding cookie/nonce một lần và explicit password linking.
+> Session email giữ nguyên; OTP chỉ dùng khôi phục mật khẩu theo policy mới. [Contract và transaction](Google_OAuth2.md).
+
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
 > **Đồng bộ:** Danh mục bảng ở §7.1 được trích từ ERD v1.3 cũ và chỉ mang tính lịch sử, **không phải schema v1.6 hiện hành**. ERD v1.6 đã sửa trùng `learning_progress.content_id` và bổ sung `question_versions.status`. Các vấn đề còn mở: `attempt_answers.client_sequence` chưa persisted; `review_history.rating` integer khác API enum chuỗi; chưa có `idempotency_requests`/`auth_sessions` trong ERD v1.6. Không tự coi thuật toán 4 mức SRS đã được freeze.
 > Tài liệu liên quan: [SRS](SRS.md) · [HLD](HLD.md) · [LLD](LLD.md) · [API](API_Specification.md) · [ERD v1.6](ERD_v1.6.md).
@@ -175,6 +182,10 @@ backend/src/main/java/com/toeic/platform/
 
 ### 2.8 AI Tutor & RAG
 
+**Python RAG runtime:** [Hai luồng ingestion/querying](RAG_Tutor.md) dùng LangChain và index
+pgvector `rag_*` do Alembic quản lý; backend Java vẫn dùng Flyway. Các service/controller Java bên dưới vẫn là DESIGN;
+không ánh xạ chunk ID Python vào FK nghiệp vụ khi chưa có mapping tương ứng.
+
 **Tables:** `ai_conversations`, `ai_messages`, `ai_message_sources`, `ai_request_logs`, `ai_configs`, `knowledge_documents`, `knowledge_chunks`.
 
 | Layer | Thành phần |
@@ -329,6 +340,8 @@ sequenceDiagram
 **Race control:** giới hạn số lượt thi cần serialization theo `(user_id,test_version_id)` hoặc advisory lock/row policy; chỉ `COUNT(*)` rồi insert là race-prone. `max_attempts=NULL` = không giới hạn. Snapshot tạo atomically với Attempt.
 
 ### 5.2 Autosave đồng thời Submit
+
+**Runtime PRAC-02 — sản phẩm chốt 2026-11-11:** PracticeSubmissionService dùng READ_COMMITTED + cùng parent row lock cho save/submit, actor/permission và ownership/source ở DB. Save kiểm thời gian sau khóa, membership pin và composite choice. Submit chấm đồng bộ, lưu answer grading snapshots V26, part results và header GRADED cùng transaction; không worker/outbox hoặc intermediate SUBMITTED persisted. GRADED replay kết quả đã lưu trước expiry check; result REPEATABLE_READ chỉ cho owner có permission. Đúng=1, sai/bỏ trống=0, accuracy đúng/tổng (phần trăm 2 chữ số); explanation chỉ trong result sau submit. HLD Phần B §25 có cùng override runtime; diagrams/Idempotency-Key/background bên dưới là DESIGN cho Test tương lai. [Chi tiết](PRAC02_Answers_Submission_Grading.md).
 
 ```mermaid
 sequenceDiagram

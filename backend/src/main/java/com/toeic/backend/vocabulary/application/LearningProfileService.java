@@ -47,7 +47,7 @@ public class LearningProfileService {
         long unreviewed = Math.max(0, total - reviewed);
 
         long due = reviewStateRepository
-                .countByUserIdAndLastReviewedAtIsNotNullAndNextReviewAtLessThanEqual(
+                .countByUserIdAndNextReviewAtLessThanEqual(
                         userId,
                         now
                 );
