@@ -9,7 +9,7 @@ const items = [
   ['Trang chủ', '/', 'imgSvg1'], ['Chủ đề', '/catalog', 'imgSvg2'],
   ['Luyện nghe', '/listening', 'imgSvg3'], ['Shadowing', '/listening?mode=shadowing', 'imgSvg4'],
   ['Từ vựng', '/vocabulary', 'imgSvg5'], ['Luyện nói', '/listening?mode=shadowing&view=exercise', 'imgSvg6'],
-  ['Luyện thi TOEIC', '/tests', 'imgSvg7'], ['Trò Chơi', '/games', 'imgSvg8'], ['Ôn tập', '/vocabulary?view=review', 'imgSvg9'],
+  ['Luyện thi TOEIC', '/practice', 'imgSvg7'], ['Trò Chơi', '/games', 'imgSvg8'], ['Ôn tập', '/vocabulary?view=review', 'imgSvg9'],
 ];
 
 export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onCollapse }) {
@@ -24,7 +24,7 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
     const query = new URLSearchParams(location.search);
     let active = target.pathname === location.pathname && (!target.search ? !location.search : target.search === location.search);
     if (label === 'Từ vựng') active = location.pathname.startsWith('/vocabulary') && !query.has('view');
-    if (label === 'Luyện thi TOEIC') active = location.pathname.startsWith('/tests');
+    if (label === 'Luyện thi TOEIC') active = location.pathname.startsWith('/practice') || location.pathname.startsWith('/tests');
     if (label === 'Trò Chơi') active = location.pathname.startsWith('/games');
     if (label === 'Shadowing') active = location.pathname === '/listening' && query.get('mode') === 'shadowing';
     if (label === 'Luyện nói') active = false;

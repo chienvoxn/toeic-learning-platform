@@ -25,6 +25,7 @@ import RequireAuth from '../features/auth/RequireAuth';
 import UnavailablePage from '../pages/UnavailablePage';
 import { useMock } from '../lib/runtime-config';
 import ContentDetailPage from '../pages/content/ContentDetailPage';
+import PracticeSetupPage from '../pages/assessment/PracticeSetupPage';
 
 function RootLayout() {
   return (
@@ -50,6 +51,9 @@ export const router = createBrowserRouter([
       { path: '/attempts/:attemptId', element: <AttemptPage /> },
       { path: '/attempts/:attemptId/result', element: <ResultPage /> },
       { element: <RequireAuth />, children: [
+      { path: '/practice', element: <PracticeSetupPage /> },
+      { path: '/practice/attempts/:attemptId', element: <AttemptPage remote /> },
+      { path: '/practice/attempts/:attemptId/result', element: <ResultPage remote /> },
       { path: '/dashboard', element: <HomePage /> },
       { path: '/profile', element: <ProfilePage /> },
       { path: '/settings', element: <SettingsPage /> },
