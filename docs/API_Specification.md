@@ -65,11 +65,23 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 **AUTH-04 — chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). PATCH allowlist fullName/targetScore, chỉ sửa actor; không nhận email/avatar/role/permission hoặc trường hệ thống. Validation identity trả 400. targetScore là mục tiêu Listening + Reading tổng 10–990, nguyên và bội số 5 theo quy tắc sản phẩm; bỏ qua giữ nguyên, null xóa; chưa có ngày mục tiêu. Đổi mật khẩu/hash và thu hồi mọi phiên trong cùng transaction, không cấp token mới.
 
-| `GET` | `/admin/users` | Admin | page,size,status | 200 Page<UserSummary> | 403 |
+| `GET` | `/admin/users` | ADMIN + user:manage | q,role,status,page,size,sort | 200 AdminUserPage | 400; 401; 403 |
 
-| `PATCH` | `/admin/users/{id}/status` | Admin | UpdateUserStatusRequest | 200 UserSummary | 409 |
+| `PATCH` | `/admin/users/{id}/status` | ADMIN + user:manage | `{status: ACTIVE hoặc LOCKED}` | 200 AdminUserSummary | 400; 401; 403; 404; 409 |
 
-| `PUT` | `/admin/users/{id}/roles` | Admin | AssignRolesRequest | 200 UserRoles | 403 |
+| `PUT` DESIGN, chưa triển khai | `/admin/users/{id}/roles` | Admin | AssignRolesRequest | — | — |
+
+**ADMIN-01 runtime 2026-11-12:** [contract, AC và kiểm chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
+V31 cấp `user:manage` mặc định chỉ ADMIN; API và service yêu cầu cả role và permission,
+không ADMIN bypass. List/count cùng scope Learner/Teacher, loại tài khoản có ADMIN kể
+cả nhiều role; q là chuỗi con literal tên/email, không phân biệt hoa thường Unicode,
+tối đa200 ký tự. role LEARNER/TEACHER; status ACTIVE/LOCKED/PENDING/DISABLED; page0,
+size20/max100; sort createdAt/fullName/email asc/desc, mặc định createdAt,desc, khóa phụ
+userId ASC. Response `{items:[{userId,email,fullName,status,roles,createdAt,updatedAt}],totalElements,page,size}`.
+PATCH chỉ nhận status, không query/trường lạ; unknown/out-of-scope user404,
+PENDING/DISABLED409, lặp cùng trạng thái không ghi lại audit. Khóa user chung login,
+status + audit nguyên tử. Khóa chặn login và request tiếp theo; mở khóa chỉ khôi phục
+hiệu lực session còn hạn/chưa revoked theo AUTH-03, không tự revoke hoặc cấp token mới.
 
 ### 3.2 Learning content & media
 

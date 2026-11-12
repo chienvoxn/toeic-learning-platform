@@ -68,6 +68,9 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
                                 AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
                                         AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
+                        .requestMatchers("/api/v1/admin/users", "/api/v1/admin/users/**").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("user:manage")))
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(config -> config

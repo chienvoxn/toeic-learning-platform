@@ -250,6 +250,12 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 ### UC-15 — Quản lý người dùng và phân quyền
 
+**ADMIN-01 runtime 2026-11-12:** phạm vi Sprint2 được yêu cầu là tìm/lọc Learner và
+Teacher, khóa/mở khóa; chưa triển khai CRUD role/permission trong luồng DESIGN bên
+dưới. ADMIN + `user:manage` bắt buộc tại server/service, V31 chỉ grant ADMIN. Không
+quản lý tài khoản có ADMIN; chỉ ACTIVE↔LOCKED, status + audit nguyên tử, giữ chính
+sách phiên AUTH-03 đã chốt. [AC và bằng chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
+
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

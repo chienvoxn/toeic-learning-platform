@@ -2,6 +2,11 @@
 
 Ngày đối chiếu: 2026-11-03. Nhánh `feat/auth-profile`.
 
+**Bổ sung TV1 2026-11-12:** backend/contract dưới đây được tái sử dụng; đã nối và kiểm
+UI hồ sơ/mục tiêu, xóa mục tiêu, đổi mật khẩu cũ–mới/thu hồi hai phiên. UI lưu không đổi
+không gửi PATCH rỗng. [AC, file/hunk và bằng chứng Sprint 2](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
+Các đoạn “chưa frontend” ở cuối là phạm vi bàn giao backend ngày 2026-11-03.
+
 ## Nguồn và giới hạn
 
 Đã đối chiếu SRS UC-01/02, API Specification §3.1, ERD `users`/`learning_profiles`, LLD §2.1, HLD module map và ADR-017 với code/Flyway. Không tìm thấy backlog hoặc Acceptance Criteria riêng cho AUTH-04 trong repository; không thể khẳng định đã đối chiếu AC ngoài repo.

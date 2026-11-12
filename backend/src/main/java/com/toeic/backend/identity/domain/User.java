@@ -152,6 +152,15 @@ public class User {
         this.passwordHash = hash;
         this.updatedAt = now;
     }
+    public void changeAccountStatus(String next, OffsetDateTime now) {
+        if (!java.util.Set.of("ACTIVE", "LOCKED").contains(status) || next == null
+                || !java.util.Set.of("ACTIVE", "LOCKED").contains(next) || now == null) {
+            throw new IllegalArgumentException("Invalid account lock transition");
+        }
+        this.status = next;
+        this.updatedAt = now;
+    }
+
     public Set<Role> getRoles() {
         return Set.copyOf(roles);
     }

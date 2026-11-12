@@ -163,7 +163,7 @@ test('Học liệu và vocabulary qua UI/API thật; bookmark, enroll, SRS và q
   const overview = await api(page, 'GET', '/learning-profile/overview'); expect(overview.status).toBe(200); expect(overview.data.totalReviews).toBeGreaterThan(0);
 });
 
-test('Teacher CRUD APIs + RBAC; Admin role hiện có, chưa có màn/endpoint user management', async ({ page }) => {
+test('Teacher CRUD APIs + RBAC; Admin có API quản lý người dùng riêng', async ({ page }) => {
   await login(page, 'teacher');
   const list = await api(page, 'GET', '/teacher/questions'); expect(list.status).toBe(200);
   const metadata = JSON.parse(execFileSync('C:/Program Files/PostgreSQL/17/bin/psql.exe', ['-X','-w','-h','127.0.0.1','-p','55459','-U','toeic_demo','-d','toeic_learning_demo','-Atc', "SELECT json_build_object('partId',(SELECT part_id FROM toeic_parts WHERE part_number=5),'questionTypeId',(SELECT question_type_id FROM question_types WHERE code='SINGLE_CHOICE'));"], { encoding:'utf8' }));
@@ -184,7 +184,7 @@ test('Teacher CRUD APIs + RBAC; Admin role hiện có, chưa có màn/endpoint u
   const attempt = await api(page,'POST','/attempts',{sourceType:'PRACTICE_SNAPSHOT',practice:{partNumbers:[5],questionCount:1}}); expect(attempt.status).toBe(403);
   await page.locator('.sidebar-link.logout-link').click(); await page.waitForURL(/\/login$/);
   await login(page,'admin'); expect((await api(page,'GET','/teacher/questions')).status).toBe(200);
-  expect((await api(page,'GET','/admin/users')).status).toBe(404);
+  expect((await api(page,'GET','/admin/users')).status).toBe(200);
 });
 
 test('Guest vẫn là mẫu local được ghi rõ, không gọi API tạo attempt tài khoản', async ({ page }) => {
@@ -202,7 +202,9 @@ test('OTP reset qua Mailpit và UI thật trên tài khoản demo mới, không 
   const registered = await request.post('/api/v1/auth/register', { data: { email, password, fullName: 'Demo OTP Check' } });
   expect(registered.status()).toBe(201);
   await page.goto('/forgot-password'); await page.locator('#recovery-email').fill(email);
+  const requested = page.waitForResponse(item => item.url().endsWith('/auth/forgot-password') && item.request().method() === 'POST');
   await page.getByRole('button', { name: 'Gửi mã đặt lại mật khẩu', exact: true }).click();
+  expect((await requested).status()).toBe(200);
   let message;
   await expect.poll(async () => {
     const response = await request.get('http://127.0.0.1:8025/api/v1/messages?limit=100');

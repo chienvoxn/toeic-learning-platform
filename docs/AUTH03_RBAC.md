@@ -23,7 +23,8 @@ Guest là request chưa xác thực, không phải role được lưu vào DB. D
 | GET hai health endpoint hiện hữu | Có | Có | Có | Có |
 | GET `/api/v1/users/me` (`user:read:self`, chỉ chính mình) | 401 | Có | Có | Có |
 | POST `/api/v1/auth/logout` (chỉ phiên hiện tại) | 401 | Có | Có | Có |
-| Guard `/api/v1/admin/**` | 401 | 403 | 403 | Qua guard role; chưa có API nghiệp vụ |
+| Guard `/api/v1/admin/**` | 401 | 403 | 403 | Qua guard role; user management thêm permission dưới đây |
+| GET `/api/v1/admin/users`, PATCH `/{id}/status` | 401 | 403 | 403 | Cần ADMIN + user:manage, mặc định grant V31 |
 | Tự gán role/permission qua register/login/header/query | Không | Không | Không | Không có API gán quyền trong phạm vi này |
 
 V14 cấp `user:read:self` cho ba role. Thu hồi grant ở `role_permissions` hoặc xóa role cuối cùng cấp quyền ở `user_roles` khiến `/users/me` trả 403 từ request tiếp theo, kể cả ADMIN. Tài khoản ACTIVE không role vẫn có thể login/logout nhưng không đọc hồ sơ qua `/users/me`. Logout không yêu cầu permission nghiệp vụ để người dùng luôn có thể thu hồi phiên của mình.
@@ -40,10 +41,14 @@ Payload register/login chỉ bind các trường DTO đã khai báo; role/permis
 | Học, thi, SRS, listening, analytics, AI, notifications cá nhân | Không | Dự kiến tài nguyên cá nhân | Chưa chốt kế thừa | Chưa chốt kế thừa | API, permission và ownership từng tài nguyên |
 | `content:write` | Không | Không | Dự kiến theo grant | Chưa chốt quyền tác nghiệp | API, ownership draft |
 | `content:publish`, `question:review`, `question:publish`, `test:publish` | Không | Không | Theo grant, mặc định OPEN | Theo grant, mặc định OPEN | Workflow, separation of duties, ma trận reviewer/publisher |
-| `user:manage` | Không | Không | Không theo LLD | Dự kiến theo grant | API quản trị, audit, ngăn tự nâng quyền |
 | `score_conversion:manage`, `ai:usage:read`, `audit:read`, system settings | Không | Không | Không | Dự kiến theo grant | API và policy chi tiết; mã settings chưa chốt |
 
 Khi thêm API nghiệp vụ phải thêm guard role/permission và ownership tại use case, seed được review, test endpoint thật và cập nhật ma trận. Guard ADMIN hiện tại không thay cho permission của từng API tương lai. Không thêm endpoint production giả để chứng minh phân quyền.
+
+**ADMIN-01 V31 2026-11-12:** `user:manage` đã được triển khai cho list/search/filter
+và lock/unlock Learner/Teacher; role ADMIN vẫn không bypass permission, không có
+API tự cấp quyền. Tài khoản có ADMIN ngoài phạm vi sửa status, kể cả nhiều role.
+Giữ nguyên chính sách phiên khóa/mở khóa bên dưới. [AC và bằng chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
 
 ## Persistence và xác thực từng request
 
