@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { remainingSeconds } from '@/features/assessment/attempt-time';
 
 export function CountdownTimer({ expiresAt, onExpire, className }) {
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(() => {
     if (!expiresAt) return 0;
-    return Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    return remainingSeconds(expiresAt);
   });
 
   useEffect(() => {
     if (!expiresAt) return;
 
     const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      const remaining = remainingSeconds(expiresAt);
       setTimeLeftSeconds(remaining);
 
       if (remaining <= 0) {

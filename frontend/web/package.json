@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "test:auth:e2e": "playwright test tests/auth.remote.spec.js",
+    "test:demo:e2e": "playwright test tests/demo.integration.spec.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",

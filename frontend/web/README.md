@@ -29,9 +29,18 @@ and `/attempts/:attemptId/result` are public. In the default mode they provide a
 local Reading sample with browser storage, raw grading and no account sync.
 This is explicitly labelled local practice, not a backend exam integration.
 
+Authenticated `/practice` uses the real PRAC-01/02 and EXAM-01 APIs: configure
+Practice or Reading Section, save/replace/clear answers, reload the server snapshot,
+submit and read persisted grading/explanations. It does not fall back to the public
+sample routes. See the [isolated local demo guide](../../docs/LOCAL_DEMO_FE_BE_Integration.md)
+for database/seed, generated demo credentials, service controls and verified limits.
+After starting and seeding that demo, `npm run test:demo:e2e` runs Chromium against
+the real frontend/backend, including the one-minute Section expiry case.
+
 Run `npm test`, `npm run lint` and `npm run build` for frontend checks.
 See [integration setup and supported flows](../../docs/Frontend_Backend_Integration.md).
-Tests exercise adapters with HTTP response fixtures, not a live backend/database.
+`npm test` exercises adapters with HTTP response fixtures; the opt-in E2E commands
+use the running services described in their guides.
 Landing styles are scoped to `.landing-page`. The Vietnamese landing includes
 a photo collage, dictation, shadowing, practice review and learning progress
 sections. The footer introduces ENGLINGO and links to learning and account pages.

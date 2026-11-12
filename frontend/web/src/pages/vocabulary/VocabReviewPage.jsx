@@ -8,6 +8,7 @@ import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.re
 import './VocabReviewPage.layout.css';
 import { readReviewSession, saveReviewSession, clearReviewSession } from '@/features/vocabulary/reviewProgress';
 import { restoreLearningQueue, applyLearningRating } from '@/features/vocabulary/learningQueue';
+import { useMock } from '@/lib/runtime-config';
 
 const ratings = [
   [1, 'HỌC LẠI', '10 phút'],
@@ -39,11 +40,11 @@ export default function VocabReviewPage() {
     let active = true;
     setData(null); setError(''); setCompleted(false); setReviewedIds([]); setCurrentId(null); setEasyIds([]); setRoundIds([]); setRoundNumber(1); setAttempts(0); setExitOpen(false);
     Promise.all([vocabularyRepo.getDeckCards(deckId), vocabularyRepo.getDecks(),
-      vocabularyRepo.getLearningSession ? vocabularyRepo.getLearningSession(deckId).catch(() => null) : Promise.resolve(null)])
+      vocabularyRepo.getLearningSession ? vocabularyRepo.getLearningSession(deckId) : Promise.resolve(null)])
       .then(([cards, decks, remote]) => {
         if (!active) return;
         const ids = new Set(cards.map((card) => card.id));
-        const previous = remote?.data ?? readReviewSession(deckId, cards);
+        const previous = remote?.data ?? (useMock ? readReviewSession(deckId, cards) : {});
         const reviewed = Array.isArray(previous?.reviewedIds)
           ? [...new Set(previous.reviewedIds.filter((id) => ids.has(id)))] : [];
         const easy = (previous.easyIds || []).filter((id) => ids.has(id));
