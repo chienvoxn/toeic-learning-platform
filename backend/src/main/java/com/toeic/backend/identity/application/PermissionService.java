@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class PermissionService {
     public AccessRights resolve(User user) {
+        return resolveSnapshot(user);
+    }
+
+    /** Dùng chung phép hợp quyền cho xác thực và capability DTO, không lưu thêm RBAC. */
+    public static AccessRights resolveSnapshot(User user) {
         var roles = user.getRoles();
         return new AccessRights(roles.stream().map(role -> role.getName()).sorted().toList(),
                 roles.stream().flatMap(role -> role.getPermissions().stream())

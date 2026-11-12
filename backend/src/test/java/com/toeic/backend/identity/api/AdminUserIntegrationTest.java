@@ -152,13 +152,16 @@ class AdminUserIntegrationTest {
         var token=token(admin);
         var mixed=account("LEARNER");
         jdbc.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,role_id FROM roles WHERE name='ADMIN'",mixed.getUserId());
-        for(var id:List.of(admin.getUserId(),mixed.getUserId(),UUID.randomUUID())) change(token,id,"{\"status\":\"LOCKED\"}").andExpect(status().isNotFound());
+        change(token,admin.getUserId(),"{\"status\":\"LOCKED\"}").andExpect(status().isConflict());
+        change(token,mixed.getUserId(),"{\"status\":\"LOCKED\"}").andExpect(status().isOk());
+        change(token,mixed.getUserId(),"{\"status\":\"ACTIVE\"}").andExpect(status().isOk());
+        change(token,UUID.randomUUID(),"{\"status\":\"LOCKED\"}").andExpect(status().isNotFound());
         for(var state:List.of("PENDING","DISABLED")) {
             jdbc.update("UPDATE users SET status=? WHERE user_id=?",state,learner.getUserId());
             change(token,learner.getUserId(),"{\"status\":\"ACTIVE\"}").andExpect(status().isConflict());
             assertEquals(state,state(learner));
         }
-        assertEquals(0,audits());
+        assertEquals(2,audits());
     }
     @Test void statusAndAuditRollBackTogether() throws Exception {
         authenticate(token(admin));

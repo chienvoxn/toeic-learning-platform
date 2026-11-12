@@ -145,6 +145,7 @@ Table users {
 Table roles {
   role_id integer [pk, increment]
   name varchar(50) [not null, unique]
+  display_name varchar(150) [note: 'ADMIN-02 V32; nullable, API fallback name; name giữ authority code']
   description text
 }
 
