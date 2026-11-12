@@ -2,6 +2,13 @@
 
 Ngày: 2026-11-01. Nhánh: `feat/auth-rbac`. Phạm vi: API identity hiện có, kế thừa [ADR-017](ADR_Auth_Session.md). Package giữ `com.toeic.backend`, modular monolith với các lớp api/application/domain/infrastructure.
 
+**Cập nhật ADMIN-02 (2026-11-12):** [RBAC quản trị thực thi và bằng chứng](ADMIN02_RBAC_Management.md)
+thay các ghi chú chưa triển khai quản trị role bên dưới trong phạm vi ADMIN-02.
+V32 cấp `rbac:manage` cho ADMIN, thêm tên hiển thị role; không tự cấp quyền DESIGN
+hoặc publish/review. Guard chống tự nâng quyền, tự khóa và mất Admin ACTIVE đủ
+quyền cuối cùng bao phủ RBAC/ADMIN01, transaction và audit. Giữ cơ chế tải quyền
+DB từ request kế tiếp trên cùng token; không tạo SUPER_ADMIN hoặc bypass.
+
 **Cập nhật CONTENT-01 (2026-11-02):** [Hai GET đọc học liệu](CONTENT01_Read_API.md) đã được triển khai trên nền này. V15 cấp thêm content:read cho ba role, Guest chỉ đọc published PUBLIC, session có quyền đọc thêm AUTHENTICATED; PRIVATE vẫn ẩn. Ma trận bên dưới mô tả phạm vi tại thời điểm AUTH-03; publish/review và API quản trị tiếp tục chưa triển khai.
 
 ## Đối chiếu và quyết định triển khai

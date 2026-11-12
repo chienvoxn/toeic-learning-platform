@@ -21,6 +21,17 @@
 
 ## 2. Auth/RBAC roles
 
+**ADMIN-02 runtime 2026-11-12:** [Contract, endpoint/payload và kiểm chứng RBAC](ADMIN02_RBAC_Management.md)
+thay phần role-assignment DESIGN trong phạm vi quản trị. API `/admin/roles`,
+`/admin/permissions`, `/admin/rbac/users`, `/admin/users/{id}/roles` kiểm ACTIVE +
+ADMIN + `rbac:manage` tại server/service; roleId/permissionId là integer (userId UUID).
+Permission chỉ đọc danh mục đã có enforcement. Không tự nâng quyền, không tự khóa
+hoặc mất Admin ACTIVE đủ quyền cuối cùng; conflict 409 và audit nguyên tử.
+Role hệ thống không đổi mã/xóa; `displayName`/mô tả/permission sửa được theo guard.
+GET me/login thêm `adminCapabilities:{userManagement,rbacManagement}` do server tính.
+PATCH status ADMIN-01 mở rộng cho target có ADMIN nếu actor còn `rbac:manage`,
+ngoài `user:manage`; danh sách ADMIN-01 vẫn chỉ Learner/Teacher, RBAC users gồm Admin.
+
 | Actor | Allowed scope |
 |---|---|
 | Guest | register, login, published public content |

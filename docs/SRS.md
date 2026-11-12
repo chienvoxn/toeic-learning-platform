@@ -250,6 +250,14 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 ### UC-15 — Quản lý người dùng và phân quyền
 
+**ADMIN-02 runtime/chốt sản phẩm 2026-11-12:** [Quyết định và AC](ADMIN02_RBAC_Management.md).
+RBAC mutation chỉ actor ACTIVE có ADMIN + permission quản trị, không mở cho Teacher.
+CRUD role, gán/thu hồi permission và role user; permission là danh mục code/migration.
+Giữ mã/xóa ba role hệ thống; không tự nâng quyền/tự khóa hoặc mất Admin ACTIVE đủ
+quyền cuối cùng, gồm cả khóa tài khoản ADMIN-01 và request đồng thời. Quyền hiệu
+lực request tiếp theo trên phiên hiện có; audit nguyên tử, xóa role chỉ khi chưa gán.
+Phần WEB-06 hoàn thiện trong nhiệm vụ này chỉ là giao diện RBAC.
+
 **ADMIN-01 runtime 2026-11-12:** phạm vi Sprint2 được yêu cầu là tìm/lọc Learner và
 Teacher, khóa/mở khóa; chưa triển khai CRUD role/permission trong luồng DESIGN bên
 dưới. ADMIN + `user:manage` bắt buộc tại server/service, V31 chỉ grant ADMIN. Không

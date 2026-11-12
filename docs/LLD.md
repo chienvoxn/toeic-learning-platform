@@ -72,6 +72,16 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**ADMIN-02 runtime 2026-11-12:** [Thiết kế/contract RBAC đã chốt](ADMIN02_RBAC_Management.md).
+AdminRbacController → RbacService → RbacRepository tái sử dụng V1/V2/V9;
+V32 thêm display_name và permission `rbac:manage`. RbacMutationGuard dùng khóa
+advisory transaction PostgreSQL chung cho mọi RBAC write và ADMIN-01 status;
+thứ tự advisory → user → role theo ID → links, đọc lại actor sau khóa. Mutation,
+guard sau mutation và audit cùng transaction; vi phạm rollback toàn bộ. ADMIN01
+cho phép khóa Admin khác khi có thêm quyền RBAC và còn Admin ACTIVE đủ quyền.
+Session vẫn resolve quyền DB mỗi request, không thêm cache/role hierarchy/bypass.
+Ghi chú AssignRole DESIGN bên dưới mô tả thời điểm AUTH-03, đã được thay trong phạm vi này.
+
 **AUTH-04 — chốt 2026-11-03:** [Phạm vi và quyết định](AUTH04_Profile_Password_Goals.md). UserProfileService kế thừa GET/PATCH me, trả/cập nhật tên và targetScore 10–990 bội số 5, null xóa/bỏ qua giữ nguyên, không ngày mục tiêu. Mapping một phần learning_profiles chỉ ghi mục tiêu và timestamp, giữ nguyên dữ liệu analytics. PasswordChangeService xác minh mật khẩu cũ và cập nhật hash + thu hồi mọi phiên cùng transaction, trả 204 không token mới. Login và đổi mật khẩu khóa cùng user trước xác minh để ngăn tạo phiên bằng credential cũ sau đổi. API/service có permission + ownership, DTO allowlist từ chối trường hệ thống. V17 chỉ seed quyền, không đổi schema mục tiêu.
 
 **AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AssignRole và quyền nghiệp vụ chưa hiện thực vẫn là DESIGN; không coi ma trận reviewer/publisher OPEN là grant mặc định.

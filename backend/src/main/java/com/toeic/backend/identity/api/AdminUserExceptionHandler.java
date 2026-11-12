@@ -8,6 +8,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice(assignableTypes=AdminUserController.class)
 public class AdminUserExceptionHandler {
+    @ExceptionHandler(com.toeic.backend.identity.application.RbacException.class)
+    public ResponseEntity<AuthError> rbac(com.toeic.backend.identity.application.RbacException error) {
+        return ResponseEntity.status(error.getStatus()).body(AuthError.of(error.getCode(),error.getMessage()));
+    }
     @ExceptionHandler(AdminUserException.class) public ResponseEntity<AuthError> admin(AdminUserException error) {
         return ResponseEntity.status(error.getStatus()).body(AuthError.of(error.getCode(),error.getMessage()));
     }

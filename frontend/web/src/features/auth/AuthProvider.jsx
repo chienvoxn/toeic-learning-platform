@@ -11,9 +11,9 @@ export function AuthProvider({ children }) {
   const [sessionError, setSessionError] = useState(null);
   const generation = useRef(0);
 
-  const restore = useCallback(async () => {
+  const restore = useCallback(async ({ background = false } = {}) => {
     const current = ++generation.current;
-    setLoading(true);
+    if (!background) setLoading(true);
     setSessionError(null);
     try {
       const restored = await authRepo.getCurrentUser();
@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         if (error.status !== 401) setSessionError(error);
       }
-    } finally { if (current === generation.current) setLoading(false); }
+    } finally { if (!background && current === generation.current) setLoading(false); }
   }, []);
 
   useEffect(() => {
