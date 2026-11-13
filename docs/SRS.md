@@ -250,6 +250,13 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 ### UC-15 — Quản lý người dùng và phân quyền
 
+**ADMIN-07 runtime 2026-11-13:** [AC, metric và giới hạn](ADMIN07_Audit_Health_Usage.md).
+Admin có permission tương ứng đọc audit đã ghi, health thành phần được bảo vệ và
+thống kê DB tài khoản/Practice/Section theo khoảng UTC. Audit chỉ đọc/projection
+sanitized, không phải lịch sử mọi hoạt động. Health không lộ cấu hình/stack trace;
+AI chưa cấu hình hiện NOT_CONFIGURED. Không có chỉ số online/realtime giả.
+WEB-06 chỉ bổ sung hai trang audit/tổng quan, chưa phải toàn bộ Teacher/Admin UI.
+
 **ADMIN-02 runtime/chốt sản phẩm 2026-11-12:** [Quyết định và AC](ADMIN02_RBAC_Management.md).
 RBAC mutation chỉ actor ACTIVE có ADMIN + permission quản trị, không mở cho Teacher.
 CRUD role, gán/thu hồi permission và role user; permission là danh mục code/migration.

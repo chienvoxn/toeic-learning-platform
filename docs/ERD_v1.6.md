@@ -710,6 +710,9 @@ Table score_conversion_rules {
 
 }
 
+// ADMIN-07 V33 chỉ seed quyền đọc; API tái sử dụng schema V9 này, không thêm bảng audit.
+// ROLE integer ID nằm trong details before/after của ADMIN-02; API trả projection an toàn.
+// Contract/metric: docs/ADMIN07_Audit_Health_Usage.md; không coi audit là mọi hoạt động.
 Table audit_logs {
   audit_id uuid [pk]
   actor_user_id uuid

@@ -21,6 +21,12 @@
 
 ## 2. Auth/RBAC roles
 
+**ADMIN-07 runtime 2026-11-13:** [Audit, health, thống kê và bằng chứng](ADMIN07_Audit_Health_Usage.md).
+Ba quyền V33 `audit:read`, `system:health:read`, `system:usage:read` chỉ thực thi khi
+actor ACTIVE có ADMIN, kiểm ở API/service. GET me/login bổ sung capability
+`auditRead`, `healthRead`, `usageRead`. Audit trả projection an toàn, không raw details;
+thống kê aggregate DB, không gọi là online/realtime. Health public giữ contract cũ.
+
 **ADMIN-02 runtime 2026-11-12:** [Contract, endpoint/payload và kiểm chứng RBAC](ADMIN02_RBAC_Management.md)
 thay phần role-assignment DESIGN trong phạm vi quản trị. API `/admin/roles`,
 `/admin/permissions`, `/admin/rbac/users`, `/admin/users/{id}/roles` kiểm ACTIVE +
@@ -311,7 +317,10 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 
 | `POST` | `/admin/score-conversion-tables/{id}/retire` | Admin | — | 200 ScoreConversionTable | 409 |
 
-| `GET` | `/admin/audit-logs` | Admin | actor,action,from,to,page,size | 200 Page<AuditLog> | 403 |
+| `GET` | `/admin/audit-logs` | ACTIVE ADMIN + audit:read | actor,action,entityType,entityId,from,to,page,size,sort | 200 Page<AuditItem> sanitized | 400/401/403/503 |
+| `GET` | `/admin/audit-logs/{auditId}` | ACTIVE ADMIN + audit:read | UUID | 200 AuditDetail sanitized | 400/401/403/404/503 |
+| `GET` | `/admin/health` | ACTIVE ADMIN + system:health:read | — | 200 trạng thái/thời điểm thành phần | 401/403 |
+| `GET` | `/admin/usage-statistics` | ACTIVE ADMIN + system:usage:read | from,to UTC [from,to), mặc định30ngày | 200 aggregate tài khoản/Practice/Section/audit | 400/401/403/503 |
 
 | `GET` | `/admin/system-settings` | Admin | — | 200 Settings | 403 |
 
