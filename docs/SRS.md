@@ -21,6 +21,16 @@
 - Learner: học nội dung, luyện Part, Section/Full Mock, Dictation, Shadowing, vocabulary SRS, analytics, AI Tutor.
 - Teacher: quản lý học liệu, ngân hàng câu hỏi, phiên bản, blueprint và bộ đề.
 - Admin: quản lý user/role, cấu hình, score conversion, AI quota/log và notification.
+
+**ADMIN-06 — quyết định sản phẩm vừa chốt 2026-11-13:** chỉ quản trị hai mặc định
+integer `vocabulary.recommendations.defaultLimit` (10, 1–100) và
+`learning.progress.defaultDays` (7, 1–90). Request bỏ `limit`/`days` đọc giá trị đã
+lưu ở request kế tiếp, không restart; tham số hợp lệ tường minh luôn ưu tiên.
+Không thay snapshot/lịch sử/attempt, auth/session/grading hoặc giới hạn bảo mật.
+ACTIVE + ADMIN + `system:settings:manage`, validation nghiêm ngặt, revision chống
+ghi đè và audit nguyên tử; không tạo/xóa key tùy ý. Backup/restore qua công cụ vận
+hành, DB đích mới riêng, không có endpoint shell/SQL/xóa DB.
+[AC, API/UI và bằng chứng](ADMIN06_System_Configuration_Data_Management.md).
 - Ngoài phạm vi MVP: chấm điểm ETS chính thức, giám sát thi từ xa, thanh toán, push/email đa kênh, microservices phức tạp.
 
 ### 1.3 Thuật ngữ

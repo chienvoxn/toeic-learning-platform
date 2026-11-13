@@ -242,7 +242,15 @@ metadata và thay đổi allowlist, không serialize raw JSON. Writer/audit nguy
 ADMIN01/02 giữ nguyên. AdminHealthService probe DB SELECT1 và AI HTTP tùy cấu hình,
 deadline/worker hữu hạn, output chỉ status/time. V33 chỉ seed ba quyền đọc và grant
 ADMIN; method/filter kiểm ADMIN + permission, UI dùng capability server.
-SettingsService/OutboxPublisher dưới đây vẫn DESIGN, không thuộc ADMIN07.
+**ADMIN-06 runtime:** SystemSettingsController → SystemSettingsService →
+SystemSettingsRepository tái sử dụng bảng V9; V34 thêm revision, hai mặc định và
+permission `system:settings:manage`. SystemSettingDefaults ánh xạ đúng tham số
+`limit`/`days`, chỉ đọc DB khi bị bỏ qua, không cache. Writer khóa advisory RBAC
+trước row Settings, kiểm lại ACTIVE/ADMIN/permission, so expectedRevision, update
+và audit nguyên tử; stale409, no-op không tạo audit/revision. AdminReadRepository
+chỉ expose key allowlist và giá trị số/revision của audit Settings. Không nhận
+arbitrary key/SQL/secret. [Contract và kiểm chứng](ADMIN06_System_Configuration_Data_Management.md).
+OutboxPublisher và các mẫu interface dưới đây vẫn DESIGN.
 
 **Tables:** `audit_logs`, `system_settings`, `outbox_events`.
 
@@ -609,7 +617,7 @@ Ngoài ra phải kiểm tra FK cho `learning_contents.current_published_version_
 
 | `audit_logs` | `audit_id`, `actor_user_id`, `action`, `entity_type`, `entity_id`, `details`, `created_at` |
 
-| `system_settings` | `setting_key`, `setting_value`, `updated_by`, `updated_at` |
+| `system_settings` | `setting_key`, `setting_value`, `updated_by`, `updated_at`, `revision` (V34, bigint >=0, default0) |
 
 | `learning_content_versions` | `content_version_id`, `content_id`, `version_number`, `title`, `summary`, `body`, `status`, `published_at`, `archived_at`, `created_by`, `created_at`, `updated_at` |
 

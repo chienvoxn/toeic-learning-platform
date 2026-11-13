@@ -3,6 +3,9 @@ package com.toeic.backend.vocabulary.api;
 
 import com.toeic.backend.identity.application.SessionPrincipal;
 import com.toeic.backend.vocabulary.application.VocabularyRecommendationService;
+import com.toeic.backend.system.application.SettingDefinition;
+import com.toeic.backend.system.application.SystemSettingDefaults;
+import org.springframework.util.MultiValueMap;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,17 +22,27 @@ import java.util.List;
 public class VocabularyRecommendationController {
 
     private final VocabularyRecommendationService recommendationService;
+    private final SystemSettingDefaults defaults;
 
     public VocabularyRecommendationController(
-            VocabularyRecommendationService recommendationService
+            VocabularyRecommendationService recommendationService,
+            SystemSettingDefaults defaults
     ) {
         this.recommendationService = recommendationService;
+        this.defaults = defaults;
     }
 
     @GetMapping("/recommendations")
-    public List<VocabularyRecommendationResponse> getRecommendations(
+    public List<VocabularyRecommendationResponse> getRecommendationsHttp(
             @AuthenticationPrincipal SessionPrincipal principal,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam MultiValueMap<String,String> query
+    ) {
+        return getRecommendations(principal,defaults.resolve(SettingDefinition.RECOMMENDATION_LIMIT,query.get("limit")));
+    }
+
+    public List<VocabularyRecommendationResponse> getRecommendations(
+            SessionPrincipal principal,
+            int limit
     ) {
         if (limit < 1 || limit > 100) {
             throw new ResponseStatusException(

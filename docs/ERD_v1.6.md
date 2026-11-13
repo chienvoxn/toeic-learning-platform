@@ -726,6 +726,7 @@ Table audit_logs {
 Table system_settings {
   setting_key varchar(100) [pk]
   setting_value jsonb [not null]
+  revision bigint [not null, default: 0, note: 'V34, >=0; CAS expectedRevision; hai key ADMIN06 allowlist trong code']
   updated_by uuid
   updated_at timestamptz [not null]
 }

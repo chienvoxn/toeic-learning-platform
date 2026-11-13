@@ -1,6 +1,6 @@
 import { apiRequest } from '../../services/apiClient.js';
 
-export const auditActions = ['USER_STATUS_CHANGED', 'ROLE_CREATED', 'ROLE_UPDATED', 'ROLE_DELETED', 'ROLE_PERMISSIONS_CHANGED', 'USER_ROLES_CHANGED'];
+export const auditActions = ['USER_STATUS_CHANGED', 'ROLE_CREATED', 'ROLE_UPDATED', 'ROLE_DELETED', 'ROLE_PERMISSIONS_CHANGED', 'USER_ROLES_CHANGED', 'SYSTEM_SETTING_UPDATED'];
 function query(input, keys) {
   const result = new URLSearchParams();
   for (const key of keys) if (input[key] !== undefined && String(input[key]).trim() !== '') result.set(key, String(input[key]).trim());

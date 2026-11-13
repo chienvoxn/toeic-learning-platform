@@ -6,7 +6,7 @@ test('admin UI capabilities use server booleans, never a role-name inference or 
   const without = toClientUser({ userId: 'a', roles: ['ADMIN'] });
   assert.equal(without.adminCapabilities, undefined);
   const response = toClientUser({ userId: 'a', roles: ['ADMIN'], adminCapabilities: { userManagement: false, rbacManagement: true } });
-  assert.deepEqual(response.adminCapabilities, { userManagement: false, rbacManagement: true, auditRead: false, healthRead: false, usageRead: false });
+  assert.deepEqual(response.adminCapabilities, { userManagement: false, rbacManagement: true, auditRead: false, healthRead: false, usageRead: false, settingsManagement: false });
   assert.deepEqual(toClientUser({ adminCapabilities: { userManagement: 'true', rbacManagement: 1 } }).adminCapabilities,
-    { userManagement: false, rbacManagement: false, auditRead: false, healthRead: false, usageRead: false });
+    { userManagement: false, rbacManagement: false, auditRead: false, healthRead: false, usageRead: false, settingsManagement: false });
 });

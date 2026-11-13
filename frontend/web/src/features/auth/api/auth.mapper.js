@@ -12,6 +12,7 @@ export function toClientUser(dto) {
       auditRead: dto.adminCapabilities.auditRead === true,
       healthRead: dto.adminCapabilities.healthRead === true,
       usageRead: dto.adminCapabilities.usageRead === true,
+      settingsManagement: dto.adminCapabilities.settingsManagement === true,
     } } : {}),
   };
 }

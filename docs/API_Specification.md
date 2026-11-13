@@ -322,9 +322,20 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 | `GET` | `/admin/health` | ACTIVE ADMIN + system:health:read | — | 200 trạng thái/thời điểm thành phần | 401/403 |
 | `GET` | `/admin/usage-statistics` | ACTIVE ADMIN + system:usage:read | from,to UTC [from,to), mặc định30ngày | 200 aggregate tài khoản/Practice/Section/audit | 400/401/403/503 |
 
-| `GET` | `/admin/system-settings` | Admin | — | 200 Settings | 403 |
+| `GET` | `/admin/system-settings` | ACTIVE ADMIN + system:settings:manage | — (không nhận query) | 200 Setting[] (đúng hai key allowlist) | 400/401/403/503 |
 
-| `PATCH` | `/admin/system-settings/{key}` | Admin | UpdateSettingRequest | 200 Setting | 422 |
+| `PATCH` | `/admin/system-settings/{key}` | ACTIVE ADMIN + system:settings:manage | {value: integer, expectedRevision: integer >=0}, không nhận field/query lạ | 200 Setting | 400/401/403/404/409/503 |
+
+**ADMIN-06 runtime:** [Contract, AC và demo Settings/data management](ADMIN06_System_Configuration_Data_Management.md).
+Chỉ `vocabulary.recommendations.defaultLimit` (10, 1–100) và
+`learning.progress.defaultDays` (7, 1–90), kiểu INTEGER. DTO gồm key/type/value/
+defaultValue/minValue/maxValue/revision/updatedAt/updatedBy. PATCH kiểm revision,
+409 khi cũ; giá trị không đổi với revision đúng là no-op. Audit cùng transaction.
+Không có API tạo/xóa key. `GET /vocabulary/recommendations` bỏ `limit` và
+`GET /learning-profile/progress` bỏ `days` đọc mặc định từ DB ở request kế tiếp;
+tham số hợp lệ đã truyền được ưu tiên, rỗng/sai/duplicate trả400. Không thay lịch sử,
+attempt, auth/session/grading. Settings audit thêm action SYSTEM_SETTING_UPDATED,
+entityType SYSTEM_SETTING, entityId là một trong hai key; chi tiết chỉ số/revision.
 
 ## 4. DTO schema definitions (contract draft)
 
