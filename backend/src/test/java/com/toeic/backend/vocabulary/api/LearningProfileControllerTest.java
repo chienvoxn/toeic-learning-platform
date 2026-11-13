@@ -1,8 +1,8 @@
-
 package com.toeic.backend.vocabulary.api;
 
 import com.toeic.backend.identity.application.SessionPrincipal;
 import com.toeic.backend.vocabulary.application.LearningProfileService;
+import com.toeic.backend.vocabulary.application.LearningStatisticsService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -22,22 +24,24 @@ class LearningProfileControllerTest {
     @Mock
     private LearningProfileService learningProfileService;
 
+    @Mock
+    private LearningStatisticsService learningStatisticsService;
+
     @InjectMocks
     private LearningProfileController controller;
-
     private UUID userId;
     private SessionPrincipal principal;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-
         principal = mock(SessionPrincipal.class);
-        when(principal.userId()).thenReturn(userId);
     }
 
     @Test
     void getOverviewShouldReturnLearningStatistics() {
+        when(principal.userId()).thenReturn(userId);
+
         LearningOverviewResponse expected =
                 new LearningOverviewResponse(
                         120,
@@ -68,6 +72,8 @@ class LearningProfileControllerTest {
 
     @Test
     void getOverviewShouldReturnZeroForNewUser() {
+        when(principal.userId()).thenReturn(userId);
+
         LearningOverviewResponse expected =
                 new LearningOverviewResponse(
                         0, 0, 0, 0, 0, 0
@@ -89,6 +95,7 @@ class LearningProfileControllerTest {
 
     @Test
     void getOverviewShouldUseAuthenticatedUserId() {
+        when(principal.userId()).thenReturn(userId);
         UUID anotherUserId = UUID.randomUUID();
 
         LearningOverviewResponse expected =
@@ -104,5 +111,25 @@ class LearningProfileControllerTest {
         verify(learningProfileService).getOverview(userId);
         verify(learningProfileService, never())
                 .getOverview(anotherUserId);
+    }
+
+    @Test
+    void getStreakShouldUseAuthenticatedUserAndReturnStreak() {
+        when(principal.userId()).thenReturn(userId);
+
+        LearningStreakResponse expected = new LearningStreakResponse(30, 4, 7);
+        when(learningStatisticsService.getStreak(userId, 30)).thenReturn(expected);
+
+        assertEquals(expected, controller.getStreak(principal, 30));
+        verify(learningStatisticsService).getStreak(userId, 30);
+    }
+
+    @Test
+    void getStreakShouldRejectInvalidDayWindow() {
+        ResponseStatusException error =
+                assertThrows(ResponseStatusException.class,
+                        () -> controller.getStreak(principal, 91));
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        verifyNoInteractions(learningStatisticsService);
     }
 }
