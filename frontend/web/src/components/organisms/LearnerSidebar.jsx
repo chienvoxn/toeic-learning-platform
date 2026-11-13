@@ -39,6 +39,8 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
         <div className="sidebar-personal">
           {user?.adminCapabilities?.userManagement && navItem(['Quản lý người dùng', '/admin/users', 'imgSvg11'])}
           {user?.adminCapabilities?.rbacManagement && navItem(['Vai trò và quyền', '/admin/roles', 'imgSvg11'])}
+          {user?.adminCapabilities?.auditRead && navItem(['Audit quản trị', '/admin/audit', 'imgSvg11'])}
+          {(user?.adminCapabilities?.healthRead || user?.adminCapabilities?.usageRead) && navItem(['Tổng quan hệ thống', '/admin/overview', 'imgSvg11'])}
           {navItem(['Ghi chú của tôi', null, 'imgSvg11'])}
           {navItem(['Từ vựng của tôi', '/vocabulary?view=personal', 'imgSvg5'])}
           <button type="button" className="sidebar-link logout-link" title={user ? 'Đăng xuất' : 'Đăng nhập'} onClick={async () => { const result = user ? await logout() : null; navigate('/login', { state: { logoutFailed: result?.revocationFailed } }); }}><FigmaAsset name="imgSvg12" /><span>{user ? 'Đăng xuất' : 'Đăng nhập'}</span></button>

@@ -15,7 +15,8 @@ public class RbacRepository {
     // Only codes with enforcement in the existing server; no arbitrary permission CRUD.
     public static final Set<String> ENFORCED_PERMISSIONS=Set.of("user:read:self","user:update:self","user:password:change:self",
             "user:manage","rbac:manage","content:read","content:bookmark:self","content:history:self","content:manage:self","content:manage:any",
-            "question:read","question:manage:self","question:manage:any","practice:manage:self","exam:manage:self");
+            "question:read","question:manage:self","question:manage:any","practice:manage:self","exam:manage:self",
+            "audit:read","system:health:read","system:usage:read");
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
     public RbacRepository(JdbcTemplate jdbc,ObjectMapper json) { this.jdbc=jdbc;this.json=json; }

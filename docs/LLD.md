@@ -234,6 +234,16 @@ không ánh xạ chunk ID Python vào FK nghiệp vụ khi chưa có mapping tư
 
 ### 2.10 System, Audit & Outbox
 
+**ADMIN-07 runtime 2026-11-13:** [Thiết kế, API và kiểm chứng](ADMIN07_Audit_Health_Usage.md).
+AdminMonitoringController → AdminReadService → AdminReadRepository đọc audit V9 và
+aggregate users/user_roles/attempts trong REPEATABLE READ. Count/data dùng một
+predicate, sort allowlist + auditId tie-break, timestamp UTC [from,to). Chỉ trả
+metadata và thay đổi allowlist, không serialize raw JSON. Writer/audit nguyên tử
+ADMIN01/02 giữ nguyên. AdminHealthService probe DB SELECT1 và AI HTTP tùy cấu hình,
+deadline/worker hữu hạn, output chỉ status/time. V33 chỉ seed ba quyền đọc và grant
+ADMIN; method/filter kiểm ADMIN + permission, UI dùng capability server.
+SettingsService/OutboxPublisher dưới đây vẫn DESIGN, không thuộc ADMIN07.
+
 **Tables:** `audit_logs`, `system_settings`, `outbox_events`.
 
 | Layer | Thành phần |

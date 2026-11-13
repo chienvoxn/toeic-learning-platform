@@ -1,5 +1,10 @@
 # ADMIN-02 / WEB-06 — quản trị role và permission
 
+**Cập nhật ADMIN-07 (2026-11-13):** [Audit/health/usage quản trị](ADMIN07_Audit_Health_Usage.md)
+thêm ba quyền đọc có enforcement vào catalog ADMIN02 và ba capability server.
+Không đổi guard, transaction, session hoặc writer audit của ADMIN01/02. Bằng chứng
+976/56/18 bên dưới là lịch sử bàn giao ADMIN02, không thay kiểm chứng ADMIN07.
+
 Ngày 2026-11-12. Nhánh `feat/web-auth-integration`. Git local:
 `chienvoxn <109399678+chienvoxn@users.noreply.github.com>`.
 **ADMIN-02 backend và UI RBAC đã triển khai; WEB-06 chỉ hoàn thành phần RBAC.**

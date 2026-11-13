@@ -68,6 +68,12 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
                                 AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
                                         AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
+                        .requestMatchers("/api/v1/admin/audit-logs", "/api/v1/admin/audit-logs/**").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("audit:read")))
+                        .requestMatchers("/api/v1/admin/health").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("system:health:read")))
+                        .requestMatchers("/api/v1/admin/usage-statistics").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("system:usage:read")))
                         .requestMatchers("/api/v1/admin/roles", "/api/v1/admin/roles/**", "/api/v1/admin/permissions", "/api/v1/admin/permissions/**",
                                 "/api/v1/admin/rbac/**", "/api/v1/admin/users/*/roles").access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasRole("ADMIN"), AuthorityAuthorizationManager.hasAuthority("rbac:manage")))

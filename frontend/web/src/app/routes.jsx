@@ -28,6 +28,8 @@ import ContentDetailPage from '../pages/content/ContentDetailPage';
 import PracticeSetupPage from '../pages/assessment/PracticeSetupPage';
 import AdminUsersPage from '../pages/admin/AdminUsersPage';
 import AdminRolesPage from '../pages/admin/AdminRolesPage';
+import AdminAuditPage from '../pages/admin/AdminAuditPage';
+import AdminOverviewPage from '../pages/admin/AdminOverviewPage';
 
 function RootLayout() {
   return (
@@ -55,6 +57,8 @@ export const router = createBrowserRouter([
       { element: <RequireAuth />, children: [
       { path: '/admin/users', element: <AdminUsersPage /> },
       { path: '/admin/roles', element: <AdminRolesPage /> },
+      { path: '/admin/audit', element: <AdminAuditPage /> },
+      { path: '/admin/overview', element: <AdminOverviewPage /> },
       { path: '/practice', element: <PracticeSetupPage /> },
       { path: '/practice/attempts/:attemptId', element: <AttemptPage remote /> },
       { path: '/practice/attempts/:attemptId/result', element: <ResultPage remote /> },
