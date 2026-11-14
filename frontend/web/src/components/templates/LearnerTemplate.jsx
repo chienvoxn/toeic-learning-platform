@@ -5,8 +5,11 @@ import { MobileBottomNav } from '@/components/organisms/MobileBottomNav';
 import { useLearnerLayout } from '@/hooks/useLearnerLayout';
 import { useLocation } from 'react-router-dom';
 import { demoModules, isRemoteAuth } from '@/features/auth/config';
+import ChatBubble from '@/features/ai/ChatBubble';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function LearnerTemplate({ children, className = '', variant = 'dashboard' }) {
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const demoPage = !['/profile', '/settings'].includes(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -53,5 +56,6 @@ export default function LearnerTemplate({ children, className = '', variant = 'd
       </div>
     </div>
     <MobileBottomNav />
+    {isRemoteAuth && user && <ChatBubble key={user.id || user.userId} />}
   </div>;
 }

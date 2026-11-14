@@ -76,6 +76,8 @@ spring.datasource.password=${DB_PASSWORD}
 
 Set the database password as an environment variable.
 
+Chatbot RAG và bong bóng chat: xem [hướng dẫn tích hợp, cấu hình và nạp học liệu](docs/RAG_Chat_Integration.md).
+
 For local development without setting environment variables on every run, edit
 `backend/config/application-local.properties` (ignored by Git) and set your
 PostgreSQL password, database URL, and Google Web Client ID there. Start from

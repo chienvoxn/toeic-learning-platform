@@ -80,6 +80,9 @@ public class IdentitySecurityConfig {
                         .requestMatchers("/api/v1/admin/users", "/api/v1/admin/users/**").access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasRole("ADMIN"),
                                 AuthorityAuthorizationManager.hasAuthority("user:manage")))
+                        .requestMatchers("/api/v1/ai/**").hasAuthority("ai:chat:self")
+                        .requestMatchers("/api/v1/admin/ai/**").access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("ai:knowledge:manage")))
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(config -> config
