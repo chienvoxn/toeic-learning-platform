@@ -1,0 +1,7 @@
+# Copy to application-local.properties and fill in your own local values.
+# The copied file is ignored by Git. Run the backend with the local profile.
+spring.datasource.url=jdbc:postgresql://localhost:5432/toeic_dev_fresh
+spring.datasource.username=postgres
+spring.datasource.password=REPLACE_WITH_POSTGRES_PASSWORD
+app.auth.google.client-id=REPLACE_WITH_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com
+app.auth.google.secure-cookie=false

@@ -76,6 +76,14 @@ spring.datasource.password=${DB_PASSWORD}
 
 Set the database password as an environment variable.
 
+For local development without setting environment variables on every run, edit
+`backend/config/application-local.properties` (ignored by Git) and set your
+PostgreSQL password, database URL, and Google Web Client ID there. Start from
+`backend` with `./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"`
+on Windows. The example is at `backend/config/application-local.properties.example`.
+Use a fresh local database if your existing `toeic_db` has a Flyway checksum
+mismatch; do not repair or reset its migration history to bypass validation.
+
 **Windows PowerShell:**
 
 ```powershell
