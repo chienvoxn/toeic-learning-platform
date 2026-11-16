@@ -339,6 +339,37 @@ entityType SYSTEM_SETTING, entityId là một trong hai key; chi tiết chỉ s�
 
 ## 4. DTO schema definitions (contract draft)
 
+**ADMIN-03 runtime (phần độc lập):** [Phạm vi/OPEN và bằng chứng](ADMIN03_Content_Moderation.md).
+UI Admin dùng lại GET/POST/PATCH/DELETE `/teacher/contents`, `/teacher/questions`,
+`/teacher/question-groups`; giữ own/any và media policy hiện có, không API authoring
+song song. Login/me thêm `adminCapabilities.contentManagement` và
+`questionManagement` cho ACTIVE ADMIN có `content:manage:any`/`question:manage:any`.
+GET `/teacher/question-options` không nhận query, trả danh mục Part/topic thật
+cho editor; kiểm `question:manage:self` hoặc `question:manage:any` và actor ACTIVE.
+Create/update ghi audit nguyên tử với tên field được yêu cầu và UUID phiên bản,
+không ghi giá trị nội dung; lỗi audit503 CONTENT_AUDIT_UNAVAILABLE rollback.
+Archive lần đầu ghi audit nguyên tử; lỗi audit503 ARCHIVE_AUDIT_UNAVAILABLE,
+lặp204 không thêm audit. Audit ADMIN07 nhận CREATED/UPDATED/ARCHIVED cho
+CONTENT/QUESTION/QUESTION_GROUP; chi tiết chỉ status, UUID version và tên field
+allowlist. Thống kê sự kiện quản lý bao gồm chín action này của Teacher hoặc
+Admin; không phải tổng mọi hoạt động.
+**Workflow ADMIN03 xác nhận2026-11-15:** dùng `/moderation`, không dùng các route
+review/approve/publish DESIGN phía trên. GET `/moderation/capabilities`, GET
+`/moderation/{contents|questions|groups}?page=0` (size20 cố định), GET
+`/moderation/{kind}/{parentId}/versions/{versionId}` và POST cùng path thêm
+`/{submit|approve|return|revoke|publish}`. Payload `{expectedRevision}`;
+return/revoke bắt buộc thêm reason1–2000; publish content bắt buộc visibility
+PUBLIC/AUTHENTICATED. Từ chối field lạ/duplicate/sai kiểu/query không hợp lệ400.
+Submit self/any+ownership; review/publish ACTIVE ADMIN+quyền riêng, không cần
+manage. Legacy thiếu evidence, stale, tự duyệt, group publication, media sai409;
+audit/DB lỗi503 và rollback. Reply gồm status/revision/approvedRevision,
+sourceVersionId/evidenceComplete/payload/decisions/capabilities. Payload/reason chỉ
+trong scope authoring/review; Learner không đọc được. Revision tăng mỗi authoring
+hoặc transition, approval pin revision sau approve, khóa nội dung cho tới revoke.
+Thêm audit SUBMITTED/APPROVED/RETURNED/APPROVAL_REVOKED/PUBLISHED cho ba resource,
+projection chỉ status/version UUID; không reason hay nội dung. Chưa G1, bộ đề,
+unpublish/restore hoặc grant API. [Contract và kiểm chứng](ADMIN03_Content_Moderation.md).
+
 ### 4.1 Authentication
 
 **Policy mới:** register trả ACTIVE ngay, không gửi OTP. Gỡ verify-email/resend-otp;

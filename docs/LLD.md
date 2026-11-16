@@ -252,6 +252,24 @@ chỉ expose key allowlist và giá trị số/revision của audit Settings. Kh
 arbitrary key/SQL/secret. [Contract và kiểm chứng](ADMIN06_System_Configuration_Data_Management.md).
 OutboxPublisher và các mẫu interface dưới đây vẫn DESIGN.
 
+**ADMIN-03 phần authoring/đọc/archive:** ContentManagementService/QuestionAuthoringService
+giữ khóa và ownership hiện hữu, gọi ContentManagementAudit MANDATORY → writer audit
+hiện có trong cùng transaction. Create/update chỉ lưu status, UUID phiên bản và
+tên field được yêu cầu; không lưu giá trị nội dung. Ba action archive chỉ lưu
+before/after status, no-op không thêm event, fail audit rollback mutation.
+AdminReadRepository lọc projection allowlist cho CONTENT/QUESTION/QUESTION_GROUP.
+GET /teacher/question-options cung cấp Part/topic từ DB cho editor theo quyền
+authoring hiện hữu, không suy Part ID từ số Part.
+**Workflow xác nhận2026-11-15:** V35 thêm metadata moderation_versions,
+moderation_contributors, moderation_decisions và bốn permission review/publish.
+ModerationEvidence chạy MANDATORY sau authoring flush trong cùng parent lock;
+create/clone có evidence, legacy edit đánh dấu thiếu evidence, không suy tác giả.
+ModerationService dùng RBAC shared advisory→parent→version→media/grant; kiểm lại
+actor và expectedRevision, state/approval/contributor trước mutation/audit.
+MediaPublicationPolicy dùng lại MediaReuseRepository, tách permission publish khỏi
+authoring manage. Group publication bị chặn; không có workflow TestVersion mới.
+[Contract/dependency](ADMIN03_Content_Moderation.md).
+
 **Tables:** `audit_logs`, `system_settings`, `outbox_events`.
 
 | Layer | Thành phần |

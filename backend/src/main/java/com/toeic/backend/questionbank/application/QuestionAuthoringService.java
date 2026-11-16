@@ -2,6 +2,8 @@ package com.toeic.backend.questionbank.application;
 
 import com.toeic.backend.questionbank.domain.QuestionChoiceDraft;
 import com.toeic.backend.questionbank.infrastructure.*;
+import com.toeic.backend.system.application.ContentManagementAudit;
+import com.toeic.backend.system.application.ModerationEvidence;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -22,11 +24,18 @@ public class QuestionAuthoringService {
     private final QuestionAuthoringAccess access;
     private final EntityManager em;
     private final Clock clock;
+    private final ContentManagementAudit audit;
+    private final ModerationEvidence evidence;
     public QuestionAuthoringService(QuestionAuthoringRepository data,QuestionVersionRepository questions,QuestionGroupRepository groups,
-            QuestionAuthoringSnapshotMapper mapper,QuestionMediaReuseService media,QuestionAuthoringAccess access,EntityManager em,Clock clock) {
+            QuestionAuthoringSnapshotMapper mapper,QuestionMediaReuseService media,QuestionAuthoringAccess access,EntityManager em,Clock clock,ContentManagementAudit audit,ModerationEvidence evidence) {
         this.data=data;this.questions=questions;this.groups=groups;this.mapper=mapper;this.media=media;this.access=access;this.em=em;this.clock=clock;
+        this.audit=audit;
+        this.evidence=evidence;
     }
     private OffsetDateTime now() { return OffsetDateTime.now(clock); }
+    /** Danh mục tham chiếu thực cho biểu mẫu; không suy partId từ partNumber hoặc dữ liệu published. */
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public QuestionAuthoringDtos.Options options(UUID actorId) { return data.options(); }
     private Parent owned(boolean group,UUID actor,UUID id,boolean lock) {
         var parent=data.parent(group,id,lock).orElseThrow(QuestionAuthoringException::missing);
         if(!access.any()&&!actor.equals(parent.owner()))throw QuestionAuthoringException.missing();
@@ -111,6 +120,7 @@ public class QuestionAuthoringService {
     }
     private record Working(Version draft,Version source,boolean cloning,int nextNumber) {}
     private Working working(Parent parent,List<Version> versions) {
+        if(versions.stream().anyMatch(v -> Set.of("IN_REVIEW","APPROVED").contains(v.status())))throw QuestionAuthoringException.conflict();
         if(!Set.of("DRAFT","PUBLISHED").contains(parent.status()))throw QuestionAuthoringException.conflict();
         Version published=null;
         if("PUBLISHED".equals(parent.status())) {
@@ -165,6 +175,8 @@ public class QuestionAuthoringService {
         var id=UUID.randomUUID();var time=now();data.insertGroup(id,actorId,edit.groupType(),time);
         var version=data.insertVersion(true,id,1,null,edit.instruction(),edit.passageText(),null,time);
         data.replaceAssets(true,version,target);
+        evidence.record("groups",id,version,null,actorId,true);
+        audit.created(actorId,ContentManagementAudit.Resource.QUESTION_GROUP,id,version,edit.fields(),time);
         return groupView(owned(true,actorId,id,false));
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
@@ -181,6 +193,8 @@ public class QuestionAuthoringService {
         var id=UUID.randomUUID();var time=now();data.insertQuestion(id,actorId,edit.partId(),edit.topicId(),type,gid,time);
         var version=data.insertVersion(false,id,1,edit.groupVersionId(),edit.questionText(),edit.explanation(),edit.difficulty(),time);
         data.replaceChoices(version,edit.choices());data.replaceAssets(false,version,target);
+        evidence.record("questions",id,version,null,actorId,true);
+        audit.created(actorId,ContentManagementAudit.Resource.QUESTION,id,version,edit.fields(),time);
         return questionView(actorId,question(actorId,id));
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
@@ -198,6 +212,8 @@ public class QuestionAuthoringService {
         if(!working.cloning())data.editVersion(true,version,null,text,passage,null);
         if(working.cloning()||edit.has("assets"))data.replaceAssets(true,version,target);
         data.updateGroup(parent,type,now());
+        evidence.record("groups",id,version,parent.pointer(),actorId,working.cloning());
+        audit.updated(actorId,ContentManagementAudit.Resource.QUESTION_GROUP,id,parent.status(),working.source().id(),version,edit.fields(),now());
         return groupView(owned(true,actorId,id,false));
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
@@ -231,15 +247,21 @@ public class QuestionAuthoringService {
         if(working.cloning()||edit.has("choices"))data.replaceChoices(version,choices);
         if(working.cloning()||edit.has("assets"))data.replaceAssets(false,version,target);
         data.updateQuestion(parent,partId,topic,type,proposedGroup,now());
+        evidence.record("questions",id,version,parent.pointer(),actorId,working.cloning());
+        audit.updated(actorId,ContentManagementAudit.Resource.QUESTION,id,parent.status(),sourceVersion.id(),version,edit.fields(),now());
         return questionView(actorId,question(actorId,id));
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
-    public void archiveGroup(UUID actorId,UUID id) { owned(true,actorId,id,true);data.archive(true,id,now()); }
+    public void archiveGroup(UUID actorId,UUID id) {
+        var parent=owned(true,actorId,id,true);var now=now();data.archive(true,id,now);
+        audit.changed(actorId,ContentManagementAudit.Resource.QUESTION_GROUP,id,parent.status(),now);
+    }
     @Transactional(isolation=Isolation.READ_COMMITTED)
     public void archiveQuestion(UUID actorId,UUID id) {
         var observed=question(actorId,id);lockGroups(actorId,Collections.singletonList(observed.groupId()),false);
         var parent=owned(false,actorId,id,true);
         if(!Objects.equals(observed.groupId(),parent.groupId()))throw QuestionAuthoringException.conflict();
-        data.archive(false,id,now());
+        var now=now();data.archive(false,id,now);
+        audit.changed(actorId,ContentManagementAudit.Resource.QUESTION,id,parent.status(),now);
     }
 }

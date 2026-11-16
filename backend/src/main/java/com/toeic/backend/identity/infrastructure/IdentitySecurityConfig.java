@@ -50,7 +50,7 @@ public class IdentitySecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
                         .requestMatchers("/api/v1/teacher/contents", "/api/v1/teacher/contents/**")
                         .hasAnyAuthority("content:manage:self", "content:manage:any")
-                        .requestMatchers("/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
+                        .requestMatchers("/api/v1/teacher/question-options", "/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
                                 "/api/v1/teacher/question-groups", "/api/v1/teacher/question-groups/**")
                         .hasAnyAuthority("question:manage:self", "question:manage:any")
                         .requestMatchers("/api/v1/attempts", "/api/v1/attempts/**").hasAnyAuthority("practice:manage:self", "exam:manage:self")

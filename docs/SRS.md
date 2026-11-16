@@ -234,6 +234,18 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 ### UC-13 — Quản lý ngân hàng câu hỏi
 
+**ADMIN-03 runtime hiện tại:** UI quản trị tạo/sửa DRAFT, list/detail/version/archive
+học liệu, câu hỏi và nhóm tái sử dụng CONTENT03/Q03; create/update/archive có audit
+nguyên tử, archive idempotent, giữ version/snapshot/kết quả.
+**Quyết định xác nhận2026-11-15:** DRAFT→IN_REVIEW→APPROVED→PUBLISHED; approval
+pin version/revision, trả sửa/thu hồi về DRAFT có lý do, khóa sửa khi chờ/đã duyệt.
+Review/publish ACTIVE ADMIN với quyền riêng; cấm contributor của vòng publication
+hiện tại, không kế thừa tập cấm từ source published cũ. Publisher kiểm media M1,
+học liệu chọn visibility tường minh. G1 triển khai riêng: lượt này chặn publication
+nhóm/câu thuộc nhóm, giữ authoring/read/archive/pin. Chưa unpublish/restore;
+bộ đề bị chặn EXAM04 chưa tích hợp. Không đánh dấu toàn bộ ADMIN03/WEB06 Done.
+[Đối chiếu AC, contract và phần còn thiếu](ADMIN03_Content_Moderation.md).
+
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

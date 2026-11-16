@@ -13,6 +13,8 @@ export function toClientUser(dto) {
       healthRead: dto.adminCapabilities.healthRead === true,
       usageRead: dto.adminCapabilities.usageRead === true,
       settingsManagement: dto.adminCapabilities.settingsManagement === true,
+      contentManagement: dto.adminCapabilities.contentManagement === true,
+      questionManagement: dto.adminCapabilities.questionManagement === true,
     } } : {}),
   };
 }

@@ -5,6 +5,9 @@ import java.util.*;
 
 public final class QuestionAuthoringDtos {
     private QuestionAuthoringDtos() {}
+    public record Options(List<QuestionReadDtos.Part> parts,List<QuestionReadDtos.Topic> topics) {
+        public Options { parts=List.copyOf(parts);topics=List.copyOf(topics); }
+    }
     public record QuestionSummary(UUID questionId,Integer partId,Integer topicId,String questionType,UUID groupId,
             String status,UUID publishedVersionId,OffsetDateTime createdAt,OffsetDateTime updatedAt) {}
     public record GroupSummary(UUID groupId,String groupType,String status,UUID publishedVersionId,OffsetDateTime createdAt,OffsetDateTime updatedAt) {}

@@ -31,5 +31,5 @@ test('monitoring errors do not invent audit, health UP or usage counts', async (
 test('monitoring capabilities require server booleans rather than role inference', () => {
   assert.equal(toClientUser({ roles: ['ADMIN'] }).adminCapabilities, undefined);
   const value = toClientUser({ adminCapabilities: { auditRead: true, healthRead: 'true', usageRead: true } });
-  assert.deepEqual(value.adminCapabilities, { userManagement: false, rbacManagement: false, auditRead: true, healthRead: false, usageRead: true, settingsManagement: false });
+  assert.deepEqual(value.adminCapabilities, { userManagement: false, rbacManagement: false, auditRead: true, healthRead: false, usageRead: true, settingsManagement: false, contentManagement: false, questionManagement: false });
 });
