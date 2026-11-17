@@ -1,4 +1,4 @@
-﻿// A card finishes this round when the server schedules it at least one day ahead.
+// A card finishes this round when the server schedules it at least one day ahead.
 export function restoreLearningQueue(cards, completedIds = [], storedQueue = null) {
   const ids = cards.map(card => card.id);
   const valid = new Set(ids);

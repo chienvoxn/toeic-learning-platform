@@ -1,4 +1,4 @@
-﻿import { restoreLearningSession } from './learningQueue.js';
+import { restoreLearningSession } from './learningQueue.js';
 const prefix = 'toeic:vocabulary:review-session:v1:';
 export const reviewSessionKey = deckId => `${prefix}${deckId}`;
 export function readReviewSession(deckId, cards = []) {

@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — Software Requirements Specification v1.2
 
 > **Chính sách tài khoản mới 2026-11-11:** đăng ký ACTIVE ngay, đăng nhập không OTP;
@@ -249,6 +251,27 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
 ### UC-15 — Quản lý người dùng và phân quyền
+
+**ADMIN-07 runtime 2026-11-13:** [AC, metric và giới hạn](ADMIN07_Audit_Health_Usage.md).
+Admin có permission tương ứng đọc audit đã ghi, health thành phần được bảo vệ và
+thống kê DB tài khoản/Practice/Section theo khoảng UTC. Audit chỉ đọc/projection
+sanitized, không phải lịch sử mọi hoạt động. Health không lộ cấu hình/stack trace;
+AI chưa cấu hình hiện NOT_CONFIGURED. Không có chỉ số online/realtime giả.
+WEB-06 chỉ bổ sung hai trang audit/tổng quan, chưa phải toàn bộ Teacher/Admin UI.
+
+**ADMIN-02 runtime/chốt sản phẩm 2026-11-12:** [Quyết định và AC](ADMIN02_RBAC_Management.md).
+RBAC mutation chỉ actor ACTIVE có ADMIN + permission quản trị, không mở cho Teacher.
+CRUD role, gán/thu hồi permission và role user; permission là danh mục code/migration.
+Giữ mã/xóa ba role hệ thống; không tự nâng quyền/tự khóa hoặc mất Admin ACTIVE đủ
+quyền cuối cùng, gồm cả khóa tài khoản ADMIN-01 và request đồng thời. Quyền hiệu
+lực request tiếp theo trên phiên hiện có; audit nguyên tử, xóa role chỉ khi chưa gán.
+Phần WEB-06 hoàn thiện trong nhiệm vụ này chỉ là giao diện RBAC.
+
+**ADMIN-01 runtime 2026-11-12:** phạm vi Sprint2 được yêu cầu là tìm/lọc Learner và
+Teacher, khóa/mở khóa; chưa triển khai CRUD role/permission trong luồng DESIGN bên
+dưới. ADMIN + `user:manage` bắt buộc tại server/service, V31 chỉ grant ADMIN. Không
+quản lý tài khoản có ADMIN; chỉ ACTIVE↔LOCKED, status + audit nguyên tử, giữ chính
+sách phiên AUTH-03 đã chốt. [AC và bằng chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
 
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 

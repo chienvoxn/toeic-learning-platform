@@ -1,11 +1,20 @@
 
 package com.toeic.backend.identity.domain;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.*;
-import java.time.OffsetDateTime;
 import java.util.UUID;
+
 import org.hibernate.annotations.DynamicUpdate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -150,6 +159,17 @@ public class User {
             throw new IllegalArgumentException("Invalid password hash");
         }
         this.passwordHash = hash;
+        this.updatedAt = now;
+    }
+    public void changeAccountStatus(String next, OffsetDateTime now) {
+        if (!Set.of("ACTIVE", "LOCKED").contains(status)
+                || next == null
+                || !Set.of("ACTIVE", "LOCKED").contains(next)
+                || now == null) {
+            throw new IllegalArgumentException("Invalid account lock transition");
+        }
+
+        this.status = next;
         this.updatedAt = now;
     }
     public Set<Role> getRoles() {

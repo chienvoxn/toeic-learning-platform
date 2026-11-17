@@ -1,5 +1,6 @@
 import { FakeAssessmentRepository } from './assessment.fake';
 import { GuestAssessmentRepository } from './assessment.guest';
+import { RemoteAssessmentRepository } from './assessment.api';
 
 import { useMock as isMock } from '@/lib/runtime-config';
 
@@ -15,3 +16,5 @@ class AssessmentRepositoryFactory {
 }
 
 export const assessmentRepo = AssessmentRepositoryFactory.getInstance();
+// Explicit account routes use the server; API errors never fall back to guest/mock.
+export const remoteAssessmentRepo = new RemoteAssessmentRepository();

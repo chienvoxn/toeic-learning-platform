@@ -6,8 +6,10 @@ import { GuestPracticeNotice } from '@/components/molecules/GuestPracticeNotice'
 import { TestMetadata } from '@/components/molecules/TestMetadata';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { assessmentRepo } from '@/features/assessment/repositories/assessment.repo';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function TestCatalogPage() {
+  const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,9 +19,9 @@ export default function TestCatalogPage() {
     return () => { active = false; };
   }, []);
   return <AssessmentLayout variant="catalog"><div className="test-catalog-page"><GuestPracticeNotice />
+    <section className="surface p-5 mb-5"><h2>Luyện tập lưu trên tài khoản</h2><p>Tạo Practice hoặc Reading Section bằng ngân hàng published và xem kết quả máy chủ.</p><Link className="pill-button navy mt-3" to={user ? '/practice' : '/login'} state={user ? undefined : { from: '/practice' }}>{user ? 'Mở Practice / Reading Section' : 'Đăng nhập để làm bài thật'}</Link></section>
     <section className="test-collection-hero"><div className="collection-tags"><span>TOEIC</span><span>2026</span></div><h1>Bộ đề TOEIC</h1><p>{tests.length} đề thi · Luyện tập theo từng phần</p><BookOpen aria-hidden="true" /></section>
-    <section className="surface p-5 my-5"><h2 className="font-bold">Luyện Reading Part 5–7 với tài khoản</h2><p className="my-3">Tạo bài từ ngân hàng câu hỏi, lưu đáp án và xem kết quả trên máy chủ. Cần đăng nhập.</p><Link to="/practice" className="pill-button navy">Luyện Reading Part 5–7</Link></section>
-    <h2 className="eyebrow">DANH SÁCH ĐỀ MẪU LOCAL</h2>
+    <h2 className="eyebrow">DANH SÁCH ĐỀ</h2>
     {loading && <LoadingSpinner text="Đang tải danh sách đề thi..." />}{error && <p className="form-error" role="alert">{error}</p>}
     <div className="test-catalog-grid">{tests.map(test => <article className="test-list-card surface" key={test.id}><div><h3>{test.title}<span className="free-label">MIỄN PHÍ</span></h3><TestMetadata test={test} /></div><Link className="pill-button" to={`/tests/${test.id}/overview`}>XEM CHI TIẾT</Link></article>)}</div>
   </div></AssessmentLayout>;

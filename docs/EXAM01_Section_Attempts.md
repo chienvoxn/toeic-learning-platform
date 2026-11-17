@@ -118,6 +118,12 @@ PracticeAnswerRepository đọc **partResults(attemptId)** từ attempt_part_res
 
 ## Rà soát Sprint 2 TV2
 
+**Cập nhật tích hợp local sau đồng bộ develop 2026-11-11:** Reading Section và
+Practice đã nối UI/API thật, được kiểm bằng browser/DB; xem
+[báo cáo và hướng dẫn demo](LOCAL_DEMO_FE_BE_Integration.md). Các ghi nhận UI chưa
+nối bên dưới là snapshot lịch sử của lượt backend EXAM-01. Listening/protected
+playback/EXAM-03 và UI Teacher vẫn thiếu; chưa đánh dấu toàn Sprint/EXAM-01 Done.
+
 Đây là đối chiếu code và bằng chứng từng luồng, **không đánh dấu Done toàn Sprint chỉ vì có API**. Các số test trong tài liệu nhiệm vụ cũ là lịch sử, không phải bằng chứng chạy lại cho EXAM-01.
 
 | Task | Phần backend đã có và tái sử dụng | Khoảng trống cần phân biệt |

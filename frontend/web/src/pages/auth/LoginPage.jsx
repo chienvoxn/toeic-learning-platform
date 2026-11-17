@@ -36,12 +36,12 @@ export default function LoginPage() {
     {state?.sessionEnded && <p role="status">Vui lòng đăng nhập để tiếp tục.</p>}
     {!isRemoteAuth && <p role="status">Auth đang ở chế độ demo, không xác thực với backend.</p>}
     {error && <p className="form-error" role="alert">{error}</p>}
-    {isRemoteAuth && <GoogleSignIn disabled={busy} onBusyChange={setBusy} onSuccess={() => navigate(destination, { replace: true })} />}
     <form className="email-login" onSubmit={submit}>
       <label htmlFor="login-email">Email</label><Input id="login-email" type="email" autoComplete="email" maxLength={255} required value={email} onChange={event => setEmail(event.target.value)} />
       <label htmlFor="login-password">Mật khẩu</label><Input id="login-password" type="password" autoComplete="current-password" maxLength={72} required value={password} onChange={event => setPassword(event.target.value)} />
       <Button type="submit" className="navy-button" disabled={busy}>{busy ? 'Đang đăng nhập...' : 'Đăng nhập'}</Button>
     </form>
+    {isRemoteAuth && <GoogleSignIn disabled={busy} onBusyChange={setBusy} onSuccess={() => navigate(destination, { replace: true })} />}
     {!isRemoteAuth && <button type="button" className="text-button" disabled={busy} onClick={google}>Dùng tài khoản Google mẫu</button>}
     <p className="auth-register">Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link></p>
     {isRemoteAuth && <p className="auth-register"><Link to="/forgot-password">Quên mật khẩu?</Link></p>}

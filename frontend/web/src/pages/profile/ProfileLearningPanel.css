@@ -1,0 +1,26 @@
+.tv3-profile-learning{min-width:0}
+.tv3-profile-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.tv3-profile-heading p,.tv3-profile-muted{color:#64748b;font-size:12px;margin-top:5px}
+.tv3-profile-reload{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;padding:7px 9px;font-size:12px;border:1px solid #e2e8f0;border-radius:10px;color:#334155;background:white}
+.tv3-profile-reload:disabled{opacity:.5}
+.tv3-profile-warning{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:10px 12px;color:#9a3412;font-size:12px;margin-bottom:15px}
+.tv3-profile-warning p+p{margin-top:6px}
+.tv3-profile-metrics,.tv3-profile-rating-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tv3-profile-metric{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:12px;min-width:0}
+.tv3-profile-metric span{display:block;font-size:12px;color:#64748b}
+.tv3-profile-metric strong{display:block;font-size:23px;font-weight:800;color:#172033;margin-top:6px}
+.tv3-profile-metric small{color:#64748b}
+.tv3-profile-rating-grid .tv3-profile-metric strong{font-size:18px}
+.tv3-profile-streak-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;background:#eff6ff;border:1px solid #dbeafe;padding:13px;border-radius:13px}
+.tv3-profile-streak-panel span{display:block;color:#475569;font-size:12px}
+.tv3-profile-streak-panel strong{display:block;margin-top:5px;font-size:26px;color:#1d4ed8}
+.tv3-profile-streak-panel strong small{font-size:12px;font-weight:500;color:#64748b}
+.tv3-profile-subsection{margin-top:22px;border-top:1px solid #e2e8f0;padding-top:17px}
+.tv3-profile-subsection h3{font-size:15px;font-weight:800;margin-bottom:15px;color:#172033}
+.tv3-profile-chart{display:flex;align-items:stretch;gap:3px;height:100px;max-width:100%;padding-bottom:3px;border-bottom:1px solid #cbd5e1}
+.tv3-profile-chart-column{min-width:0;flex:1;display:flex;align-items:flex-end}
+.tv3-profile-chart-bar{width:100%;background:#2563eb;border-radius:4px 4px 0 0;min-height:2px}
+.tv3-profile-chart-caption{display:flex;justify-content:space-between;color:#64748b;font-size:11px;margin-top:6px}
+.tv3-profile-actions{margin-top:18px}
+.tv3-profile-actions a{font-size:12px}
+@media(max-width:480px){.tv3-profile-metrics,.tv3-profile-rating-grid{gap:7px}.tv3-profile-metric{padding:10px}.tv3-profile-metric strong{font-size:20px}.tv3-profile-streak-panel strong{font-size:23px}}

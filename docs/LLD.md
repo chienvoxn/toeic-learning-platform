@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
 > **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
@@ -72,9 +74,27 @@ backend/src/main/java/com/toeic/platform/
 
 **Invariants:** Không trả password_hash; role assignment chỉ admin; ownership check.
 
+**ADMIN-02 runtime 2026-11-12:** [Thiết kế/contract RBAC đã chốt](ADMIN02_RBAC_Management.md).
+AdminRbacController → RbacService → RbacRepository tái sử dụng V1/V2/V9;
+V32 thêm display_name và permission `rbac:manage`. RbacMutationGuard dùng khóa
+advisory transaction PostgreSQL chung cho mọi RBAC write và ADMIN-01 status;
+thứ tự advisory → user → role theo ID → links, đọc lại actor sau khóa. Mutation,
+guard sau mutation và audit cùng transaction; vi phạm rollback toàn bộ. ADMIN01
+cho phép khóa Admin khác khi có thêm quyền RBAC và còn Admin ACTIVE đủ quyền.
+Session vẫn resolve quyền DB mỗi request, không thêm cache/role hierarchy/bypass.
+Ghi chú AssignRole DESIGN bên dưới mô tả thời điểm AUTH-03, đã được thay trong phạm vi này.
+
 **AUTH-04 — chốt 2026-11-03:** [Phạm vi và quyết định](AUTH04_Profile_Password_Goals.md). UserProfileService kế thừa GET/PATCH me, trả/cập nhật tên và targetScore 10–990 bội số 5, null xóa/bỏ qua giữ nguyên, không ngày mục tiêu. Mapping một phần learning_profiles chỉ ghi mục tiêu và timestamp, giữ nguyên dữ liệu analytics. PasswordChangeService xác minh mật khẩu cũ và cập nhật hash + thu hồi mọi phiên cùng transaction, trả 204 không token mới. Login và đổi mật khẩu khóa cùng user trước xác minh để ngăn tạo phiên bằng credential cũ sau đổi. API/service có permission + ownership, DTO allowlist từ chối trường hệ thống. V17 chỉ seed quyền, không đổi schema mục tiêu.
 
-**AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AdminUserController/AssignRole và quyền nghiệp vụ khác bên trên vẫn là DESIGN, chưa triển khai; không coi ma trận reviewer/publisher OPEN là grant mặc định.
+**AUTH-03 hiện thực:** [Ma trận RBAC](AUTH03_RBAC.md); Permission map bảng V2 và Role.permissions qua role_permissions, V14 seed user:read:self cho ba role. SessionAuthenticationService tải permission từ DB mỗi request qua entity graph, PermissionService tính hợp quyền. Method security bảo vệ UserProfileService (permission + own user) và AuthService.logout (own session). AssignRole và quyền nghiệp vụ chưa hiện thực vẫn là DESIGN; không coi ma trận reviewer/publisher OPEN là grant mặc định.
+
+**ADMIN-01 runtime 2026-11-12:** AdminUserController bind allowlist, AdminUserService
+kiểm ADMIN + user:manage, đọc RR data/count qua AdminUserRepository cùng predicate
+Learner/Teacher không có ADMIN; ghi khóa user cùng login/password, status + audit_logs
+commit/rollback cùng transaction. Lặp cùng trạng thái không thêm audit, không sửa
+sessions; giữ policy lock/unlock AUTH-03. V31 chỉ seed permission/grant ADMIN, không
+đổi schema hoặc role CRUD. Search dùng collation Unicode `und-x-icu` sẵn có PostgreSQL
+để lowercase đúng tiếng Việt kể cả database locale C. [Chi tiết](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
 
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
@@ -215,6 +235,16 @@ không ánh xạ chunk ID Python vào FK nghiệp vụ khi chưa có mapping tư
 **Mẫu interface [DESIGN]:** `CommandService.execute(Command, ActorContext) -> Result`; query sử dụng `QueryService` riêng, DTO không expose JPA entity. Mọi write xác thực quyền, validation, transaction, audit/outbox nếu có sự kiện. Unit tests cho business rules, integration tests cho persistence và HTTP tests cho controller.
 
 ### 2.10 System, Audit & Outbox
+
+**ADMIN-07 runtime 2026-11-13:** [Thiết kế, API và kiểm chứng](ADMIN07_Audit_Health_Usage.md).
+AdminMonitoringController → AdminReadService → AdminReadRepository đọc audit V9 và
+aggregate users/user_roles/attempts trong REPEATABLE READ. Count/data dùng một
+predicate, sort allowlist + auditId tie-break, timestamp UTC [from,to). Chỉ trả
+metadata và thay đổi allowlist, không serialize raw JSON. Writer/audit nguyên tử
+ADMIN01/02 giữ nguyên. AdminHealthService probe DB SELECT1 và AI HTTP tùy cấu hình,
+deadline/worker hữu hạn, output chỉ status/time. V33 chỉ seed ba quyền đọc và grant
+ADMIN; method/filter kiểm ADMIN + permission, UI dùng capability server.
+SettingsService/OutboxPublisher dưới đây vẫn DESIGN, không thuộc ADMIN07.
 
 **Tables:** `audit_logs`, `system_settings`, `outbox_events`.
 

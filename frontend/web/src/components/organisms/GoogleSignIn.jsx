@@ -42,15 +42,16 @@ export default function GoogleSignIn({ onSuccess, onBusyChange, disabled = false
         callback: response => { if (!cancelled && response.credential) authenticate({ credential: response.credential, challengeId: challenge.challengeId }); },
       });
       container.current.replaceChildren();
-      google.renderButton(container.current, { type: 'standard', theme: 'outline', size: 'large', text: 'continue_with', locale: 'vi', width: 280 });
+      const buttonWidth = Math.min(400, Math.floor(container.current.getBoundingClientRect().width)) || 280;
+      google.renderButton(container.current, { type: 'standard', theme: 'outline', size: 'large', text: 'continue_with', locale: 'vi', width: buttonWidth });
       timer = setTimeout(() => { if (!cancelled && !working.current) { setPending(null); setPassword(''); setRevision(value => value + 1); } }, challenge.expiresIn * 1000);
     }).catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; active.current = false; clearTimeout(timer); };
     // Revision rotates the nonce/challenge; callbacks are read from refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revision]);
-  return <section className="my-5 space-y-3" aria-label="Đăng nhập Google">
-    <div ref={container} inert={busy || disabled} className={busy || disabled ? 'opacity-60' : ''} aria-busy={busy} />
+  return <section className="my-5 w-full space-y-3" aria-label="Đăng nhập Google">
+    <div ref={container} inert={busy || disabled} className={`google-sign-in-button w-full${busy || disabled ? ' opacity-60' : ''}`} aria-busy={busy} />
     {busy && <p className="text-sm" role="status">Đang xác minh với Google...</p>}
     {error && <p className="form-error" role="alert">{error}</p>}
     {pending && <form className="space-y-3" onSubmit={event => { event.preventDefault(); authenticate({ ...pending, currentPassword: password }); }}>

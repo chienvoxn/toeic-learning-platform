@@ -2,6 +2,13 @@
 
 Ngày: 2026-11-01. Nhánh: `feat/auth-rbac`. Phạm vi: API identity hiện có, kế thừa [ADR-017](ADR_Auth_Session.md). Package giữ `com.toeic.backend`, modular monolith với các lớp api/application/domain/infrastructure.
 
+**Cập nhật ADMIN-02 (2026-11-12):** [RBAC quản trị thực thi và bằng chứng](ADMIN02_RBAC_Management.md)
+thay các ghi chú chưa triển khai quản trị role bên dưới trong phạm vi ADMIN-02.
+V32 cấp `rbac:manage` cho ADMIN, thêm tên hiển thị role; không tự cấp quyền DESIGN
+hoặc publish/review. Guard chống tự nâng quyền, tự khóa và mất Admin ACTIVE đủ
+quyền cuối cùng bao phủ RBAC/ADMIN01, transaction và audit. Giữ cơ chế tải quyền
+DB từ request kế tiếp trên cùng token; không tạo SUPER_ADMIN hoặc bypass.
+
 **Cập nhật CONTENT-01 (2026-11-02):** [Hai GET đọc học liệu](CONTENT01_Read_API.md) đã được triển khai trên nền này. V15 cấp thêm content:read cho ba role, Guest chỉ đọc published PUBLIC, session có quyền đọc thêm AUTHENTICATED; PRIVATE vẫn ẩn. Ma trận bên dưới mô tả phạm vi tại thời điểm AUTH-03; publish/review và API quản trị tiếp tục chưa triển khai.
 
 ## Đối chiếu và quyết định triển khai
@@ -23,7 +30,8 @@ Guest là request chưa xác thực, không phải role được lưu vào DB. D
 | GET hai health endpoint hiện hữu | Có | Có | Có | Có |
 | GET `/api/v1/users/me` (`user:read:self`, chỉ chính mình) | 401 | Có | Có | Có |
 | POST `/api/v1/auth/logout` (chỉ phiên hiện tại) | 401 | Có | Có | Có |
-| Guard `/api/v1/admin/**` | 401 | 403 | 403 | Qua guard role; chưa có API nghiệp vụ |
+| Guard `/api/v1/admin/**` | 401 | 403 | 403 | Qua guard role; user management thêm permission dưới đây |
+| GET `/api/v1/admin/users`, PATCH `/{id}/status` | 401 | 403 | 403 | Cần ADMIN + user:manage, mặc định grant V31 |
 | Tự gán role/permission qua register/login/header/query | Không | Không | Không | Không có API gán quyền trong phạm vi này |
 
 V14 cấp `user:read:self` cho ba role. Thu hồi grant ở `role_permissions` hoặc xóa role cuối cùng cấp quyền ở `user_roles` khiến `/users/me` trả 403 từ request tiếp theo, kể cả ADMIN. Tài khoản ACTIVE không role vẫn có thể login/logout nhưng không đọc hồ sơ qua `/users/me`. Logout không yêu cầu permission nghiệp vụ để người dùng luôn có thể thu hồi phiên của mình.
@@ -40,10 +48,14 @@ Payload register/login chỉ bind các trường DTO đã khai báo; role/permis
 | Học, thi, SRS, listening, analytics, AI, notifications cá nhân | Không | Dự kiến tài nguyên cá nhân | Chưa chốt kế thừa | Chưa chốt kế thừa | API, permission và ownership từng tài nguyên |
 | `content:write` | Không | Không | Dự kiến theo grant | Chưa chốt quyền tác nghiệp | API, ownership draft |
 | `content:publish`, `question:review`, `question:publish`, `test:publish` | Không | Không | Theo grant, mặc định OPEN | Theo grant, mặc định OPEN | Workflow, separation of duties, ma trận reviewer/publisher |
-| `user:manage` | Không | Không | Không theo LLD | Dự kiến theo grant | API quản trị, audit, ngăn tự nâng quyền |
 | `score_conversion:manage`, `ai:usage:read`, `audit:read`, system settings | Không | Không | Không | Dự kiến theo grant | API và policy chi tiết; mã settings chưa chốt |
 
 Khi thêm API nghiệp vụ phải thêm guard role/permission và ownership tại use case, seed được review, test endpoint thật và cập nhật ma trận. Guard ADMIN hiện tại không thay cho permission của từng API tương lai. Không thêm endpoint production giả để chứng minh phân quyền.
+
+**ADMIN-01 V31 2026-11-12:** `user:manage` đã được triển khai cho list/search/filter
+và lock/unlock Learner/Teacher; role ADMIN vẫn không bypass permission, không có
+API tự cấp quyền. Tài khoản có ADMIN ngoài phạm vi sửa status, kể cả nhiều role.
+Giữ nguyên chính sách phiên khóa/mở khóa bên dưới. [AC và bằng chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
 
 ## Persistence và xác thực từng request
 

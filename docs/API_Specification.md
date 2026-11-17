@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — API Specification v1.0
 
 > **SYNC REVIEW v1.7 — 2026-10-28 | Trạng thái: đồng bộ tài liệu, CHƯA freeze/validate runtime**
@@ -20,6 +22,23 @@
 - `Idempotency-Key` recommended for start/submit/AI messages; implementation storage [OPEN] pending ERD revision.
 
 ## 2. Auth/RBAC roles
+
+**ADMIN-07 runtime 2026-11-13:** [Audit, health, thống kê và bằng chứng](ADMIN07_Audit_Health_Usage.md).
+Ba quyền V33 `audit:read`, `system:health:read`, `system:usage:read` chỉ thực thi khi
+actor ACTIVE có ADMIN, kiểm ở API/service. GET me/login bổ sung capability
+`auditRead`, `healthRead`, `usageRead`. Audit trả projection an toàn, không raw details;
+thống kê aggregate DB, không gọi là online/realtime. Health public giữ contract cũ.
+
+**ADMIN-02 runtime 2026-11-12:** [Contract, endpoint/payload và kiểm chứng RBAC](ADMIN02_RBAC_Management.md)
+thay phần role-assignment DESIGN trong phạm vi quản trị. API `/admin/roles`,
+`/admin/permissions`, `/admin/rbac/users`, `/admin/users/{id}/roles` kiểm ACTIVE +
+ADMIN + `rbac:manage` tại server/service; roleId/permissionId là integer (userId UUID).
+Permission chỉ đọc danh mục đã có enforcement. Không tự nâng quyền, không tự khóa
+hoặc mất Admin ACTIVE đủ quyền cuối cùng; conflict 409 và audit nguyên tử.
+Role hệ thống không đổi mã/xóa; `displayName`/mô tả/permission sửa được theo guard.
+GET me/login thêm `adminCapabilities:{userManagement,rbacManagement}` do server tính.
+PATCH status ADMIN-01 mở rộng cho target có ADMIN nếu actor còn `rbac:manage`,
+ngoài `user:manage`; danh sách ADMIN-01 vẫn chỉ Learner/Teacher, RBAC users gồm Admin.
 
 | Actor | Allowed scope |
 |---|---|
@@ -65,11 +84,23 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 **AUTH-04 — chốt 2026-11-03:** [Hồ sơ, mật khẩu và mục tiêu](AUTH04_Profile_Password_Goals.md). PATCH allowlist fullName/targetScore, chỉ sửa actor; không nhận email/avatar/role/permission hoặc trường hệ thống. Validation identity trả 400. targetScore là mục tiêu Listening + Reading tổng 10–990, nguyên và bội số 5 theo quy tắc sản phẩm; bỏ qua giữ nguyên, null xóa; chưa có ngày mục tiêu. Đổi mật khẩu/hash và thu hồi mọi phiên trong cùng transaction, không cấp token mới.
 
-| `GET` | `/admin/users` | Admin | page,size,status | 200 Page<UserSummary> | 403 |
+| `GET` | `/admin/users` | ADMIN + user:manage | q,role,status,page,size,sort | 200 AdminUserPage | 400; 401; 403 |
 
-| `PATCH` | `/admin/users/{id}/status` | Admin | UpdateUserStatusRequest | 200 UserSummary | 409 |
+| `PATCH` | `/admin/users/{id}/status` | ADMIN + user:manage | `{status: ACTIVE hoặc LOCKED}` | 200 AdminUserSummary | 400; 401; 403; 404; 409 |
 
-| `PUT` | `/admin/users/{id}/roles` | Admin | AssignRolesRequest | 200 UserRoles | 403 |
+| `PUT` DESIGN, chưa triển khai | `/admin/users/{id}/roles` | Admin | AssignRolesRequest | — | — |
+
+**ADMIN-01 runtime 2026-11-12:** [contract, AC và kiểm chứng](TV1_Sprint2_AUTH04_ADMIN01_QA02.md).
+V31 cấp `user:manage` mặc định chỉ ADMIN; API và service yêu cầu cả role và permission,
+không ADMIN bypass. List/count cùng scope Learner/Teacher, loại tài khoản có ADMIN kể
+cả nhiều role; q là chuỗi con literal tên/email, không phân biệt hoa thường Unicode,
+tối đa200 ký tự. role LEARNER/TEACHER; status ACTIVE/LOCKED/PENDING/DISABLED; page0,
+size20/max100; sort createdAt/fullName/email asc/desc, mặc định createdAt,desc, khóa phụ
+userId ASC. Response `{items:[{userId,email,fullName,status,roles,createdAt,updatedAt}],totalElements,page,size}`.
+PATCH chỉ nhận status, không query/trường lạ; unknown/out-of-scope user404,
+PENDING/DISABLED409, lặp cùng trạng thái không ghi lại audit. Khóa user chung login,
+status + audit nguyên tử. Khóa chặn login và request tiếp theo; mở khóa chỉ khôi phục
+hiệu lực session còn hạn/chưa revoked theo AUTH-03, không tự revoke hoặc cấp token mới.
 
 ### 3.2 Learning content & media
 
@@ -288,7 +319,10 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 
 | `POST` | `/admin/score-conversion-tables/{id}/retire` | Admin | — | 200 ScoreConversionTable | 409 |
 
-| `GET` | `/admin/audit-logs` | Admin | actor,action,from,to,page,size | 200 Page<AuditLog> | 403 |
+| `GET` | `/admin/audit-logs` | ACTIVE ADMIN + audit:read | actor,action,entityType,entityId,from,to,page,size,sort | 200 Page<AuditItem> sanitized | 400/401/403/503 |
+| `GET` | `/admin/audit-logs/{auditId}` | ACTIVE ADMIN + audit:read | UUID | 200 AuditDetail sanitized | 400/401/403/404/503 |
+| `GET` | `/admin/health` | ACTIVE ADMIN + system:health:read | — | 200 trạng thái/thời điểm thành phần | 401/403 |
+| `GET` | `/admin/usage-statistics` | ACTIVE ADMIN + system:usage:read | from,to UTC [from,to), mặc định30ngày | 200 aggregate tài khoản/Practice/Section/audit | 400/401/403/503 |
 
 | `GET` | `/admin/system-settings` | Admin | — | 200 Settings | 403 |
 

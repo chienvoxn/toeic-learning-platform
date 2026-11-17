@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
 > **EXAM-01 V27 runtime — sản phẩm chốt 2026-11-11:** attempts thêm section_type VARCHAR(20) và configured_duration_seconds INTEGER nullable cho rows cũ; SECTION_SNAPSHOT bắt buộc attempt_type=SECTION, test_version_id NULL, section_type LISTENING/READING, duration 60–7200 giây/bội 60, total_questions 1–100, expires_at = started_at + configured_duration_seconds. Source khác giữ hai cột NULL. questionCount pin bằng total_questions, Part bắt buộc suy từ section_type, tập/order version pin bằng snapshots V10. Không backfill/sửa V1–V26. V27 seed exam:manage:self chỉ mặc định LEARNER. Membership đủ mọi Part và feasibility nguyên nhóm được application enforce; chấm/answer/part results dùng V5/V26. [Contract/schema/kiểm thử](EXAM01_Section_Attempts.md).
@@ -145,6 +147,7 @@ Table users {
 Table roles {
   role_id integer [pk, increment]
   name varchar(50) [not null, unique]
+  display_name varchar(150) [note: 'ADMIN-02 V32; nullable, API fallback name; name giữ authority code']
   description text
 }
 
@@ -709,6 +712,9 @@ Table score_conversion_rules {
 
 }
 
+// ADMIN-07 V33 chỉ seed quyền đọc; API tái sử dụng schema V9 này, không thêm bảng audit.
+// ROLE integer ID nằm trong details before/after của ADMIN-02; API trả projection an toàn.
+// Contract/metric: docs/ADMIN07_Audit_Health_Usage.md; không coi audit là mọi hoạt động.
 Table audit_logs {
   audit_id uuid [pk]
   actor_user_id uuid

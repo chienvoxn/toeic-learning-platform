@@ -6,6 +6,13 @@ export function toClientUser(dto) {
     roles: dto.roles ?? [], status: dto.status,
     localLoginEnabled: dto.localLoginEnabled ?? true,
     emailVerifiedAt: dto.emailVerifiedAt, lastLoginAt: dto.lastLoginAt,
+    ...(dto.adminCapabilities ? { adminCapabilities: {
+      userManagement: dto.adminCapabilities.userManagement === true,
+      rbacManagement: dto.adminCapabilities.rbacManagement === true,
+      auditRead: dto.adminCapabilities.auditRead === true,
+      healthRead: dto.adminCapabilities.healthRead === true,
+      usageRead: dto.adminCapabilities.usageRead === true,
+    } } : {}),
   };
 }
 

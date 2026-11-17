@@ -35,6 +35,11 @@ Các mô tả verify-email/resend-otp trước đây đã được thay thế; U
 
 ## Chạy local
 
+Demo đã kiểm tại `D:\toeic-learning-platform` dùng profile `local-demo` và database
+riêng `toeic_learning_demo:55459`; xem [hướng dẫn demo và bằng chứng](LOCAL_DEMO_FE_BE_Integration.md).
+Không khởi động datasource cá nhân `toeic_db` bên dưới nếu chưa backup/cho phép nâng cấp.
+Các bước sau là cấu hình mặc định lịch sử, không phải cấu hình phiên demo đang chạy.
+
 1. PostgreSQL chạy tại localhost:5432, database toeic_db, user postgres.
 2. Đặt `DB_PASSWORD` trong terminal backend theo mật khẩu PostgreSQL của bạn,
    không ghi vào source hoặc log. Chạy:
@@ -87,8 +92,11 @@ Thi thử công khai tại `/tests`, `/tests/:testId/overview`, `/attempts/:atte
 Part 5/7 trên thiết bị, không sync account; chỉ raw count, không quy đổi TOEIC.
 Thời gian/chấm local không có bảo đảm như server. Xóa dữ liệu trình duyệt mất bài.
 
-Backend PRAC-01 có tạo/đọc practice snapshot cho người đã đăng nhập, nhưng web
-chưa nối; chưa có API lưu đáp án/submit/grade/result hoàn chỉnh hoặc thi guest server.
+Luồng tài khoản tại `/practice` đã nối PRAC-01/02 và Reading EXAM-01: tạo snapshot,
+PUT lựa chọn từng questionVersionId, reload, submit không body và đọc grading/giải thích
+đã lưu. API lỗi không fallback Guest. Section giữ nhóm/đủ Part và deadline server,
+không tự nộp khi hết hạn; chưa có thi Guest server hoặc EXAM-03. Xem
+[payload, kiểm chứng và giới hạn demo](LOCAL_DEMO_FE_BE_Integration.md).
 Game, dictation/shadowing chưa có backend tương ứng nên chế độ thật báo chưa sẵn sàng.
 Media content chỉ trả metadata, chưa có URL playback. Avatar/bio/privacy chưa được
 server hỗ trợ. Tạo từ và gắn vào bộ là hai API; UI giữ ID nếu bước gắn lỗi để retry
