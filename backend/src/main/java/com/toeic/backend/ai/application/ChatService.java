@@ -1,6 +1,7 @@
 package com.toeic.backend.ai.application;
 
 import com.toeic.backend.ai.application.ChatContracts.*;
+import com.toeic.backend.ai.domain.BasicGreetingResponder;
 import com.toeic.backend.ai.infrastructure.*;
 import com.toeic.backend.content.application.ContentAccessPolicy;
 import com.toeic.backend.identity.application.SessionPrincipal;
@@ -83,13 +84,21 @@ public class ChatService {
         });
         if(reservation.replay()!=null) return visible(reservation.replay());
         try {
+            var greeting=BasicGreetingResponder.respondTo(question);
             var scope=store.scope(access.canReadMemberContent());
-            if(scope.size()>500) throw new ChatFailure(503,"AI_SCOPE_LIMIT","Cần thu hẹp phạm vi học liệu trước khi hỏi đáp.");
-            var remote=scope.isEmpty()?null:rag.ask(question,scope.stream().map(Evidence::documentId).toList(),reservation.history(),request);
-            Answer answer=remote==null?new Answer(ChatContracts.NO_SOURCE,false,ChatContracts.NO_SOURCE,List.of()):validate(remote,scope);
+            RemoteAnswer remote=null;
+            Answer answer;
+            if(greeting.isPresent()) {
+                answer=new Answer(greeting.get(),false,null,List.of());
+            } else {
+                if(scope.size()>500) throw new ChatFailure(503,"AI_SCOPE_LIMIT","Cần thu hẹp phạm vi học liệu trước khi hỏi đáp.");
+                remote=scope.isEmpty()?null:rag.ask(question,scope.stream().map(Evidence::documentId).toList(),reservation.history(),request);
+                answer=remote==null?new Answer(ChatContracts.NO_SOURCE,false,ChatContracts.NO_SOURCE,List.of()):validate(remote,scope);
+            }
             // Recheck visibility after the remote call, before returning or persisting generated text.
             answer=visible(answer);
             final Answer result=answer;
+            final RemoteAnswer providerResult=remote;
             tx.executeWithoutResult(status->{
                 store.own(actor,conversation);
                 UUID userMessage=UUID.randomUUID(),assistantMessage=UUID.randomUUID();
@@ -98,7 +107,7 @@ public class ChatService {
                 store.jdbc().update("insert into ai_citation_snapshots(message_id,response_json) values(?,?)",assistantMessage,store.encode(result));
                 store.jdbc().update("update ai_conversations set title=case when title='Hội thoại mới' then ? else title end,updated_at=now() where conversation_id=?",question.substring(0,Math.min(80,question.length())),conversation);
                 store.jdbc().update("update ai_chat_requests set status='COMPLETED',response_json=?,finished_at=now() where request_id=?",store.encode(result),request);
-                var usage=remote==null?null:remote.usage();
+                var usage=providerResult==null?null:providerResult.usage();
                 store.jdbc().update("insert into ai_request_logs(request_id,conversation_id,user_id,provider,model,prompt_tokens,completion_tokens,total_tokens,latency_ms,status,created_at) values(?,?,?,?,?,?,?,?,?,'COMPLETED',now())",
                         request,conversation,actor,usage==null?"none":usage.provider(),usage==null?"none":usage.chatModel(),usage==null?0:usage.inputTokens(),usage==null?0:usage.outputTokens(),usage==null?0:usage.totalTokens(),usage==null?0:usage.latencyMs());
             });
