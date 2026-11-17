@@ -15,6 +15,7 @@ import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
 import { reviewProgress, reviewAction } from '@/features/vocabulary/reviewProgress';
+import VocabularyActions from '@/components/organisms/VocabularyActions';
 import VocabularyEditor from '@/components/organisms/VocabularyEditor';
 import { useMock } from '@/lib/runtime-config';
 
@@ -44,6 +45,7 @@ export default function VocabDeckDetailPage() {
 
   useEffect(() => {
     let active = true;
+    setError('');
     setStatesLoading(true);
     setStates({});
     setStateWarning('');
@@ -51,8 +53,9 @@ export default function VocabDeckDetailPage() {
     Promise.all([
       vocabularyRepo.getDeckDetail(deckId),
       vocabularyRepo.getDeckCards(deckId),
+      useMock ? Promise.resolve(null) : vocabularyRepo.getLearningSession(deckId),
     ])
-      .then(([deck, cards]) => {
+      .then(([deck, cards, session]) => {
         if (!active) return;
 
         if (!deck) {
@@ -61,7 +64,7 @@ export default function VocabDeckDetailPage() {
 
         const words = Array.isArray(cards) ? cards : [];
 
-        setSessionProgress(reviewProgress(deckId, words));
+        setSessionProgress(reviewProgress(deckId, words, session?.data ?? null, !useMock));
         setData({
           deck,
           groups: words.length
@@ -252,6 +255,7 @@ export default function VocabDeckDetailPage() {
           </div>
         </div>
 
+        {!useMock && <VocabularyActions deck={deck} onSaved={() => setRevision(value => value + 1)} />}
         {!useMock && (
           <VocabularyEditor deckId={deckId} onSaved={() => setRevision(value => value + 1)} />
         )}
@@ -329,6 +333,7 @@ export default function VocabDeckDetailPage() {
                           {word.definitionVi}
                         </p>
 
+                        {!useMock && <VocabularyActions deck={deck} word={word} onSaved={() => setRevision(value => value + 1)} />}
                         {word.exampleEn && (
                           <p className="text-[11px] text-gray-500 italic">
                             "{word.exampleEn}"

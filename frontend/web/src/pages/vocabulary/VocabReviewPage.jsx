@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Volume2, ChevronLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { assetUrl } from '@/lib/figma-assets';
 import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.repo';
 import './VocabReviewPage.layout.css';
-import { readReviewSession, saveReviewSession, clearReviewSession } from '@/features/vocabulary/reviewProgress';
-import { restoreLearningQueue, applyLearningRating } from '@/features/vocabulary/learningQueue';
 import { useMock } from '@/lib/runtime-config';
+import { readReviewSession, saveReviewSession, clearReviewSession } from '@/features/vocabulary/reviewProgress';
+import { restoreLearningQueue, restoreLearningSession, readyLearningQueue, applyLearningRating } from '@/features/vocabulary/learningQueue';
 
 const ratings = [
   [1, 'HỌC LẠI', '10 phút'],
@@ -23,7 +23,10 @@ export default function VocabReviewPage() {
   const [exitOpen, setExitOpen] = useState(false);
   const [exitError, setExitError] = useState('');
   const [exiting, setExiting] = useState(false);
-  const [easyIds, setEasyIds] = useState([]);
+  const [completedIds, setCompletedIds] = useState([]);
+  const [deferredUntil, setDeferredUntil] = useState({});
+  const [clock, setClock] = useState(Date.now);
+  useEffect(() => { const timer = setInterval(() => setClock(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const [roundIds, setRoundIds] = useState([]);
   const [roundNumber, setRoundNumber] = useState(1);
   const [attempts, setAttempts] = useState(0);
@@ -38,22 +41,23 @@ export default function VocabReviewPage() {
 
   useEffect(() => {
     let active = true;
-    setData(null); setError(''); setCompleted(false); setReviewedIds([]); setCurrentId(null); setEasyIds([]); setRoundIds([]); setRoundNumber(1); setAttempts(0); setExitOpen(false);
+    setDeferredUntil({}); setData(null); setError(''); setCompleted(false); setReviewedIds([]); setCurrentId(null); setCompletedIds([]); setRoundIds([]); setRoundNumber(1); setAttempts(0); setExitOpen(false);
     Promise.all([vocabularyRepo.getDeckCards(deckId), vocabularyRepo.getDecks(),
       vocabularyRepo.getLearningSession ? vocabularyRepo.getLearningSession(deckId) : Promise.resolve(null)])
       .then(([cards, decks, remote]) => {
         if (!active) return;
         const ids = new Set(cards.map((card) => card.id));
-        const previous = remote?.data ?? (useMock ? readReviewSession(deckId, cards) : {});
+        const previous = restoreLearningSession(cards, useMock ? readReviewSession(deckId, cards) : (remote?.data ?? {}));
         const reviewed = Array.isArray(previous?.reviewedIds)
           ? [...new Set(previous.reviewedIds.filter((id) => ids.has(id)))] : [];
-        const easy = (previous.easyIds || []).filter((id) => ids.has(id));
+        const easy = (previous.completedIds || []).filter((id) => ids.has(id));
         // Always recover every unfinished word, including legacy sessions.
         const initialRound = restoreLearningQueue(cards, easy, previous.roundIds);
         const nextId = initialRound.includes(previous.currentId) ? previous.currentId : initialRound[0] ?? null;
         setData({ cards, deck: decks.find((deck) => deck.id === deckId) });
         setReviewedIds(reviewed);
-        setEasyIds(easy);
+        setCompletedIds(easy);
+        setDeferredUntil(previous.deferredUntil);
         setRoundIds(initialRound);
         setRoundNumber(previous.roundNumber || (reviewed.length === cards.length && easy.length < cards.length ? 2 : 1));
         setAttempts(previous.attempts || 0);
@@ -65,13 +69,12 @@ export default function VocabReviewPage() {
   }, [deckId]);
 
   const reviewedSet = useMemo(() => new Set(reviewedIds), [reviewedIds]);
-  const easySet = useMemo(() => new Set(easyIds), [easyIds]);
-  const card = data?.cards.find((item) => item.id === currentId && roundIds.includes(item.id))
-    ?? data?.cards.find((item) => item.id === roundIds[0]);
-  const currentIndex = data?.cards.findIndex((item) => item.id === card?.id) ?? -1;
-  const progress = data?.cards.length ? Math.round(easyIds.length / data.cards.length * 100) : 0;
-  const roundPosition = Math.max(0, roundIds.indexOf(card?.id)) + 1;
-  const pendingCount = data ? data.cards.length - easyIds.length : 0;
+  const completedSet = useMemo(() => new Set(completedIds), [completedIds]);
+  const readyIds = readyLearningQueue(roundIds, deferredUntil, clock);
+  const card = data?.cards.find((item) => item.id === currentId && readyIds.includes(item.id))
+    ?? data?.cards.find((item) => item.id === readyIds[0]);
+  const progress = data?.cards.length ? Math.round(completedIds.length / data.cards.length * 100) : 0;
+  const pendingCount = data ? data.cards.length - completedIds.length : 0;
 
   async function rate(value) {
     if (saving || !card) return;
@@ -80,22 +83,22 @@ export default function VocabReviewPage() {
       // Every rating is recorded by the existing backend SRS service.
       const result = await vocabularyRepo.rateCard(card.id, value);
       const updatedReviewed = reviewedSet.has(card.id) ? reviewedIds : [...reviewedIds, card.id];
-      const next = applyLearningRating(data.cards, easyIds, roundIds, card.id, value);
-      const updatedEasy = next.easyIds;
+      const next = applyLearningRating(data.cards, completedIds, roundIds, card.id, value, result, deferredUntil);
+      const updatedEasy = next.completedIds;
       const nextIds = next.queue;
       const allEasy = next.completed;
       const nextId = nextIds[0] ?? null;
-      const nextRoundNumber = roundNumber + (value !== 4 && nextIds.length === 1 ? 1 : 0);
+      const nextRoundNumber = roundNumber + (result.intervalDays === 0 && nextIds.length === 1 ? 1 : 0);
       const nextAttempts = attempts + 1;
       const saved = saveReviewSession(deckId, {
-        reviewedIds: updatedReviewed, easyIds: updatedEasy,
+        reviewedIds: updatedReviewed, completedIds: updatedEasy, deferredUntil: next.deferredUntil,
         roundIds: nextIds, roundNumber: nextRoundNumber, currentId: nextId,
         attempts: nextAttempts,
       });
       if (vocabularyRepo.saveLearningSession) {
         try {
           await vocabularyRepo.saveLearningSession(deckId, {
-            reviewedIds: updatedReviewed, easyIds: updatedEasy,
+            reviewedIds: updatedReviewed, completedIds: updatedEasy, deferredUntil: next.deferredUntil,
             roundIds: nextIds, roundNumber: nextRoundNumber,
             currentId: nextId, attempts: nextAttempts,
           });
@@ -104,7 +107,8 @@ export default function VocabReviewPage() {
         }
       } else if (!saved) setError('Đánh giá đã lưu, nhưng trình duyệt không lưu được tiến độ.');
       setReviewedIds(updatedReviewed);
-      setEasyIds(updatedEasy);
+      setCompletedIds(updatedEasy);
+      setDeferredUntil(next.deferredUntil); setClock(Date.now());
       setRoundIds(nextIds);
       setRoundNumber(nextRoundNumber);
       setAttempts(nextAttempts);
@@ -125,7 +129,8 @@ export default function VocabReviewPage() {
     }
     clearReviewSession(deckId);
     setReviewedIds([]);
-    setEasyIds([]);
+    setDeferredUntil({});
+    setCompletedIds([]);
     setRoundIds(data.cards.map((item) => item.id));
     setRoundNumber(1);
     setAttempts(0);
@@ -141,7 +146,7 @@ export default function VocabReviewPage() {
     setExiting(true);
     try {
       if (save) {
-        const snapshot = { reviewedIds, easyIds, roundIds, roundNumber, attempts, currentId: card?.id ?? null };
+        const snapshot = { reviewedIds, completedIds, deferredUntil, roundIds, roundNumber, attempts, currentId: card?.id ?? null };
         const localSaved = saveReviewSession(deckId, snapshot);
         if (vocabularyRepo.saveLearningSession) {
           try {
@@ -186,26 +191,26 @@ export default function VocabReviewPage() {
     {error && <p className="form-error" role="alert">{error}</p>}
     {!data && !error && <LoadingSpinner text="Đang tải bộ thẻ..." />}
     {completed ? <div className="review-complete surface">
-      <CheckCircle2 size={56} /><h2>Bạn đã ghi nhớ toàn bộ từ vựng!</h2>
-      <p>Bạn đã chọn DỄ cho {easyIds.length}/{data.cards.length} từ. Lịch ôn SRS vẫn được cập nhật sau mỗi lần đánh giá.</p>
+      <CheckCircle2 size={56} /><h2>Bạn đã hoàn thành lượt học!</h2>
+      <p>{completedIds.length}/{data.cards.length} từ đã được hẹn ôn từ 1 ngày trở lên. Hoàn thành lượt học không đồng nghĩa đã thành thạo từ.</p>
       {lastSchedule && <p>Lịch ôn vừa cập nhật: {new Date(lastSchedule).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}</p>}
 
       <button type="button" className="pill-button navy" onClick={restart}>Học lượt mới</button>
       <button type="button" className="pill-button navy" onClick={() => navigate('/vocabulary')}>Quay lại thư viện</button>
-    </div> : data && !card ? <p className="empty-message">Bộ thẻ hiện chưa có từ vựng. <Link to="/vocabulary">Quay lại thư viện</Link></p>
+    </div> : data && !card ? <div className="surface p-6" role="status">{data.cards.length ? <><h2>Đang chờ đến lịch học lại</h2><p>Các từ còn lại chưa đến hạn. Từ sẽ tự xuất hiện khi đến lịch ôn.</p><p>Lịch gần nhất: {new Date(Math.min(...roundIds.map(id => Date.parse(deferredUntil[id])).filter(Number.isFinite))).toLocaleString('vi-VN')}</p></> : <p>Bộ thẻ hiện chưa có từ vựng.</p>}<button className="pill-button navy" onClick={() => setExitOpen(true)}>Lưu tiến độ và thoát</button></div>
     : card && <div className="flashcard-columns review-columns">
       <aside className="flashcard-topics"><h2>DANH SÁCH TỪ VỰNG</h2>
         {data.cards.map((item, i) => <button key={item.id} type="button"
-          disabled={saving || !roundIds.includes(item.id)}
+          disabled={saving || !readyIds.includes(item.id)}
           className={card.id === item.id ? 'selected' : ''}
-          onClick={() => { setCurrentId(item.id); setRevealed(false); saveReviewSession(deckId, { reviewedIds, easyIds, roundIds, roundNumber, attempts, currentId: item.id }); }}>
-          <span className="topic-emoji">{easySet.has(item.id) ? '✓' : '📘'}</span>
+          onClick={() => { setCurrentId(item.id); setRevealed(false); saveReviewSession(deckId, { reviewedIds, completedIds, deferredUntil, roundIds, roundNumber, attempts, currentId: item.id }); }}>
+          <span className="topic-emoji">{completedSet.has(item.id) ? '✓' : '📘'}</span>
           <span><strong>{item.word}</strong><small>{item.partOfSpeech}</small></span>
           <span className="topic-dot">{i + 1}</span>
         </button>)}
       </aside>
       <section className="flashcard-study review-study">
-        <div className="flashcard-progress"><span>TIẾN ĐỘ — {data.deck?.category || 'TỪ VỰNG'}</span><span>{`ĐÃ ĐẠT DỄ ${easyIds.length}/${data.cards.length} · ${progress}%`}</span></div>
+        <div className="flashcard-progress"><span>TIẾN ĐỘ — {data.deck?.category || 'TỪ VỰNG'}</span><span>{`ĐÃ HOÀN THÀNH ${completedIds.length}/${data.cards.length} · ${progress}%`}</span></div>
         <div className="thin-progress"><span style={{ width: `${progress}%` }} /></div>
         <div className={`flashcard surface ${revealed ? 'revealed' : ''}`}>
           <AlertTriangle size={16} className="flashcard-alert" />
@@ -220,8 +225,8 @@ export default function VocabReviewPage() {
           </div>}
           <button type="button" className="flip-hint" onClick={() => setRevealed(!revealed)}>Nhấn để lật thẻ</button>
         </div>
-        <p className="flashcard-caption">{`Đã xem ${reviewedIds.length}/${data.cards.length} · Đạt DỄ ${easyIds.length} · Cần luyện thêm ${pendingCount} · ${attempts} lượt đánh giá`}</p>
-        <p className="review-learning-hint">HỌC LẠI và KHÓ sẽ được nhắc lại trong buổi học. Chỉ chọn DỄ khi bạn đã nhớ chắc từ này.</p>
+        <p className="flashcard-caption">{`Đã đánh giá ${reviewedIds.length}/${data.cards.length} · Hoàn thành ${completedIds.length} · Còn lại ${pendingCount} · ${attempts} lượt đánh giá`}</p>
+        <p className="review-learning-hint">KHÓ, TỐT và DỄ hoàn thành từ trong lượt này khi lịch ôn tiếp từ 1 ngày trở lên. HỌC LẠI chờ đến hạn, không lặp ngay.</p>
         <div className="review-actions-area">
           <div className="rating-buttons review-rating-buttons">{ratings.map(([value, title, interval]) => <button key={value} type="button" disabled={saving}
           onClick={() => rate(value)} className={`rating-${['again', 'hard', 'good', 'easy'][value - 1]}`}>
@@ -234,7 +239,7 @@ export default function VocabReviewPage() {
     {exitOpen && <div className="review-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExitOpen(false); }}>
       <div className="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-exit-title">
         <h2 id="review-exit-title">Bạn muốn lưu tiến độ học không?</h2>
-        <p>Bạn đã đạt DỄ {easyIds.length}/{data?.cards.length ?? 0} từ và đang ở vòng {roundNumber}. Bạn có thể tiếp tục lượt học này vào lần sau.</p>
+        <p>Bạn đã hoàn thành {completedIds.length}/{data?.cards.length ?? 0} từ trong lượt này. Tiến độ và thời điểm chờ học lại có thể được lưu để tiếp tục lần sau.</p>
         <p className="review-modal-note">Các đánh giá đã lưu vào lịch ôn vẫn được giữ nguyên, kể cả khi bạn không lưu lượt học.</p>
         {exitError && <p role="alert" style={{ color: "#b42318", fontSize: 14, marginTop: 10 }}>{exitError}</p>}
         <div className="review-modal-actions">

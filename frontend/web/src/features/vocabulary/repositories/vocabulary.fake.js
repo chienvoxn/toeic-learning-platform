@@ -93,6 +93,17 @@ export const MOCK_FLASHCARDS = [
 ];
 
 export class FakeVocabularyRepository {
+  async getCatalogDecks() { return []; }
+  async getDueReviews() { return []; }
+  async getReviewStatistics() {
+    const cards = await Promise.all(MOCK_DECKS.map(deck => this.getDeckCards(deck.id)));
+    return { totalVocabulary: new Set(cards.flat().map(card => card.id)).size, dueVocabulary: 0 };
+  }
+  async getReviewState() {
+    const error = new Error('No demo review state');
+    error.status = 404;
+    throw error;
+  }
   async getDecks() {
     await delay(300);
     return MOCK_DECKS;
@@ -143,6 +154,7 @@ export class FakeVocabularyRepository {
     ];
 
     return {
+      ...deck,
       deck,
       groups,
       totalWords: cards.length,
@@ -153,12 +165,15 @@ export class FakeVocabularyRepository {
 
   async rateCard(cardId, rating) {
     await delay(200);
-    // rating: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'
+    const intervalDays = rating === 1 ? 0 : rating === 4 ? 3 : 1;
+    const now = Date.now();
     return {
       success: true,
       cardId,
       rating,
-      nextReviewAt: new Date(Date.now() + 86400 * 1000 * 3).toISOString(),
+      intervalDays,
+      lastReviewedAt: new Date(now).toISOString(),
+      nextReviewAt: new Date(now + (intervalDays ? intervalDays * 86400000 : 600000)).toISOString(),
     };
   }
 }

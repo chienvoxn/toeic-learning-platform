@@ -38,6 +38,7 @@ export default function VocabDeckListPage() {
   const [dueSaving, setDueSaving] = useState(false);
   const [dueNotice, setDueNotice] = useState('');
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statsError, setStatsError] = useState('');
@@ -65,7 +66,10 @@ export default function VocabDeckListPage() {
         if (deckResult.status === 'fulfilled') {
           const personalDecks = Array.isArray(deckResult.value) ? deckResult.value : [];
           setDecks(personalDecks);
-          Promise.allSettled(personalDecks.map((deck) => vocabularyRepo.getDeckCards(deck.id)))
+          Promise.allSettled(personalDecks.map(async (deck) => {
+            const [cards, session] = await Promise.all([vocabularyRepo.getDeckCards(deck.id), useMock ? Promise.resolve(null) : vocabularyRepo.getLearningSession(deck.id)]);
+            return { cards, session };
+          }))
             .then((results) => {
               if (!active) return;
               const progress = {};
@@ -73,8 +77,8 @@ export default function VocabDeckListPage() {
               let failed = 0;
               results.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                  progress[personalDecks[index].id] = reviewProgress(personalDecks[index].id, result.value);
-                  cardIndex[personalDecks[index].id] = result.value;
+                  progress[personalDecks[index].id] = reviewProgress(personalDecks[index].id, result.value.cards, result.value.session?.data ?? null, !useMock);
+                  cardIndex[personalDecks[index].id] = result.value.cards;
                 }
                 else failed += 1;
               });
@@ -165,21 +169,24 @@ export default function VocabDeckListPage() {
     setShowReviewPicker(true);
   };
 
-  const launchReview = () => {
-    if (!selectedReviewDeck || !selectedReviewProgress) return;
-    if (reviewMode === 'restart') {
-      const count = selectedReviewProgress.reviewed;
-      if (count > 0) { setConfirmRestart(true); return; }
+  const confirmNewRound = async () => {
+    if (!selectedReviewDeck || restarting) return;
+    setRestarting(true); setProgressError('');
+    try {
+      if (!useMock) await vocabularyRepo.clearLearningSession(selectedReviewDeck.id);
       clearReviewSession(selectedReviewDeck.id);
-    }
-    setShowReviewPicker(false);
-    navigate(`/vocabulary/${selectedReviewDeck.id}/review`);
+      setConfirmRestart(false); setShowReviewPicker(false);
+      navigate(`/vocabulary/${selectedReviewDeck.id}/review`);
+    } catch (err) { setProgressError(err.message || 'Không thể bắt đầu lượt mới.'); }
+    finally { setRestarting(false); }
   };
 
-  const confirmNewRound = () => {
-    if (!selectedReviewDeck) return;
-    clearReviewSession(selectedReviewDeck.id);
-    setConfirmRestart(false);
+  const launchReview = () => {
+    if (!selectedReviewDeck || !selectedReviewProgress || restarting) return;
+    if (reviewMode === 'restart') {
+      if (selectedReviewProgress.evaluated > 0) { setConfirmRestart(true); return; }
+      void confirmNewRound(); return;
+    }
     setShowReviewPicker(false);
     navigate(`/vocabulary/${selectedReviewDeck.id}/review`);
   };
@@ -411,7 +418,7 @@ export default function VocabDeckListPage() {
             <section role="alertdialog" aria-modal="true" aria-labelledby="restart-title" aria-describedby="restart-description" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl text-slate-900">
               <h2 id="restart-title" className="text-xl font-bold">Bạn muốn học lại từ đầu?</h2>
               <p id="restart-description" className="mt-3 text-sm text-slate-600">Bạn sẽ bắt đầu một lượt học mới với tất cả từ trong bộ <strong>{selectedReviewDeck.title}</strong>. Những từ đã học và lịch ôn của bạn vẫn được giữ lại.</p>
-              <div className="mt-6 flex flex-wrap justify-end gap-2"><button type="button" className="rounded-xl border border-slate-300 px-4 py-2" onClick={() => setConfirmRestart(false)}>Tiếp tục lượt cũ</button><button type="button" className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white" onClick={confirmNewRound}>Học lại từ đầu</button></div>
+              <div className="mt-6 flex flex-wrap justify-end gap-2"><button type="button" className="rounded-xl border border-slate-300 px-4 py-2" onClick={() => setConfirmRestart(false)}>Tiếp tục lượt cũ</button><button type="button" className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white" disabled={restarting} onClick={confirmNewRound}>Học lại từ đầu</button></div>
             </section>
           </div>
         )}

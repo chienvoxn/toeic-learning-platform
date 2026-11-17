@@ -1,10 +1,6 @@
 
 package com.toeic.backend.vocabulary.api;
 
-import com.toeic.backend.identity.application.SessionPrincipal;
-import com.toeic.backend.vocabulary.application.LearningProfileService;
-import com.toeic.backend.vocabulary.application.LearningStatisticsService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.toeic.backend.identity.application.SessionPrincipal;
+import com.toeic.backend.vocabulary.application.LearningProfileService;
+import com.toeic.backend.vocabulary.application.LearningStatisticsService;
 @RestController
 @RequestMapping("/api/v1/learning-profile")
 public class LearningProfileController {
@@ -66,7 +65,6 @@ public class LearningProfileController {
                 days
         );
     }
-
     @GetMapping("/streak")
     public LearningStreakResponse getStreak(
             @AuthenticationPrincipal SessionPrincipal principal,
@@ -78,7 +76,7 @@ public class LearningProfileController {
                     "days must be between 1 and 90"
             );
         }
+
         return learningStatisticsService.getStreak(principal.userId(), days);
     }
-
 }

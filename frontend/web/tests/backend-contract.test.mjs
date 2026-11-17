@@ -217,3 +217,33 @@ test('unconfigured Google auth does not create a browser session', async () => {
   await assert.rejects(new RemoteAuthRepository().googleChallenge(), error => error.code === 'GOOGLE_NOT_CONFIGURED');
   assert.equal(storage.size, 0);
 });
+
+
+test('vocabulary management uses owner-scoped endpoints and preserves PUT metadata', async () => {
+  const repo = new RemoteVocabularyRepository();
+  const dto = { word: 'work', meaning: 'làm việc', pronunciationAudioResourceId: 'audio-id', note: 'note', example: 'I work.' };
+  reply(dto); const original = await repo.getVocabulary('word-id');
+  reply(dto); await repo.updateVocabulary('word-id', { ...original, meaning: 'công việc' });
+  assert.equal(requests[1].method, 'PUT');
+  assert.equal(bodyAt(1).pronunciationAudioResourceId, 'audio-id');
+  reply(null, 204); await repo.removeFromDeck('deck-id', 'word-id');
+  assert.equal(requests[2].url, '/api/v1/vocabulary-decks/deck-id/vocabularies/word-id');
+  reply([]); await repo.getReviewHistory('word-id');
+  assert.equal(requests[3].url, '/api/v1/vocabularies/word-id/reviews/history');
+  reply({}); await repo.updateDeck('deck-id', { name: 'My deck', description: '' });
+  assert.deepEqual(bodyAt(4), { name: 'My deck', description: '' });
+  reply({ code: 'FORBIDDEN' }, 403);
+  await assert.rejects(repo.deleteVocabulary('word-id'), error => error.status === 403);
+  reply(null, 204); await repo.deleteDeck('deck-id');
+  assert.equal(requests[6].method, 'DELETE');
+});
+
+test('server progress is authoritative and ignores stale/deleted card IDs', async () => {
+  const { reviewProgress } = await loadBrowserModule('features/vocabulary/reviewProgress.js');
+  const cards = [{ id: 'a' }, { id: 'b' }];
+  localStorage.setItem('toeic:vocabulary:review-session:v1:deck', JSON.stringify({ easyIds: ['a', 'b'] }));
+  assert.equal(reviewProgress('deck', cards, null, true).percent, 0);
+  const result = reviewProgress('deck', cards, { easyIds: ['a', 'a', 'deleted'], reviewedIds: ['a'] }, true);
+  assert.equal(result.percent, 50);
+  assert.equal(result.remaining, 1);
+});
