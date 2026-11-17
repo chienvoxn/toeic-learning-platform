@@ -79,6 +79,17 @@ class ChatIntegrationTest {
         var conversation=chat.create();var result=chat.ask(conversation.id(),UUID.randomUUID(),"Explain this");
         assertFalse(result.grounded());assertEquals(ChatContracts.NO_SOURCE,result.warning());assertTrue(result.citations().isEmpty());verifyNoInteractions(rag);
     }
+    @Test void basicGreetingIsAnsweredLocallyAndSavedWithoutSourceWarning() {
+        var conversation=chat.create();
+        var result=chat.ask(conversation.id(),UUID.randomUUID(),"  Xin chào!!!  ");
+
+        assertTrue(result.answer().startsWith("Xin chào!"));
+        assertFalse(result.grounded());
+        assertNull(result.warning());
+        assertTrue(result.citations().isEmpty());
+        assertEquals(2,chat.messages(conversation.id(),0).size());
+        verifyNoInteractions(rag);
+    }
     @Test void revokedSourcesHideSavedAnswerAndAreRemovedFromFutureHistory() {
         index();when(rag.ask(anyString(),anyList(),anyList(),any())).thenReturn(answer(version));
         var conversation=chat.create();chat.ask(conversation.id(),UUID.randomUUID(),"Explain");
