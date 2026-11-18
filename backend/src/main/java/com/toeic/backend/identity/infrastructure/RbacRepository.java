@@ -17,7 +17,8 @@ public class RbacRepository {
             "user:manage","rbac:manage","content:read","content:bookmark:self","content:history:self","content:manage:self","content:manage:any",
             "question:read","question:manage:self","question:manage:any","practice:manage:self","exam:manage:self",
             "audit:read","system:health:read","system:usage:read","system:settings:manage",
-            "content:review","content:publish","question:review","question:publish");
+            "content:review","content:publish","question:review","question:publish",
+            "ai:chat:self","ai:knowledge:manage");
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
     public RbacRepository(JdbcTemplate jdbc,ObjectMapper json) { this.jdbc=jdbc;this.json=json; }

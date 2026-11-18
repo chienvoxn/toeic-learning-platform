@@ -1,4 +1,10 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # SOFTWARE ARCHITECTURE DOCUMENT (SAD / HLD v1.0)
+
+> **Flyway V34 compatibility:** Boot/test/CLI dùng coordinator chung, nhận diện
+> history trước mutation; empty/V33 chọn RAG34, DB34 giữ Settings/RAG, V36/V37
+> hoàn thiện schema. [Cơ chế, kiểm chứng và vận hành](MIGRATION34_Source_Compatibility.md).
 
 > **Policy mới:** đăng ký/login không OTP; chỉ recovery dùng OTP riêng. V25 và
 > `PasswordResetService` thay xác minh đăng ký cũ. [Contract](Password_Recovery.md).

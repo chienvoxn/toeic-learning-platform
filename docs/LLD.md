@@ -1,4 +1,11 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
+
+> **Flyway compatibility runtime:** MigrationConfiguration kiểm config và khóa
+> startup; MigrationHistory kiểm prefix/checksum, MigrationSchema đối chiếu
+> metadata cố định; MigrationCli dùng cùng coordinator. Không sửa history/SQL
+> đã áp dụng. [Chi tiết](MIGRATION34_Source_Compatibility.md).
 
 > **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
 > consume và revoke sessions cùng transaction. [Thiết kế V25](Password_Recovery.md).

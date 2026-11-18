@@ -167,6 +167,13 @@ export class RemoteVocabularyRepository {
     return apiRequest('/learning-profile/overview');
   }
 
+  async getLearningStreak(days = 30) {
+    if (!Number.isInteger(days) || days < 1 || days > 90) {
+      throw new Error('Số ngày thống kê phải từ 1 đến 90.');
+    }
+    return apiRequest(`/learning-profile/streak?days=${days}`);
+  }
+
   async getLearningStatistics() {
     return apiRequest('/learning-profile/statistics');
   }

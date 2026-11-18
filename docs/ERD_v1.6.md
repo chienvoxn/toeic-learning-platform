@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
 > **ADMIN-03 V35 — quyết định xác nhận2026-11-15:** moderation_versions lưu kind/version_id/parent_id/source_version_id/cycle_key/revision/approved_revision/evidence_complete; PK(kind,version_id), không backfill legacy. moderation_contributors lưu actor/action/time của create/edit/submit, moderation_decisions lưu version/revision/actor/action/reason/time trong scope review. Hai bảng con FK metadata với ON DELETE CASCADE chỉ cho liên kết metadata; actor FK users, không cascade user/version/audit. Parent/source polymorphic được service validate, không tuyên bố là FK vật lý. Published pointer/status vẫn ở bảng hiện hữu; không sửa SQL V1–V34. [Contract và giới hạn G1/media](ADMIN03_Content_Moderation.md).

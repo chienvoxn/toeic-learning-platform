@@ -1,3 +1,5 @@
+> **RAG chat runtime V34 (2026-11-15):** API hội thoại, bong bóng chat, permission/quota, index published version và citation snapshot đã có trong code. Contract/runtime và giới hạn thay các đoạn DESIGN tương ứng được mô tả tại [RAG_Chat_Integration.md](RAG_Chat_Integration.md). Các mode ngoài ask, streaming, retention, dashboard usage AI và đồng bộ publish tự động chưa triển khai.
+
 # RAG Tutor — Hai luồng nghiệp vụ với LangChain và pgvector
 
 ## Phạm vi và trạng thái

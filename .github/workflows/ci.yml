@@ -79,20 +79,20 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_DB: toeic_db
+          POSTGRES_DB: toeic_ci_test
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d toeic_db"
+          --health-cmd "pg_isready -U postgres -d toeic_ci_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      DB_PASSWORD: ci_test_password
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/toeic_db
+      DB_PASSWORD: ''
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/toeic_ci_test
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: '6'
       SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: '1'
@@ -112,4 +112,4 @@ jobs:
           cache-dependency-path: backend/pom.xml
 
       - name: Run backend tests
-        run: mvn -B clean verify
+        run: bash ./mvnw -B clean verify -Dspring.test.context.cache.maxSize=8
