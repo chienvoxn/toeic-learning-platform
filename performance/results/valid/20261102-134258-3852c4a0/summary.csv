@@ -1,0 +1,3 @@
+﻿users,iterations,max_connections,samples,successes,failures,error_percent,average_ms,p50_ms,p95_ms,p99_ms,max_ms,success_p95_ms,throughput_rps,success_rps,duration_seconds,peak_active_users,peak_inflight_requests,client_loop_lag_p95_ms
+2,3,2,6,6,0,0.0,3.103,2.157,5.079,5.079,5.079,5.079,81.486,81.486,0.074,2,2,7.752
+4,3,2,12,12,0,0.0,4.707,4.347,8.176,8.176,8.176,8.176,147.651,147.651,0.081,4,4,3.611

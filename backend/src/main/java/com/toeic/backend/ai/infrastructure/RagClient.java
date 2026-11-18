@@ -13,7 +13,12 @@ import tools.jackson.databind.ObjectMapper;
 /** Gọi API AI nội bộ bằng khóa riêng, giới hạn thời gian và lọc lỗi provider. */
 @Component
 public class RagClient {
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+    // Uvicorn serves HTTP/1.1. Forcing it avoids Java HttpClient's cleartext HTTP/2
+    // upgrade attempt, which can make the initial request body disappear at the ASGI server.
+    private final HttpClient http = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(3))
+            .build();
     private final ObjectMapper json;
     private final String base, serviceKey, adminKey;
     public RagClient(ObjectMapper json, @Value("${app.ai.base-url:http://127.0.0.1:8001}") String base,

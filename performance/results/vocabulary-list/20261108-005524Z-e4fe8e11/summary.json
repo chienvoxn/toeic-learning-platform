@@ -1,0 +1,75 @@
+{
+  "url": "http://127.0.0.1:8080/api/v1/vocabularies",
+  "params": {
+    "page": 0,
+    "size": 20
+  },
+  "users": [
+    10,
+    50,
+    100
+  ],
+  "iterations": 10,
+  "ramp_seconds": 5,
+  "interval_seconds": 1,
+  "timeout_seconds": 10,
+  "warmup_per_user": 1,
+  "account_model": "distinct account per virtual user",
+  "latency_scope": "client HTTP including response validation; login/warmup excluded",
+  "percentile_method": "nearest rank; failures included",
+  "throughput_scope": "includes ramp and think time",
+  "data_policy": "existing data; no vocabulary seed or mutation",
+  "results": [
+    {
+      "users": 10,
+      "samples": 100,
+      "failures": 0,
+      "error_percent": 0.0,
+      "average_ms": 10.866,
+      "p50_ms": 9.829,
+      "p95_ms": 16.28,
+      "p99_ms": 22.481,
+      "max_ms": 22.714,
+      "success_p95_ms": 16.28,
+      "throughput_rps": 7.065,
+      "duration_seconds": 14.154,
+      "min_matching_rows": 0,
+      "max_matching_rows": 0,
+      "errors": {}
+    },
+    {
+      "users": 50,
+      "samples": 500,
+      "failures": 0,
+      "error_percent": 0.0,
+      "average_ms": 9.025,
+      "p50_ms": 8.659,
+      "p95_ms": 13.468,
+      "p99_ms": 19.27,
+      "max_ms": 25.856,
+      "success_p95_ms": 13.468,
+      "throughput_rps": 35.282,
+      "duration_seconds": 14.172,
+      "min_matching_rows": 0,
+      "max_matching_rows": 0,
+      "errors": {}
+    },
+    {
+      "users": 100,
+      "samples": 1000,
+      "failures": 0,
+      "error_percent": 0.0,
+      "average_ms": 9.455,
+      "p50_ms": 8.875,
+      "p95_ms": 16.46,
+      "p99_ms": 21.56,
+      "max_ms": 32.494,
+      "success_p95_ms": 16.46,
+      "throughput_rps": 70.905,
+      "duration_seconds": 14.103,
+      "min_matching_rows": 0,
+      "max_matching_rows": 0,
+      "errors": {}
+    }
+  ]
+}

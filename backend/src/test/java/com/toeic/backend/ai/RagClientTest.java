@@ -15,12 +15,14 @@ class RagClientTest {
         var json=JsonMapper.builder().build();UUID version=UUID.randomUUID(),request=UUID.randomUUID(),chunk=UUID.randomUUID();
         var server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
         server.createContext("/internal/v1/documents",exchange->{
+            assertEquals("HTTP/1.1",exchange.getProtocol());
             assertEquals("PUT",exchange.getRequestMethod());assertEquals("test-admin",exchange.getRequestHeaders().getFirst("X-API-Key"));
             var body=json.readTree(new String(exchange.getRequestBody().readAllBytes(),StandardCharsets.UTF_8));
             assertEquals(version.toString(),body.get("documentId").asString());
             exchange.sendResponseHeaders(200,2);exchange.getResponseBody().write("{}".getBytes());exchange.close();
         });
         server.createContext("/internal/v1/tutor/ask",exchange->{
+            assertEquals("HTTP/1.1",exchange.getProtocol());
             assertEquals("test-service",exchange.getRequestHeaders().getFirst("X-API-Key"));
             assertEquals(request.toString(),exchange.getRequestHeaders().getFirst("X-Request-ID"));
             var body=json.readTree(new String(exchange.getRequestBody().readAllBytes(),StandardCharsets.UTF_8));
