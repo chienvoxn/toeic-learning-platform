@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vocabularies")
+@SQLRestriction("archived_at IS NULL")
 public class Vocabulary {
 
     @Id
@@ -49,6 +51,13 @@ public class Vocabulary {
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    @Column(name = "archived_at")
+    private OffsetDateTime archivedAt;
+
+    public void archive() {
+        archivedAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
 
     protected Vocabulary() {
     }

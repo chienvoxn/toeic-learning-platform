@@ -248,6 +248,16 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 | `GET` | `/reviews/history` | Learner | page,size | 200 Page<ReviewHistory> | 400 |
 
+**Xóa từ và bộ từ trong runtime** (các đường dẫn dưới `/api/v1`)
+
+| Method | Path | Kết quả |
+|---|---|---|
+| `DELETE` | `/vocabularies/{id}` | 204. Ẩn từ và gỡ khỏi mọi bộ. Lịch sử vẫn tính vào tổng lượt ôn và streak. API theo ID của từ đã xóa trả 404. |
+| `DELETE` | `/vocabulary-decks/{deckId}/vocabularies/{vocabularyId}` | 204. Gỡ liên kết trong bộ chỉ định, giữ từ và lịch ôn của từ. |
+| `DELETE` | `/vocabulary-decks/{deckId}` | 204. Xóa bộ, liên kết, phiên học và enrollment của bộ. Sổ tay giữ các từ. Có thể bắt đầu lại từ catalog để tạo bộ mới. |
+
+Các thao tác yêu cầu phiên xác thực. Tài nguyên không tồn tại hoặc ngoài quyền sở hữu trả 404.
+
 ### 3.6 Listening practice
 
 | Method | Path | Access | Request | R | Error |

@@ -133,12 +133,8 @@ class VocabularyReviewIntegrationTest {
                 userId
         );
 
-        if (vocabularyId != null) {
-            jdbc.update(
-                    "DELETE FROM vocabularies WHERE vocabulary_id = ?",
-                    vocabularyId
-            );
-        }
+        jdbc.update("DELETE FROM vocabulary_decks WHERE user_id = ?", userId);
+        jdbc.update("DELETE FROM vocabularies WHERE created_by = ?", userId);
 
         jdbc.update(
                 "DELETE FROM auth_sessions WHERE user_id = ?",
@@ -181,6 +177,92 @@ class VocabularyReviewIntegrationTest {
                                 )
                         )
         ).andExpect(status().isOk());
+    }
+
+    @Test
+    void deletingReviewedVocabularyUnlinksEveryDeckAndPreservesLearningHistory() throws Exception {
+        UUID firstDeck = createDeckWithVocabulary();
+        UUID secondDeck = createDeckWithVocabulary();
+
+        mvc.perform(delete("/api/v1/vocabulary-decks/{deckId}/vocabularies/{vocabularyId}",
+                        firstDeck, vocabularyId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT count(*) FROM deck_vocabularies WHERE vocabulary_id = ?", Integer.class, vocabularyId));
+
+        submitReview(1);
+        jdbc.update("UPDATE review_states SET next_review_at = now() WHERE vocabulary_id = ?", vocabularyId);
+        mvc.perform(get("/api/v1/vocabularies/reviews/due").header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.length()").value(1));
+
+        mvc.perform(delete("/api/v1/vocabularies/{id}", vocabularyId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT count(*) FROM deck_vocabularies WHERE vocabulary_id = ?", Integer.class, vocabularyId));
+        mvc.perform(get("/api/v1/vocabulary-decks/{deckId}/flashcards", secondDeck)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/vocabularies/{id}", vocabularyId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+        mvc.perform(post(reviewUrl()).header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON).content("{\"rating\":3}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/vocabularies/reviews/due").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/vocabulary/recommendations").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/v1/learning-profile/overview").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalVocabularies").value(0))
+                .andExpect(jsonPath("$.reviewedVocabularies").value(0))
+                .andExpect(jsonPath("$.dueForReview").value(0))
+                .andExpect(jsonPath("$.totalReviews").value(1));
+    }
+
+    @Test
+    void deletingCatalogCopyClearsItsSessionAndAllowsStartingAgain() throws Exception {
+        String startUrl = "/api/v1/vocabulary/catalog/decks/11111111-1111-4111-8111-111111111111/start";
+        UUID firstDeck = startCatalogCopy(startUrl);
+        mvc.perform(put("/api/v1/vocabulary-decks/{deckId}/learning-session", firstDeck)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(delete("/api/v1/vocabulary-decks/{deckId}", firstDeck)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT count(*) FROM vocabulary_learning_sessions WHERE deck_id = ?", Integer.class, firstDeck));
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT count(*) FROM deck_vocabularies WHERE deck_id = ?", Integer.class, firstDeck));
+        assertNotEquals(firstDeck, startCatalogCopy(startUrl));
+    }
+
+    private UUID createDeckWithVocabulary() throws Exception {
+        var result = mvc.perform(post("/api/v1/vocabulary-decks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON).content("{\"name\":\"Integration deck\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        UUID deckId = UUID.fromString(mapper.readTree(result.getResponse().getContentAsString())
+                .get("deckId").asString());
+        mvc.perform(post("/api/v1/vocabulary-decks/{deckId}/vocabularies", deckId)
+                        .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("vocabularyId", vocabularyId))))
+                .andExpect(status().isCreated());
+        return deckId;
+    }
+
+    private UUID startCatalogCopy(String url) throws Exception {
+        var result = mvc.perform(post(url).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alreadyEnrolled").value(false)).andReturn();
+        return UUID.fromString(mapper.readTree(result.getResponse().getContentAsString())
+                .get("personalDeckId").asString());
     }
 
     // 1. Authentication

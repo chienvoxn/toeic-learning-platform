@@ -3,7 +3,6 @@ package com.toeic.backend.vocabulary.application;
 
 import com.toeic.backend.vocabulary.api.VocabularyResponse;
 import com.toeic.backend.vocabulary.domain.DeckVocabulary;
-import com.toeic.backend.vocabulary.domain.Vocabulary;
 import com.toeic.backend.vocabulary.infrastructure.DeckVocabularyRepository;
 import com.toeic.backend.vocabulary.infrastructure.VocabularyDeckRepository;
 import com.toeic.backend.vocabulary.infrastructure.VocabularyRepository;
@@ -14,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -41,7 +41,9 @@ public class DeckFlashcardService {
             UUID vocabularyId
     ) {
         checkOwnedDeck(currentUserId, deckId);
-        checkOwnedVocabulary(currentUserId, vocabularyId);
+        vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Vocabulary not found"));
 
         if (deckVocabularyRepository
                 .existsByIdDeckIdAndIdVocabularyId(
@@ -100,10 +102,9 @@ public class DeckFlashcardService {
         return deckVocabularyRepository
                 .findByIdDeckIdOrderByAddedAtDesc(deckId)
                 .stream()
-                .map(link -> checkOwnedVocabulary(
-                        currentUserId,
-                        link.getVocabularyId()
-                ))
+                .map(link -> vocabularyRepository.findById(link.getVocabularyId()))
+                .flatMap(Optional::stream)
+                .filter(vocabulary -> currentUserId.equals(vocabulary.getCreatedBy()))
                 .map(VocabularyResponse::from)
                 .toList();
     }
@@ -121,19 +122,4 @@ public class DeckFlashcardService {
                 ));
     }
 
-    // 5. CHECK VOCABULARY OWNERSHIP
-    private Vocabulary checkOwnedVocabulary(
-            UUID currentUserId,
-            UUID vocabularyId
-    ) {
-        return vocabularyRepository
-                .findById(vocabularyId)
-                .filter(vocabulary ->
-                        vocabulary.getCreatedBy().equals(currentUserId)
-                )
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Vocabulary not found"
-                ));
-    }
 }

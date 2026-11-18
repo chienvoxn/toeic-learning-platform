@@ -24,11 +24,11 @@ Hoàn thành lượt học khác đã thành thạo từ. Local vẫn lưu bản
 snapshot thất bại, có thông báo; đánh giá SRS và lưu snapshot là hai request.
 Chưa có optimistic concurrency giữa nhiều tab/thiết bị.
 
-Backend giữ nguyên theo phạm vi frontend. Migration V31 và test backend thêm
-trong lượt tích hợp đã được gỡ khỏi source theo yêu cầu người dùng. API xóa
-hiện có có thể bị khóa ngoại chặn khi từ có liên kết/lịch sử ôn hoặc bộ được
-tạo từ catalog; frontend hiển thị lỗi và không báo thành công giả. Cần chuyển
-vấn đề này cho người phụ trách backend. Không tự sửa Flyway history/database.
+Xóa từ khỏi sổ tay ẩn từ khỏi danh sách, mọi bộ, hàng ôn và gợi ý. Lịch sử
+đã ghi vẫn tính vào tổng lượt ôn và chuỗi ngày học. API theo ID của từ
+đã xóa trả 404. Gỡ khỏi bộ chỉ xóa liên kết với bộ đã chọn.
+Xóa bộ cá nhân giữ các từ trong sổ tay, đồng thời xóa liên kết, phiên học
+và enrollment của bộ. Khi bắt đầu lại từ catalog, server tạo bản sao mới.
 
 Trách nhiệm service giữ nguyên: VocabularyService quản lý từ thuộc tài khoản;
 VocabularyDeckService quản lý bộ; DeckFlashcardService quản lý liên kết;
