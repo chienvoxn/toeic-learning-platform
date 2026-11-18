@@ -52,7 +52,7 @@ class VocabularyReviewControllerTest {
         var response = controller.submitReview(
                 principal,
                 vocabularyId,
-                new SubmitReviewRequest(3)
+                new SubmitReviewRequest(3), null
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

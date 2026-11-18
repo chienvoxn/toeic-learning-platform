@@ -227,6 +227,8 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.5 Vocabulary & SRS
 
+Bảng dưới là contract thiết kế. Các đường dẫn runtime được ghi trong các phần tiếp theo.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
@@ -479,13 +481,18 @@ Mảng ví dụ rút gọn; runtime đủ totalQuestions theo order snapshot. Đ
 ### 4.6 SRS
 
 ```json
-// POST /reviews
-{"vocabularyId":"<uuid>","rating":"GOOD"}
-// 201 ReviewReceipt
-{"vocabularyId":"<uuid>","rating":"GOOD","reviewedAt":"2026-10-28T02:00:00Z","nextReviewAt":"2026-10-30T02:00:00Z","repetitionCount":2,"intervalDays":2,"easeFactor":2.5}
+// POST /api/v1/vocabularies/{id}/reviews
+{"rating":3}
+// 200 ReviewStateResponse
+{"reviewStateId":"<uuid>","vocabularyId":"<uuid>","repetitionCount":2,"intervalDays":6,"easeFactor":2.5,"lastReviewedAt":"2026-10-28T02:00:00Z","nextReviewAt":"2026-11-03T02:00:00Z"}
 ```
 
 `nextReviewAt` và các thông số chỉ là ví dụ response; công thức Again/Hard/Good/Easy vẫn cần chốt.
+
+Runtime hỗ trợ header tùy chọn `Idempotency-Key` dạng UUID cho
+`POST /api/v1/vocabularies/{id}/reviews`. Cùng người dùng và key với
+cùng từ và rating trả lại response đã lưu. Nếu thay từ hoặc rating,
+server trả 409. Request không có key giữ hành vi hiện tại.
 
 ### 4.7 AI Tutor
 

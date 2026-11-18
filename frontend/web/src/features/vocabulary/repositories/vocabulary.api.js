@@ -117,7 +117,7 @@ export class RemoteVocabularyRepository {
     );
   }
 
-  async rateCard(cardId, rating) {
+  async rateCard(cardId, rating, requestKey) {
     const normalized =
       typeof rating === 'string'
         ? ratings[rating.toUpperCase()]
@@ -133,6 +133,7 @@ export class RemoteVocabularyRepository {
 
     return apiRequest(`/vocabularies/${cardId}/reviews`, {
       method: 'POST',
+      headers: requestKey ? { 'Idempotency-Key': requestKey } : {},
       body: { rating: normalized },
     });
   }

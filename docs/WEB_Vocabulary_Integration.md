@@ -43,3 +43,6 @@ lưu snapshot lượt học; VocabularyCatalogEnrollmentService sao chép catalo
 Kiểm tra thủ công: tạo bộ → thêm từ → sửa từ → đánh giá → xem lịch sử →
 reload/đổi thiết bị kiểm tiến độ → gỡ từ (sổ tay giữ từ) → xóa từ đã ôn →
 xóa bộ catalog rồi bắt đầu lại. Thử lỗi mạng và tài khoản không sở hữu dữ liệu.
+
+Ôn đến hạn gửi `Idempotency-Key` UUID cho mỗi lượt. Khi chưa xác nhận được
+kết quả, người học nhấn lại cùng mức đánh giá để gửi lại key đó. Key được giữ trong sessionStorage của tab để thử lại sau reload.

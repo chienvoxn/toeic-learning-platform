@@ -18,6 +18,7 @@ import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.re
 import { reviewProgress, reviewAction, clearReviewSession } from '@/features/vocabulary/reviewProgress';
 import DeckEditor from '@/components/organisms/DeckEditor';
 import { useMock } from '@/lib/runtime-config';
+import { readSession } from '@/features/auth/session';
 
 export default function VocabDeckListPage() {
   const [decks, setDecks] = useState([]);
@@ -36,6 +37,14 @@ export default function VocabDeckListPage() {
   const [dueActiveId, setDueActiveId] = useState(null);
   const [dueRevealed, setDueRevealed] = useState(false);
   const [dueSaving, setDueSaving] = useState(false);
+  const [pendingDueRating, setPendingDueRating] = useState(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('toeic:pending-due-review') || 'null');
+      return saved?.token === readSession()?.accessToken && saved?.request?.key ? saved.request : null;
+    } catch {
+      return null;
+    }
+  });
   const [dueNotice, setDueNotice] = useState('');
   const [confirmRestart, setConfirmRestart] = useState(false);
   const [restarting, setRestarting] = useState(false);
@@ -50,6 +59,14 @@ export default function VocabDeckListPage() {
   const [showAllCatalogDecks, setShowAllCatalogDecks] = useState(false);
 
   const [search] = useSearchParams();
+
+  useEffect(() => {
+    if (!pendingDueRating) return;
+    setShowDueList(true);
+    setDueActiveId(pendingDueRating.vocabularyId);
+    setDueRevealed(true);
+  }, []);
+
 
   useEffect(() => {
     let active = true;
@@ -213,7 +230,10 @@ export default function VocabDeckListPage() {
     return { ...item, card: null, deck: null };
   });
 
-  const activeDue = dueDetails.find((item) => item.vocabularyId === dueActiveId) || null;
+  const activeDue = dueDetails.find((item) => item.vocabularyId === dueActiveId)
+    || (pendingDueRating?.vocabularyId === dueActiveId
+      ? { vocabularyId: dueActiveId, card: Object.values(deckCardsById).flat().find((item) => item.id === dueActiveId) }
+      : null);
 
   const openDueReview = (id) => {
     setDueError('');
@@ -223,22 +243,35 @@ export default function VocabDeckListPage() {
   };
 
   const submitDueRating = async (rating) => {
-    if (!activeDue || dueSaving) return;
+    if (!activeDue || dueSaving || (pendingDueRating && pendingDueRating.vocabularyId !== activeDue.vocabularyId)) return;
     setDueSaving(true);
     setDueError('');
     try {
-      await vocabularyRepo.rateCard(activeDue.vocabularyId, rating);
+      const request = pendingDueRating || { rating, key: crypto.randomUUID(), vocabularyId: activeDue.vocabularyId };
+      if (!useMock) {
+        sessionStorage.setItem('toeic:pending-due-review', JSON.stringify({
+          token: readSession()?.accessToken, request,
+        }));
+      }
+      setPendingDueRating(request);
+      await vocabularyRepo.rateCard(activeDue.vocabularyId, request.rating, request.key);
       // Refresh from backend: only the server decides whether a word remains due.
       const [nextDue, nextStats] = await Promise.all([
         vocabularyRepo.getDueReviews(),
         vocabularyRepo.getReviewStatistics(),
       ]);
+      sessionStorage.removeItem('toeic:pending-due-review');
+      setPendingDueRating(null);
       setDueItems(Array.isArray(nextDue) ? nextDue : []);
       setReviewStats(nextStats);
       setDueActiveId(null);
       setDueRevealed(false);
       setDueNotice('Đã lưu đánh giá. Lịch ôn của bạn đã được cập nhật.');
     } catch (err) {
+      if (err?.status >= 400 && err.status < 500 && err.status !== 408 && err.status !== 429) {
+        sessionStorage.removeItem('toeic:pending-due-review');
+        setPendingDueRating(null);
+      }
       setDueError(err?.message || 'Không lưu được đánh giá. Vui lòng thử lại.');
     } finally {
       setDueSaving(false);
@@ -388,13 +421,14 @@ export default function VocabDeckListPage() {
         )}
 
         {showDueList && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !dueSaving) { setShowDueList(false); setDueActiveId(null); } }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !dueSaving && !pendingDueRating) { setShowDueList(false); setDueActiveId(null); } }}>
             <section role="dialog" aria-modal="true" aria-labelledby="due-list-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl text-slate-900">
               <div className="flex items-start justify-between gap-3">
                 <div><h2 id="due-list-title" className="text-xl font-bold">{activeDue ? 'Ôn tập từ vựng' : 'Từ cần ôn hôm nay'}</h2><p className="mt-1 text-sm text-slate-500">{activeDue ? 'Nhớ lại nghĩa trước khi xem đáp án nhé.' : 'Các từ đã đến lịch ôn theo quá trình học của bạn.'}</p></div>
-                <button type="button" disabled={dueSaving} aria-label="Đóng" className="rounded-lg px-2 py-1 text-xl hover:bg-slate-100" onClick={() => { setShowDueList(false); setDueActiveId(null); }}>×</button>
+                <button type="button" disabled={dueSaving || Boolean(pendingDueRating)} aria-label="Đóng" className="rounded-lg px-2 py-1 text-xl hover:bg-slate-100" onClick={() => { setShowDueList(false); setDueActiveId(null); }}>×</button>
               </div>
-              {dueError && <p className="mt-4 text-sm text-red-600" role="alert">{dueError}</p>}
+              {pendingDueRating && <p role="status">Hãy nhấn lại mức đánh giá đã chọn để xác nhận kết quả.</p>}
+                  {dueError && <p className="mt-4 text-sm text-red-600" role="alert">{dueError}</p>}
               {dueNotice && !activeDue && <p className="mt-4 text-sm text-green-700" role="status">{dueNotice}</p>}
               {activeDue ? (
                 <div className="mt-5 space-y-4">
@@ -405,9 +439,9 @@ export default function VocabDeckListPage() {
                     {dueRevealed ? <div className="mt-5 border-t border-slate-200 pt-4"><p className="font-semibold">{activeDue.card?.definitionVi || 'Không có nghĩa tiếng Việt trong dữ liệu hiện tại.'}</p>{activeDue.card?.exampleEn && <p className="mt-2 text-sm text-slate-600">{activeDue.card.exampleEn}</p>}</div> : <button type="button" className="mt-5 rounded-xl bg-blue-600 px-5 py-2 font-semibold text-white" onClick={() => setDueRevealed(true)}>Xem nghĩa</button>}
                   </div>
                   {dueRevealed && <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {[[1, 'HỌC LẠI'], [2, 'KHÓ'], [3, 'TỐT'], [4, 'DỄ']].map(([value, label]) => <button key={value} type="button" disabled={dueSaving} onClick={() => submitDueRating(value)} className="rounded-xl border border-slate-200 px-2 py-3 text-sm font-semibold hover:bg-blue-50 disabled:opacity-50">{label}</button>)}
+                    {[[1, 'HỌC LẠI'], [2, 'KHÓ'], [3, 'TỐT'], [4, 'DỄ']].map(([value, label]) => <button key={value} type="button" disabled={dueSaving || (pendingDueRating && pendingDueRating.rating !== value)} onClick={() => submitDueRating(value)} className="rounded-xl border border-slate-200 px-2 py-3 text-sm font-semibold hover:bg-blue-50 disabled:opacity-50">{label}</button>)}
                   </div>}
-                  <button type="button" disabled={dueSaving} className="rounded-lg border border-slate-200 px-4 py-2 text-sm" onClick={() => { setDueActiveId(null); setDueRevealed(false); setDueError(''); }}>Quay lại danh sách</button>
+                  <button type="button" disabled={dueSaving || Boolean(pendingDueRating)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm" onClick={() => { setDueActiveId(null); setDueRevealed(false); setDueError(''); }}>Quay lại danh sách</button>
                 </div>
               ) : (
                 <>

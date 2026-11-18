@@ -126,6 +126,7 @@ class VocabularyReviewIntegrationTest {
             return;
         }
 
+        jdbc.update("DELETE FROM vocabulary_review_requests WHERE user_id = ?", userId);
         jdbc.update("""
                 DELETE FROM review_history
                 WHERE review_state_id IN (
@@ -363,6 +364,47 @@ class VocabularyReviewIntegrationTest {
                 .andExpect(jsonPath("$.alreadyEnrolled").value(false)).andReturn();
         return UUID.fromString(mapper.readTree(result.getResponse().getContentAsString())
                 .get("personalDeckId").asString());
+    }
+
+    @Test
+    void repeatedReviewRequestReturnsOriginalResultAndRejectsDifferentPayload() throws Exception {
+        String key = UUID.randomUUID().toString();
+        var first = mvc.perform(post(reviewUrl()).header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key).contentType(APPLICATION_JSON)
+                        .content("{\"rating\":3}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        var retry = mvc.perform(post(reviewUrl()).header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key).contentType(APPLICATION_JSON)
+                        .content("{\"rating\":3}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(mapper.readTree(first), mapper.readTree(retry));
+        mvc.perform(post(reviewUrl()).header("Authorization", "Bearer " + token)
+                        .header("Idempotency-Key", key).contentType(APPLICATION_JSON)
+                        .content("{\"rating\":4}")).andExpect(status().isConflict());
+        assertEquals(1, reviewCount());
+        submitReview(4);
+        assertEquals(2, reviewCount());
+    }
+
+    @Test
+    void concurrentIdenticalReviewRequestsCreateOneHistoryEntry() throws Exception {
+        String key = UUID.randomUUID().toString();
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            Callable<String> call = () -> {
+                start.await();
+                return mvc.perform(post(reviewUrl()).header("Authorization", "Bearer " + token)
+                                .header("Idempotency-Key", key).contentType(APPLICATION_JSON)
+                                .content("{\"rating\":3}"))
+                        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            };
+            Future<String> first = pool.submit(call);
+            Future<String> second = pool.submit(call);
+            start.countDown();
+            assertEquals(mapper.readTree(first.get(10, TimeUnit.SECONDS)),
+                    mapper.readTree(second.get(10, TimeUnit.SECONDS)));
+        }
+        assertEquals(1, reviewCount());
     }
 
     // 1. Authentication
