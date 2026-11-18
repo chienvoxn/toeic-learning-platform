@@ -36,7 +36,7 @@ public class ChatService {
         UUID actor=actor("ai:chat:self"),id=UUID.randomUUID();
         return tx.execute(status->{
             store.jdbc().queryForList("select user_id from users where user_id=? for update",actor);
-            if(store.jdbc().queryForObject("select count(*) from ai_conversations where user_id=?",Integer.class,actor)>=100)
+            if(store.jdbc().queryForObject("select count(*) from ai_conversations where user_id=? and deleted_at is null",Integer.class,actor)>=100)
                 throw new ChatFailure(429,"AI_CONVERSATION_LIMIT","Đã đạt giới hạn 100 hội thoại.");
             store.jdbc().update("insert into ai_conversations(conversation_id,user_id,title) values(?,?,?)",id,actor,"Hội thoại mới");
             return store.list(actor,0).stream().filter(c->c.id().equals(id)).findFirst().orElseThrow();
@@ -49,6 +49,18 @@ public class ChatService {
             var filtered=visible(m.answer());
             return new Message(m.id(),m.role(),filtered.answer(),m.createdAt(),filtered);
         }).toList();
+    }
+    /** Ẩn hội thoại của chính người dùng, giữ lại tin nhắn và metadata trong database. */
+    public void delete(UUID conversation) {
+        UUID actor=actor("ai:chat:self");
+        tx.executeWithoutResult(status->{
+            // Serialize deletion with ask() reservations for every conversation of this user.
+            store.jdbc().queryForList("select user_id from users where user_id=? for update",actor);
+            store.own(actor,conversation);
+            if(Boolean.TRUE.equals(store.jdbc().queryForObject("select exists(select 1 from ai_chat_requests where conversation_id=? and status='PENDING')",Boolean.class,conversation)))
+                throw new ChatFailure(409,"AI_BUSY","Hội thoại đang xử lý một câu hỏi và chưa thể xóa.");
+            store.jdbc().update("update ai_conversations set deleted_at=now() where conversation_id=? and user_id=? and deleted_at is null",conversation,actor);
+        });
     }
     private Answer visible(Answer answer) {
         Set<UUID> allowed=new HashSet<>(store.scope(access.canReadMemberContent()).stream().map(Evidence::documentId).toList());

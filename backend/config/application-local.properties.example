@@ -6,9 +6,11 @@ spring.datasource.password=REPLACE_WITH_POSTGRES_PASSWORD
 app.auth.google.client-id=REPLACE_WITH_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com
 app.auth.google.secure-cookie=false
 
-# Copy the corresponding internal keys from AI/.env. GOOGLE_API_KEY stays in AI/.env.
-app.ai.base-url=http://127.0.0.1:8001
-app.ai.service-key=REPLACE_WITH_AI_SERVICE_KEY
-app.ai.admin-key=REPLACE_WITH_AI_ADMIN_KEY
+# Copy the corresponding internal keys from AI/.env, or provide the equivalent
+# PYTHON_RAG_BASE_URL / AI_SERVICE_KEY / AI_ADMIN_KEY environment variables.
+# GOOGLE_API_KEY stays in AI/.env and is never configured in Spring Boot.
+app.ai.base-url=${PYTHON_RAG_BASE_URL:http://127.0.0.1:8001}
+app.ai.service-key=${AI_SERVICE_KEY:REPLACE_WITH_AI_SERVICE_KEY}
+app.ai.admin-key=${AI_ADMIN_KEY:REPLACE_WITH_AI_ADMIN_KEY}
 app.ai.daily-limit=30
 app.ai.minute-limit=5

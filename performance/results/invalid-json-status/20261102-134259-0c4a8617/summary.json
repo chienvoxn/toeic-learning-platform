@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:53997/api/health/database",
+  "ramp_seconds": 0.01,
+  "interval_seconds": 0.02,
+  "timeout_seconds": 10,
+  "cooldown_seconds": 0.0,
+  "expected_database": "synthetic_db",
+  "latency_scope": "client-observed HTTP including pool wait; excludes think time",
+  "percentile_method": "nearest rank; overall percentiles include failures",
+  "results": [
+    {
+      "users": 2,
+      "iterations": 3,
+      "max_connections": 2,
+      "samples": 6,
+      "successes": 0,
+      "failures": 6,
+      "error_percent": 100.0,
+      "average_ms": 3.843,
+      "p50_ms": 3.621,
+      "p95_ms": 5.981,
+      "p99_ms": 5.981,
+      "max_ms": 5.981,
+      "success_p95_ms": null,
+      "throughput_rps": 85.501,
+      "success_rps": 0.0,
+      "duration_seconds": 0.07,
+      "peak_active_users": 2,
+      "peak_inflight_requests": 2,
+      "client_loop_lag_p95_ms": 5.092,
+      "errors": {
+        "STATUS_NOT_UP": 6
+      }
+    }
+  ]
+}

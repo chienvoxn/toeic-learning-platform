@@ -90,6 +90,28 @@ class ChatIntegrationTest {
         assertEquals(2,chat.messages(conversation.id(),0).size());
         verifyNoInteractions(rag);
     }
+    @Test void ownerCanHideConversationWhileRetainingItsHistory() {
+        var conversation=chat.create();
+        chat.ask(conversation.id(),UUID.randomUUID(),"Hello");
+
+        chat.delete(conversation.id());
+
+        assertTrue(chat.list(0).stream().noneMatch(item->item.id().equals(conversation.id())));
+        assertEquals(2,jdbc.queryForObject("select count(*) from ai_messages where conversation_id=?",Integer.class,conversation.id()));
+        assertEquals(1,jdbc.queryForObject("select count(*) from ai_chat_requests where conversation_id=?",Integer.class,conversation.id()));
+        assertEquals(1,jdbc.queryForObject("select count(*) from ai_request_logs where conversation_id=?",Integer.class,conversation.id()));
+        assertNotNull(jdbc.queryForObject("select deleted_at from ai_conversations where conversation_id=?",java.sql.Timestamp.class,conversation.id()));
+        assertEquals(404,assertThrows(ChatFailure.class,()->chat.messages(conversation.id(),0)).status);
+        assertEquals(404,assertThrows(ChatFailure.class,()->chat.ask(conversation.id(),UUID.randomUUID(),"Hello")).status);
+    }
+    @Test void anotherUserCannotDeleteConversation() {
+        var conversation=chat.create();
+        login(other,"ai:chat:self");
+
+        assertEquals(404,assertThrows(ChatFailure.class,()->chat.delete(conversation.id())).status);
+        login(actor,"ai:chat:self");
+        assertTrue(chat.list(0).stream().anyMatch(item->item.id().equals(conversation.id())));
+    }
     @Test void revokedSourcesHideSavedAnswerAndAreRemovedFromFutureHistory() {
         index();when(rag.ask(anyString(),anyList(),anyList(),any())).thenReturn(answer(version));
         var conversation=chat.create();chat.ask(conversation.id(),UUID.randomUUID(),"Explain");

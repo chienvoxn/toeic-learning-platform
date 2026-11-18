@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MessageCircle, X, Send, Plus, ArrowLeft, BookOpen } from 'lucide-react';
+import { MessageCircle, X, Send, Plus, ArrowLeft, BookOpen, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { chatApi } from './chat.api';
 import './chat.css';
@@ -59,6 +59,18 @@ export default function ChatBubble() {
     } catch (err) { if (mounted.current && current === operation.current) setError(err.message); }
     finally { if (mounted.current && current === operation.current) setLoading(false); }
   }
+  async function remove(item) {
+    if (!window.confirm(`Xóa hội thoại “${item.title}” khỏi lịch sử của bạn?`)) return;
+    const current = ++operation.current;
+    setLoading(true); setError('');
+    try {
+      await chatApi.remove(item.id);
+      if (!mounted.current || current !== operation.current) return;
+      setList(value => value.filter(row => row.id !== item.id));
+      if (conversation?.id === item.id) { setConversation(null); setMessages([]); setPage(0); setOlder(false); }
+    } catch (err) { if (mounted.current && current === operation.current) setError(err.message); }
+    finally { if (mounted.current && current === operation.current) setLoading(false); }
+  }
   async function send(event) {
     event.preventDefault();
     if (sending.current || !question.trim() || loading) return;
@@ -91,7 +103,7 @@ export default function ChatBubble() {
       <div className="tutor-scroll">
         {!conversation && <><div className="tutor-welcome"><span>ENGLINGO · AI TUTOR</span><h2>Bạn muốn học gì hôm nay?</h2><p>Hỏi về ngữ pháp, từ vựng hoặc cách dùng tiếng Anh trong TOEIC.</p></div>
           {!list.length && !loading && <button className="tutor-suggestion" type="button" onClick={() => { setQuestion('Khi nào sử dụng thì hiện tại hoàn thành?'); input.current?.focus(); }}>Khi nào dùng thì hiện tại hoàn thành?</button>}
-          {!!list.length && <div className="tutor-history"><small>Hội thoại gần đây</small>{list.map(item => <button type="button" key={item.id} disabled={busy || loading} onClick={() => select(item)}><MessageCircle size={16} />{item.title}</button>)}{moreConversations && <button type="button" disabled={loading} onClick={() => loadList(true)}>Xem thêm hội thoại</button>}</div>}</>}
+          {!!list.length && <div className="tutor-history"><small>Hội thoại gần đây</small>{list.map(item => <div className="tutor-history-row" key={item.id}><button className="tutor-history-open" type="button" disabled={busy || loading} onClick={() => select(item)}><MessageCircle size={16} />{item.title}</button><button className="tutor-history-delete" type="button" disabled={busy || loading} aria-label={`Xóa hội thoại ${item.title}`} onClick={() => remove(item)}><Trash2 size={16} /></button></div>)}{moreConversations && <button type="button" disabled={loading} onClick={() => loadList(true)}>Xem thêm hội thoại</button>}</div>}</>}
         {older && conversation && <button type="button" className="tutor-reload" disabled={loading || busy} onClick={() => select(conversation, true)}>Xem tin nhắn trước</button>}
         <div role="log" aria-label="Tin nhắn">{messages.map(message => <article key={message.id} className={`tutor-message tutor-${message.role}`}>
           <small>{message.role === 'user' ? 'Bạn' : 'Trợ lý TOEIC'}</small><p>{message.content}</p>

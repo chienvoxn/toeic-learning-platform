@@ -17,11 +17,11 @@ public class ChatRepository {
     public String encode(Object value) { return json.writeValueAsString(value); }
     public Answer decode(String value) { return json.readValue(value,Answer.class); }
     public void own(UUID actor,UUID conversation) {
-        if(!Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from ai_conversations where conversation_id=? and user_id=?)",Boolean.class,conversation,actor)))
+        if(!Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from ai_conversations where conversation_id=? and user_id=? and deleted_at is null)",Boolean.class,conversation,actor)))
             throw ChatFailure.missing();
     }
     public List<Conversation> list(UUID actor,int page) {
-        return jdbc.query("select * from ai_conversations where user_id=? order by updated_at desc,conversation_id limit 20 offset ?",
+        return jdbc.query("select * from ai_conversations where user_id=? and deleted_at is null order by updated_at desc,conversation_id limit 20 offset ?",
                 (r,n)->new Conversation(r.getObject("conversation_id",UUID.class),r.getString("title"),r.getString("updated_at")),actor,page*20);
     }
     public List<Message> messages(UUID conversation,int page) {

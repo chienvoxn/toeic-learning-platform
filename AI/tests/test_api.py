@@ -97,6 +97,28 @@ def test_tutor_modes_return_verified_citations(client, indexed, service_headers,
     assert "Present perfect" in provider.queries[-1]
 
 
+def test_vocabulary_guidance_also_applies_to_natural_ask_mode(
+    client, indexed, service_headers, provider
+):
+    response = client.post(
+        ASK,
+        headers=service_headers,
+        json={
+            "question": "Từ invoice nghĩa là gì và dùng như thế nào?",
+            "mode": "ask",
+            "language": "vi",
+            "allowedDocumentIds": [indexed],
+        },
+    )
+    assert response.status_code == 200, response.text
+    system_prompt, user_prompt = provider.prompts[-1]
+    assert "ask-mode question requests the meaning or usage of a word" in system_prompt
+    assert "pronunciation" in system_prompt
+    payload = json.loads(user_prompt)
+    assert payload["mode"] == "ask"
+    assert payload["language"] == "vi"
+
+
 def test_practice_returns_drafts_with_per_question_sources(client, indexed, service_headers):
     response = client.post(
         ASK,

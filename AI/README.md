@@ -2,7 +2,9 @@
 
 Phần AI của ứng dụng học TOEIC, dùng FastAPI, LangChain và Gemini.
 Service tìm nội dung trong học liệu rồi trả lời kèm nguồn tham khảo.
-Hiện chạy riêng, chưa nối với Spring Boot và giao diện React.
+Service đã được nối vào Spring Boot qua API nội bộ; giao diện React chỉ gọi Spring Boot.
+Spring Boot sở hữu xác thực, phân quyền, quota và lịch sử hội thoại. Python chỉ sở hữu
+index RAG dẫn xuất, thực hiện retrieval và gọi Gemini.
 
 Sau khi đã cài đặt và chạy migration, hằng ngày chỉ cần:
 
@@ -29,7 +31,7 @@ AI/
 ├── scripts/
 │   ├── init_env.py      # Chuẩn bị cấu hình local khi thiết lập
 │   └── verify_rag.py    # Một lệnh chạy thử toàn bộ RAG với Gemini
-├── examples/            # Học liệu và request mẫu
+├── examples/            # Học liệu TXT/JSON và request mẫu
 ├── .env.example         # Mẫu cấu hình
 ├── compose.yaml         # PostgreSQL có pgvector
 ├── alembic.ini          # Cấu hình migration, không chứa mật khẩu
@@ -54,6 +56,10 @@ các key hợp lệ đã có. Nếu database là SQLite mặc định cũ `data/
 script chuyển cấu hình sang PostgreSQL + pgvector, không xóa file index cũ. Với PostgreSQL
 hoặc database tùy chỉnh, cần chọn index mới và nạp lại tài liệu nếu chữ ký cấu hình khác.
 Không đưa `.env` lên Git hoặc gửi các khóa này xuống frontend.
+
+Có thể khởi động `/health` khi chưa có `GOOGLE_API_KEY` để kiểm tra tiến trình. `/ready`
+sẽ trả `503 missing_google_api_key`, và các thao tác ingest/chat cần embeddings hoặc LLM
+sẽ trả lỗi có kiểm soát cho tới khi key được cấu hình.
 
 Runtime bắt buộc PostgreSQL + pgvector. `init_env.py` tạo mật khẩu PostgreSQL và URL tương ứng
 cho database local mới; không tự đổi password của database đã tồn tại. Bật Docker Desktop rồi chạy:
@@ -84,6 +90,27 @@ Revision baseline không hỗ trợ downgrade để tránh xóa index đang có 
 
 Swagger ở http://127.0.0.1:8001/docs. `/health` kiểm tra server;
 `/ready` kiểm tra database và cấu hình key, chưa kiểm tra kết nối tới Gemini.
+
+### Nạp file TXT mẫu qua API
+
+Sau khi điền key, chạy PostgreSQL, migration và FastAPI, có thể dùng Swagger hoặc PowerShell.
+`documentId` bên dưới trùng với ví dụ câu hỏi và là ID ổn định chỉ dành cho demo:
+
+```powershell
+$headers = @{ "X-API-Key" = $env:AI_ADMIN_KEY }
+$form = @{
+  documentId = "27bd260f-9558-4884-a9d5-d3058e112d49"
+  title = "TOEIC grammar sample: present perfect"
+  file = Get-Item ".\examples\toeic-grammar-sample.txt"
+}
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8001/internal/v1/documents/upload" `
+  -Headers $headers -Form $form
+```
+
+Nếu dùng khóa trong `AI/.env` thay vì biến môi trường của terminal, sao chép riêng giá trị
+`AI_ADMIN_KEY` vào `$headers`; không commit hoặc gửi giá trị đó vào chat. Có thể kiểm tra
+danh sách đã ingest bằng `GET /internal/v1/documents` trong Swagger với cùng admin key.
 
 Để nạp học liệu mẫu và chạy thử trọn luồng, dùng duy nhất lệnh sau.
 Không cần bật Spring Boot/frontend hoặc uvicorn trước:

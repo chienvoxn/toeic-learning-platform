@@ -302,6 +302,8 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 
 | `GET` | `/ai/conversations/{id}/messages` | Owner | page,size | 200 Page<AiMessage> | 404 |
 
+| `DELETE` | `/ai/conversations/{id}` | Owner | — | 204 | 404, 409 AI_BUSY |
+
 | `POST` | `/ai/conversations/{id}/messages` | Owner | AskTutorRequest | 200 AiTutorResponse | 429 AI_QUOTA_EXCEEDED |
 
 | `GET` | `/admin/ai/usage` | Admin | from,to,provider,model | 200 AiUsageSummary | 403 |
