@@ -10,8 +10,9 @@ resource và metadata không hiển thị. Sửa từ áp dụng cho mọi bộ 
 
 API tái sử dụng /api/v1/vocabulary-decks, /vocabularies và các route con
 flashcards, vocabularies/{vocabularyId}, reviews/history, learning-session.
-Không thay đổi payload API. Rating runtime là số 1–4; các enum trong thiết kế
-cũ không được gửi trực tiếp xuống backend.
+Rating runtime là số 1–4. Màn hình học theo bộ gửi rating qua
+`POST /vocabulary-decks/{deckId}/learning-session/reviews`. Màn hình ôn đến
+hạn tiếp tục dùng `POST /vocabularies/{id}/reviews`.
 
 Danh sách/chi tiết bộ và màn hình ôn dùng phiên server làm nguồn tiến độ khi
 remote; không che lỗi tải phiên bằng dữ liệu local. Bộ mới chưa có phiên là 0%.
@@ -20,9 +21,13 @@ Tiến độ lượt học dùng completedIds: từ có intervalDays >= 1 trong 
 Học lại lưu deferredUntil bằng nextReviewAt, chỉ xuất hiện khi đến hạn; reload
 giữ thời điểm chờ. Phiên cũ easyIds được đọc tương thích và nâng cấp bằng trạng
 thái SRS của các từ đã đánh giá trong phiên; không tự hoàn thành từ chưa học.
-Hoàn thành lượt học khác đã thành thạo từ. Local vẫn lưu bản dự phòng khi ghi
-snapshot thất bại, có thông báo; đánh giá SRS và lưu snapshot là hai request.
-Chưa có optimistic concurrency giữa nhiều tab/thiết bị.
+Hoàn thành lượt học khác đã thành thạo từ. Trong chế độ thật, server lưu
+rating, lịch ôn, history và snapshot trong cùng giao dịch. Mỗi thao tác ghi
+gửi `expectedRevision` đã đọc. Khi nhận 409, web tải phiên mới nhất để người
+học xem lại. Khi mất phản hồi của rating, nút thử lại gửi cùng nội dung và
+revision. Nếu yêu cầu trước đã lưu, retry nhận 409 và web tải phiên đã lưu,
+vì vậy rating chỉ được ghi một lần. Reset lưu phiên rỗng với revision mới.
+Chế độ mock tiếp tục lưu phiên cục bộ.
 
 Xóa từ khỏi sổ tay ẩn từ khỏi danh sách, mọi bộ, hàng ôn và gợi ý. Lịch sử
 đã ghi vẫn tính vào tổng lượt ôn và chuỗi ngày học. API theo ID của từ

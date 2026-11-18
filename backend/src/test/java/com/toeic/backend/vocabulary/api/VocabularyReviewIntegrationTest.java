@@ -4,6 +4,7 @@ package com.toeic.backend.vocabulary.api;
 import com.toeic.backend.identity.domain.User;
 import com.toeic.backend.identity.infrastructure.RoleRepository;
 import com.toeic.backend.identity.infrastructure.UserRepository;
+import com.toeic.backend.vocabulary.application.VocabularyLearningSessionService;
 import com.toeic.backend.vocabulary.domain.Vocabulary;
 import com.toeic.backend.vocabulary.infrastructure.VocabularyRepository;
 
@@ -14,13 +15,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -61,6 +65,9 @@ class VocabularyReviewIntegrationTest {
 
     @Autowired
     JdbcTemplate jdbc;
+
+    @Autowired
+    VocabularyLearningSessionService sessions;
 
     private UUID userId;
     private UUID vocabularyId;
@@ -227,7 +234,7 @@ class VocabularyReviewIntegrationTest {
     void deletingCatalogCopyClearsItsSessionAndAllowsStartingAgain() throws Exception {
         String startUrl = "/api/v1/vocabulary/catalog/decks/11111111-1111-4111-8111-111111111111/start";
         UUID firstDeck = startCatalogCopy(startUrl);
-        mvc.perform(put("/api/v1/vocabulary-decks/{deckId}/learning-session", firstDeck)
+        mvc.perform(put("/api/v1/vocabulary-decks/{deckId}/learning-session?expectedRevision=0", firstDeck)
                         .header("Authorization", "Bearer " + token)
                         .contentType(APPLICATION_JSON).content("{}"))
                 .andExpect(status().isOk());
@@ -241,6 +248,99 @@ class VocabularyReviewIntegrationTest {
         assertEquals(0, jdbc.queryForObject(
                 "SELECT count(*) FROM deck_vocabularies WHERE deck_id = ?", Integer.class, firstDeck));
         assertNotEquals(firstDeck, startCatalogCopy(startUrl));
+    }
+
+    @Test
+    void sessionReviewAndRetryShareOneRevisionAndHistoryEntry() throws Exception {
+        String sessionUrl = sessionUrl(createDeckWithVocabulary());
+
+        mvc.perform(sessionRating(sessionUrl, 0, 3))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.session.revision").value(1))
+                .andExpect(jsonPath("$.session.data.completedIds[0]").value(vocabularyId.toString()))
+                .andExpect(jsonPath("$.session.data.attempts").value(1))
+                .andExpect(jsonPath("$.review.intervalDays").value(1));
+        mvc.perform(sessionRating(sessionUrl, 0, 3)).andExpect(status().isConflict());
+        mvc.perform(put(sessionUrl).param("expectedRevision", "0").header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON).content("{}"))
+                .andExpect(status().isConflict());
+        mvc.perform(delete(sessionUrl).param("expectedRevision", "0").header("Authorization", "Bearer " + token))
+                .andExpect(status().isConflict());
+        assertEquals(1, reviewCount());
+
+        mvc.perform(delete(sessionUrl).param("expectedRevision", "1").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.revision").value(2));
+        mvc.perform(sessionRating(sessionUrl, 0, 4)).andExpect(status().isConflict());
+        mvc.perform(sessionRating(sessionUrl, 2, 1)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.session.revision").value(3))
+                .andExpect(jsonPath("$.session.data.deferredUntil." + vocabularyId).isString());
+        mvc.perform(sessionRating(sessionUrl, 3, 3)).andExpect(status().isConflict());
+        assertEquals(2, reviewCount());
+
+        mvc.perform(get(sessionUrl).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.revision").value(3))
+                .andExpect(jsonPath("$.data.attempts").value(1));
+    }
+
+    @Test
+    void concurrentSessionRatingsAtTheSameRevisionOnlyApplyOneReview() throws Exception {
+        String sessionUrl = sessionUrl(createDeckWithVocabulary());
+        CountDownLatch start = new CountDownLatch(1);
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            Future<Integer> first = pool.submit(() -> {
+                start.await();
+                return mvc.perform(sessionRating(sessionUrl, 0, 3)).andReturn().getResponse().getStatus();
+            });
+            Future<Integer> second = pool.submit(() -> {
+                start.await();
+                return mvc.perform(sessionRating(sessionUrl, 0, 4)).andReturn().getResponse().getStatus();
+            });
+            start.countDown();
+            assertEquals(Set.of(200, 409),
+                    Set.copyOf(java.util.List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS))));
+        }
+        assertEquals(1, reviewCount());
+    }
+
+    @Test
+    void failedSnapshotWriteRollsBackSrsAndLeavesTheRevisionAvailableForRetry() throws Exception {
+        UUID deckId = createDeckWithVocabulary();
+        sessions.save(userId, deckId, 0, mapper.createObjectNode());
+        jdbc.execute("ALTER TABLE vocabulary_learning_sessions ADD CONSTRAINT reject_test_rating "
+                + "CHECK (deck_id <> '" + deckId + "' OR revision < 2)");
+        try {
+            assertThrows(DataIntegrityViolationException.class,
+                    () -> sessions.rate(userId, deckId, 1, vocabularyId, 3));
+            assertEquals(1, sessions.get(userId, deckId).revision());
+            assertEquals(0, reviewCount());
+            assertEquals(0, jdbc.queryForObject(
+                    "SELECT count(*) FROM review_states WHERE user_id = ?", Integer.class, userId));
+        } finally {
+            jdbc.execute("ALTER TABLE vocabulary_learning_sessions DROP CONSTRAINT reject_test_rating");
+        }
+        mvc.perform(sessionRating(sessionUrl(deckId), 1, 3)).andExpect(status().isOk());
+        assertEquals(1, reviewCount());
+    }
+
+    private String sessionUrl(UUID deckId) {
+        return "/api/v1/vocabulary-decks/" + deckId + "/learning-session";
+    }
+
+    private MockHttpServletRequestBuilder sessionRating(
+            String sessionUrl, long revision, int rating
+    ) throws Exception {
+        return post(sessionUrl + "/reviews").header("Authorization", "Bearer " + token)
+                .contentType(APPLICATION_JSON).content(mapper.writeValueAsString(
+                        Map.of("vocabularyId", vocabularyId, "expectedRevision", revision, "rating", rating)));
+    }
+
+    private int reviewCount() {
+        return jdbc.queryForObject("""
+                SELECT count(*) FROM review_history h JOIN review_states s USING (review_state_id)
+                WHERE s.user_id = ?
+                """, Integer.class, userId);
     }
 
     private UUID createDeckWithVocabulary() throws Exception {

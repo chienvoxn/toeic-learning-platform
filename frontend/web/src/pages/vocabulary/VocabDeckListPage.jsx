@@ -77,7 +77,12 @@ export default function VocabDeckListPage() {
               let failed = 0;
               results.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                  progress[personalDecks[index].id] = reviewProgress(personalDecks[index].id, result.value.cards, result.value.session?.data ?? null, !useMock);
+                  const { cards, session } = result.value;
+                  const { id } = personalDecks[index];
+                  progress[id] = {
+                    ...reviewProgress(id, cards, session?.data ?? null, !useMock),
+                    revision: session?.revision ?? 0,
+                  };
                   cardIndex[personalDecks[index].id] = result.value.cards;
                 }
                 else failed += 1;
@@ -170,15 +175,24 @@ export default function VocabDeckListPage() {
   };
 
   const confirmNewRound = async () => {
-    if (!selectedReviewDeck || restarting) return;
+    if (!selectedReviewDeck || !selectedReviewProgress || restarting) return;
     setRestarting(true); setProgressError('');
     try {
-      if (!useMock) await vocabularyRepo.clearLearningSession(selectedReviewDeck.id);
+      if (!useMock) await vocabularyRepo.clearLearningSession(selectedReviewDeck.id, selectedReviewProgress.revision);
       clearReviewSession(selectedReviewDeck.id);
       setConfirmRestart(false); setShowReviewPicker(false);
       navigate(`/vocabulary/${selectedReviewDeck.id}/review`);
-    } catch (err) { setProgressError(err.message || 'Không thể bắt đầu lượt mới.'); }
-    finally { setRestarting(false); }
+    } catch (err) {
+      if (err.status === 409) {
+        setConfirmRestart(false);
+        setShowReviewPicker(false);
+        navigate(`/vocabulary/${selectedReviewDeck.id}/review`, {
+          state: { notice: 'Tiến độ vừa thay đổi. Hãy xem phiên mới nhất trước khi bắt đầu lượt mới.' },
+        });
+      } else {
+        setProgressError(err.message || 'Không thể bắt đầu lượt mới.');
+      }
+    } finally { setRestarting(false); }
   };
 
   const launchReview = () => {

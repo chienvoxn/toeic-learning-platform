@@ -258,6 +258,25 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 Các thao tác yêu cầu phiên xác thực. Tài nguyên không tồn tại hoặc ngoài quyền sở hữu trả 404.
 
+**Phiên học flashcard trong runtime**
+
+Các route sau dùng tiền tố `/api/v1/vocabulary-decks/{deckId}/learning-session`, yêu cầu phiên đăng nhập và bộ thuộc người dùng.
+
+| Method | Path tương đối | Request và kết quả |
+|---|---|---|
+| `GET` | gốc | 200 snapshot `{data,revision,updatedAt}`. Chưa có phiên thì response rỗng và revision khởi đầu là 0. |
+| `PUT` | `?expectedRevision=<n>` | Body là snapshot dạng object. Trả 200 snapshot đã lưu với revision mới. |
+| `DELETE` | `?expectedRevision=<n>` | Reset về `data={}`, trả 200 snapshot với revision mới. |
+| `POST` | `/reviews` | Body `{expectedRevision,vocabularyId,rating}`, rating là số nguyên 1–4. Trả 200 `{session,review}` gồm snapshot mới và lịch ôn. |
+
+Ghi và reset của phiên yêu cầu revision hiện tại. Revision cũ trả 409,
+client tải lại phiên trước khi thao tác tiếp. Reset vẫn tăng revision để
+request cũ không khớp phiên mới. Rating theo phiên chỉ áp dụng cho thẻ
+còn trong bộ, chưa hoàn thành và đã đến thời điểm được ôn trong phiên.
+SRS state, history và snapshot được lưu nguyên tử. Khi mất phản hồi, client
+có thể gửi lại cùng revision để tránh ghi trùng rồi tải lại phiên nếu nhận
+409. Tiến độ cũ dùng `easyIds` vẫn được đọc và chuyển đổi khi đánh giá tiếp.
+
 ### 3.6 Listening practice
 
 | Method | Path | Access | Request | R | Error |
