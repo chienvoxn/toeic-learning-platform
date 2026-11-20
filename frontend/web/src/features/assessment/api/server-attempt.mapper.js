@@ -36,3 +36,73 @@ export function toServerResult(dto, session) {
     incorrectCount: dto.incorrectCount, unansweredCount: dto.unansweredCount,
     partResults: dto.parts, section: dto.section, questions, remote: true };
 }
+
+function splitAssets(assets = [], includeTranscript = false) {
+  const safeList = Array.isArray(assets) ? assets : [];
+  const mapAsset = item => ({
+    resourceId: item.resourceId,
+    resourceType: item.resourceType,
+    mimeType: item.mimeType,
+    durationSeconds: item.durationSeconds ?? null,
+    displayOrder: item.displayOrder ?? null,
+    url: item.url,
+    fallbackUrl: item.fallbackUrl || null,
+    ...(includeTranscript && item.transcript ? { transcript: item.transcript } : {}),
+  });
+  const mapped = safeList.filter(item => item && item.url).map(mapAsset);
+  return {
+    audioAssets: mapped.filter(item => item.resourceType === 'AUDIO'),
+    imageAssets: mapped.filter(item => item.resourceType === 'IMAGE'),
+    transcripts: includeTranscript ? mapped.map(item => item.transcript).filter(Boolean) : [],
+  };
+}
+
+export function attachAttemptMedia(attempt, mediaDto) {
+  if (!attempt || !mediaDto || !Array.isArray(mediaDto.questions)) return attempt;
+  const byVersion = new Map(mediaDto.questions.map(item => [item.questionVersionId, item]));
+  return {
+    ...attempt,
+    parts: attempt.parts.map(part => ({
+      ...part,
+      questions: part.questions.map(question => {
+        const media = byVersion.get(question.id);
+        if (!media) return question;
+        const own = splitAssets(media.assets, false);
+        const grp = splitAssets(media.passageAssets, false);
+        return {
+          ...question,
+          audioAssets: own.audioAssets,
+          imageAssets: own.imageAssets,
+          passage: question.passage
+            ? { ...question.passage, audioAssets: grp.audioAssets, imageAssets: grp.imageAssets }
+            : (grp.audioAssets.length || grp.imageAssets.length)
+              ? { id: media.groupVersionId || `group-${question.id}`, instruction: '', text: '', audioAssets: grp.audioAssets, imageAssets: grp.imageAssets }
+              : null,
+        };
+      }),
+    })),
+  };
+}
+
+export function attachResultMedia(result, mediaDto) {
+  if (!result || !mediaDto || mediaDto.status !== 'GRADED' || !Array.isArray(mediaDto.questions)) return result;
+  const byVersion = new Map(mediaDto.questions.map(item => [item.questionVersionId, item]));
+  return {
+    ...result,
+    questions: result.questions.map(question => {
+      const media = byVersion.get(question.id);
+      if (!media) return question;
+      const own = splitAssets(media.assets, true);
+      const grp = splitAssets(media.passageAssets, true);
+      return {
+        ...question,
+        audioAssets: own.audioAssets,
+        imageAssets: own.imageAssets,
+        passageAudioAssets: grp.audioAssets,
+        passageImageAssets: grp.imageAssets,
+        transcript: own.transcripts.join('\n') || null,
+        passageTranscript: grp.transcripts.join('\n') || null,
+      };
+    }),
+  };
+}

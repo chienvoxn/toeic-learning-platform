@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { assessmentRepo } from '../repositories/assessment.repo';
 import { AnswerSaveQueue } from '../answer-save-queue';
+import { attachAttemptMedia } from '../api/server-attempt.mapper';
 
 export function useAttemptSession(attemptId, repository = assessmentRepo) {
   const [attempt, setAttempt] = useState(null);
@@ -23,8 +24,17 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
     queue.current = saves; setSaveStatus('saved'); setSaveError('');
     const leaving = event => { if (saves.pending.size) { event.preventDefault(); event.returnValue = ''; } };
     window.addEventListener('beforeunload', leaving);
-    repository.getAttempt(attemptId).then(data => {
-      if (active) { sequence.current = data.clientSequence || 0; setAttempt(data); }
+    repository.getAttempt(attemptId).then(async data => {
+      let enriched = data;
+      if (data?.remote && typeof repository.getAttemptMedia === 'function' && data.parts?.some(p => p.questions.some(q => q.hasMedia))) {
+        try {
+          const mediaDto = await repository.getAttemptMedia(attemptId);
+          enriched = attachAttemptMedia(data, mediaDto);
+        } catch {
+          // Keep safe session even if media presign endpoint fails
+        }
+      }
+      if (active) { sequence.current = enriched.clientSequence || 0; setAttempt(enriched); }
     }).catch(error => { if (active) setLoadError(error.message); })
       .finally(() => { if (active) setIsLoading(false); });
     return () => { active = false; window.removeEventListener('beforeunload', leaving); };
