@@ -39,9 +39,9 @@ public final class MigrationSchema {
         Collections.sort(output);return String.join("\n",output)+"\n";
     }
 
-    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation) throws SQLException {
+    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete) throws SQLException {
         String expected;
-        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v37.txt")) {
+        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v39.txt")) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
             expected = new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n","\n");
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot read release schema evidence", e); }
@@ -51,11 +51,13 @@ public final class MigrationSchema {
             if ((!rag && RAG.contains(parts[1])) || (!moderation && MODERATION.contains(parts[1]))) continue;
             if (!settings && (line.startsWith("column|system_settings|revision|")
                     || line.startsWith("constraint|system_settings|ck_system_settings_revision|"))) continue;
+            if (!softDelete && (line.startsWith("column|ai_conversations|deleted_at|")
+                    || line.startsWith("index|ai_conversations|idx_ai_conversations_active_user|"))) continue;
             filtered.append(line).append('\n');
         }
         if (!filtered.toString().equals(normalizedSignature(connection))) throw new IllegalStateException("Schema differs from release migration evidence");
         // An existing feature's grants can have been revoked; never restore them.
-        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage'";
+        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish'";
         var actual = new HashSet<String>();
         try (var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT code FROM public.permissions WHERE code IN (" + codes + ")")) {
             while (rows.next()) actual.add(rows.getString(1));
@@ -63,6 +65,7 @@ public final class MigrationSchema {
         var required = new HashSet<String>();
         if (settings) required.add("system:settings:manage");
         if (rag) required.addAll(Set.of("ai:chat:self", "ai:knowledge:manage"));
+        if (moderation) required.addAll(Set.of("content:review","content:publish","question:review","question:publish"));
         if (!actual.equals(required)) throw new IllegalStateException("Partial feature permission catalog");
     }
 
@@ -114,7 +117,7 @@ public final class MigrationSchema {
         // varchar[] -> text[] casts. These exact alternatives were reproduced by
         // round-tripping the canonical SQL schema, independently of upgrade targets.
         // No general stripping of casts, constraints or validation flags is allowed.
-        try (var canonical=MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v37.txt");
+        try (var canonical=MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v39.txt");
              var restored=MigrationSchema.class.getResourceAsStream("/db/compatibility/restored-constraints.txt")) {
             if (canonical==null || restored==null) throw new IllegalStateException("Missing restore equivalence evidence");
             Map<String,String> originals=new HashMap<>();

@@ -19,4 +19,13 @@ class MigrationHistoryTest {
         rows.add(new MigrationHistory.Row(rows.size()+1,"34","V34__managed_system_defaults.sql","managed system defaults","SQL",1299604777,true));
         assertThrows(IllegalStateException.class,()->MigrationHistory.verifyPrefix(rows));
     }
+    @Test void duplicateV35RowsAreRejected() {
+        var rows=new ArrayList<MigrationHistory.Row>();
+        for(String version:MigrationHistory.VERSIONS) {
+            rows.add(new MigrationHistory.Row(rows.size()+1,version,"script","description","SQL",1,true));
+            if(version.equals("35"))break;
+        }
+        rows.add(new MigrationHistory.Row(rows.size()+1,"35","V35__ai_conversation_delete_cascade.sql","ai conversation delete cascade","SQL",359517897,true));
+        assertThrows(IllegalStateException.class,()->MigrationHistory.verifyPrefix(rows));
+    }
 }

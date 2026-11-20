@@ -36,7 +36,7 @@ class MigrationCompatibilityIntegrationTest {
         DATABASES.add(name);return name;
     }
     static Flyway original(String database,String lineage,String target) {
-        return Flyway.configure().dataSource(source(database)).locations("classpath:db/migration","classpath:db/history/"+lineage)
+        return Flyway.configure().dataSource(source(database)).locations("classpath:db/migration","classpath:db/history/"+lineage,"classpath:db/history/v35/admin03")
                 .target(target).cleanDisabled(true).load();
     }
     @BeforeAll static void seedOriginalHistories() throws Exception {
@@ -63,22 +63,29 @@ class MigrationCompatibilityIntegrationTest {
         }
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(all.toString().getBytes(StandardCharsets.UTF_8)));
     }
-    @ParameterizedTest @ValueSource(strings={"empty","v33","settings","rag"})
+    @ParameterizedTest @ValueSource(strings={"empty","v33","settings","rag","settings-admin35","rag-admin35","rag-rag35","settings37","rag37","rag-rag36","rag-rag37","rag-rag38"})
     void historiesConvergeAndRestartWithoutRewritingOldRows(String kind) throws Exception {
-        String db=database(switch(kind){case "v33"->v33;case "settings"->settings;case "rag"->rag;default->null;});
+        String db=database(kind.equals("empty")?null:kind.equals("v33")?v33:kind.startsWith("settings")?settings:rag);
+        if(kind.endsWith("-admin35") || kind.endsWith("37") || kind.startsWith("rag-rag")) {
+            String target=kind.endsWith("-admin35")?"35":kind.startsWith("rag-rag")?kind.substring(7):"37";
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration",
+                "classpath:db/history/"+(kind.startsWith("settings")?"settings":"rag"),
+                "classpath:db/history/v35/"+(kind.startsWith("rag-rag")?"rag":"admin03")).target(target).cleanDisabled(true).load().migrate();
+        }
         String oldHistory="";
         if(!kind.equals("empty")) {
             sql(db,"INSERT INTO system_settings(setting_key,setting_value) VALUES('compatibility.retained','42')");
-            if(kind.equals("settings"))sql(db,"UPDATE system_settings SET revision=7 WHERE setting_key='compatibility.retained'; DELETE FROM role_permissions WHERE permission_id=(SELECT permission_id FROM permissions WHERE code='system:settings:manage')");
+            if(kind.startsWith("settings"))sql(db,"UPDATE system_settings SET revision=7 WHERE setting_key='compatibility.retained'; DELETE FROM role_permissions WHERE permission_id=(SELECT permission_id FROM permissions WHERE code='system:settings:manage')");
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("37",flyway.info().current().getVersion().toString());
+        assertEquals("39",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
+        assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {
             assertTrue(history(db).startsWith(oldHistory));
             try(var c=source(db).getConnection();var s=c.createStatement();var r=s.executeQuery("SELECT setting_value,revision FROM system_settings WHERE setting_key='compatibility.retained'")) {
-                assertTrue(r.next());assertEquals("42",r.getString(1));assertEquals(kind.equals("settings")?7:0,r.getLong(2));
+                assertTrue(r.next());assertEquals("42",r.getString(1));assertEquals(kind.startsWith("settings")?7:0,r.getLong(2));
             }
         }
         String before=snapshot(db);run(db,new MockEnvironment()).validate();assertEquals(before,snapshot(db));
@@ -122,12 +129,33 @@ class MigrationCompatibilityIntegrationTest {
                 case "partial-settings"->sql(db,"ALTER TABLE system_settings ADD COLUMN revision bigint NOT NULL DEFAULT 0");
                 case "empty-domain"->sql(db,"CREATE DOMAIN unexpected AS integer");
                 case "history-column"->sql(db,"ALTER TABLE flyway_schema_history ADD COLUMN unexpected int");
-                case "unknown-version"->{Path directory=Files.createTempDirectory("toeic-migration-future-");Files.writeString(directory.resolve("V99__unknown.sql"),"SELECT 1;");Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/rag","filesystem:"+directory).cleanDisabled(true).load().migrate();}
+                case "unknown-version"->{Path directory=Files.createTempDirectory("toeic-migration-future-");Files.writeString(directory.resolve("V99__unknown.sql"),"SELECT 1;");Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/rag","classpath:db/history/v35/admin03","filesystem:"+directory).cleanDisabled(true).load().migrate();}
                 default->throw new AssertionError(kind);
             }
         }
         String database=db,before=snapshot(db);
         assertThrows(Exception.class,()->run(database,new MockEnvironment()));assertEquals(before,snapshot(db));
+    }
+    @ParameterizedTest @ValueSource(strings={"settings-rag35","soft-column-only","soft-index-drift","moderation-drift","v35-checksum","v35-script"})
+    void v35MismatchesAreRejectedBeforeMutation(String kind) throws Exception {
+        String db=database(kind.equals("settings-rag35")?settings:rag);
+        String v35=kind.equals("soft-column-only")||kind.equals("moderation-drift")?"admin03":"rag";
+        if(kind.equals("v35-checksum") || kind.equals("v35-script")) {
+            Path directory=Files.createTempDirectory("toeic-v35-negative-");
+            String sql=Files.readString(Path.of("src/main/resources/db/history/v35/rag/V35__ai_conversation_delete_cascade.sql"));
+            Files.writeString(directory.resolve(kind.equals("v35-script")?"V35__unknown_identity.sql":"V35__ai_conversation_delete_cascade.sql"),sql+(kind.equals("v35-checksum")?"\n-- deliberately invalid checksum fixture\n":""));
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/rag","filesystem:"+directory).target("35").cleanDisabled(true).load().migrate();
+        } else {
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/"+(kind.equals("settings-rag35")?"settings":"rag"),
+                "classpath:db/history/v35/"+v35).target("35").cleanDisabled(true).load().migrate();
+            switch(kind) {
+                case "soft-column-only"->sql(db,"ALTER TABLE ai_conversations ADD COLUMN deleted_at timestamptz");
+                case "soft-index-drift"->sql(db,"DROP INDEX idx_ai_conversations_active_user; CREATE INDEX idx_ai_conversations_active_user ON ai_conversations(user_id,updated_at DESC)");
+                case "moderation-drift"->sql(db,"ALTER TABLE moderation_versions ADD COLUMN unexpected int");
+            }
+        }
+        String before=snapshot(db);
+        assertThrows(Exception.class,()->run(db,new MockEnvironment()));assertEquals(before,snapshot(db));
     }
     @Test void concurrentStartupRunsOnlyOneV34() throws Exception {
         String db=database(v33);

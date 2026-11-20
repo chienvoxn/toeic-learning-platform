@@ -9,12 +9,16 @@ test('chat bubble sends, shows sources, reopens history and fits mobile', async 
   let sent = false;
   let requestId;
   let askCount = 0;
+  let deleted = false;
   await page.addInitScript(() => localStorage.setItem('toeic.remote.session', JSON.stringify({ accessToken: 'browser-fixture-token', tokenType: 'Bearer', expiresAt: Date.now() + 3600000 })));
   await page.route('**/api/v1/**', async route => {
     const { pathname } = new URL(route.request().url());
     let body = {};
     if (pathname === '/api/v1/users/me') body = user;
-    else if (pathname === '/api/v1/ai/conversations') body = route.request().method() === 'POST' ? conversation : (sent ? [conversation] : []);
+    else if (pathname === '/api/v1/ai/conversations') body = route.request().method() === 'POST' ? conversation : (sent && !deleted ? [conversation] : []);
+    else if (pathname === `/api/v1/ai/conversations/${conversation.id}` && route.request().method() === 'DELETE') {
+      deleted = true; return route.fulfill({ status: 204, body: '' });
+    }
     else if (pathname.endsWith('/messages')) {
       if (route.request().method() === 'POST') {
         const payload = route.request().postDataJSON();
@@ -43,6 +47,10 @@ test('chat bubble sends, shows sources, reopens history and fits mobile', async 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Mở trợ lý TOEIC', exact: true }).click();
   await expect(page.getByText(answer.answer, { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Hội thoại', exact: true }).click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: `Xóa hội thoại ${conversation.title}`, exact: true }).click();
+  await expect(page.getByRole('button', { name: `Xóa hội thoại ${conversation.title}`, exact: true })).toHaveCount(0);
   const bounds = await page.getByRole('dialog').boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0); expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
   await page.screenshot({ path: 'test-results/chat-mobile.png' });

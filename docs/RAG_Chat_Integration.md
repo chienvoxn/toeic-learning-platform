@@ -26,6 +26,9 @@ streaming và dashboard usage AI chưa nằm trong luồng này.
    Hai key này phải giống `AI_SERVICE_KEY`/`AI_ADMIN_KEY` trong `AI/.env` và khác nhau.
    Google OAuth Client ID phục vụ đăng nhập; `GOOGLE_API_KEY` gọi Gemini và chỉ ở Python.
    Đừng đưa bất kỳ secret nào vào frontend hoặc Git.
+
+   Có thể dùng biến môi trường `PYTHON_RAG_BASE_URL`, `AI_SERVICE_KEY` và `AI_ADMIN_KEY`
+   thay cho ba thuộc tính trên. Spring không cần và không được nhận `GOOGLE_API_KEY`.
 5. Tại `backend`: `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"`.
    Cần DB có lịch sử migration hợp lệ. Flyway thêm V34; không repair V26 hoặc reset DB cũ.
 6. Tại `frontend/web`: `npm run dev`, đăng nhập và mở hồ sơ/dashboard.
@@ -49,6 +52,53 @@ với cùng version sẽ thay index và ghi mapping; nguồn chưa có mapping c
 chưa tự xóa index hoặc tự đồng bộ publish vì publish workflow hiện vẫn DESIGN.
 Không có học liệu hợp lệ đã index thì chatbot trả cảnh báo thiếu nguồn, không gọi LLM.
 Không nạp đáp án hoặc transcript đề đang thi trong MVP.
+
+File mẫu tự biên soạn `AI/examples/toeic-grammar-sample.txt` dùng để kiểm tra upload
+PDF/TXT. Xem lệnh upload trong `AI/README.md`. Upload trực tiếp vào Python chỉ tạo vector
+index; để nguồn xuất hiện trong Web, `documentId` phải là một `contentVersionId` đã publish
+và có mapping `ai_indexed_versions`. Luồng chuẩn của Web vẫn là gọi endpoint admin Java ở trên.
+
+Nếu database local chưa có học liệu published (publish workflow hiện vẫn DESIGN), dùng fixture
+demo idempotent, không phải Flyway migration và không dùng cho production:
+
+```powershell
+# Lấy UUID của một tài khoản Admin/Teacher local đã tồn tại; không dùng token làm author_id.
+psql -d toeic_dev_fresh -U postgres `
+  -v author_id="UUID_CUA_ADMIN_HOAC_TEACHER" `
+  -f ..\AI\examples\seed_backend_demo_content.sql
+
+# Sau khi đăng nhập Admin và đặt token trong terminal cá nhân:
+$headers = @{ Authorization = "Bearer $adminToken" }
+Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8080/api/v1/admin/ai/contents/0bd8ce55-6f85-4eef-8e02-64b7aaad39be/index" `
+  -Headers $headers
+```
+
+Fixture tạo content/version published có ID ổn định; endpoint Java mới là bước ingest chuẩn vì
+nó chỉ gửi text đã kiểm tra publication sang Python rồi ghi mapping nguồn cho chatbot Web.
+
+Để nạp catalog học tập mở rộng (từ vựng, ngữ pháp, đọc, transcript nghe và chiến lược) vào đúng database
+local, dùng `seed_backend_learning_catalog.sql`. Script chủ động từ chối chạy nếu database
+không phải `toeic_dev_fresh`. Sau khi seed, cần index từng content qua Spring Boot; chỉ thêm
+dữ liệu vào PostgreSQL chưa đủ để chatbot truy hồi vì `rag_chunks` là index dẫn xuất:
+
+```powershell
+psql -d toeic_dev_fresh -U postgres `
+  -v author_id="UUID_CUA_ADMIN_HOAC_TEACHER" `
+  -f ..\AI\examples\seed_backend_learning_catalog.sql
+
+$headers = @{ Authorization = "Bearer $adminToken" }
+2..26 | ForEach-Object {
+  $contentId = "de400000-0000-4000-8000-{0:D12}" -f $_
+  Invoke-RestMethod -Method Post `
+    -Uri "http://localhost:8080/api/v1/admin/ai/contents/$contentId/index" `
+    -Headers $headers
+}
+```
+
+Fixture idempotent theo ID và không phải Flyway migration production. Trách nhiệm của
+`ChatService.index` là kiểm tra version đang published, gửi nội dung sang RAG và lưu mapping;
+`TutorService` chỉ tạo câu trả lời từ các chunk đã được cấp quyền và truy hồi.
 
 ## Contract public runtime
 

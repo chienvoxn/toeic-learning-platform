@@ -21,6 +21,9 @@ public class ChatController {
     public Conversation create() { return chat.create(); }
     @GetMapping("/ai/conversations/{id}/messages")
     public List<Message> messages(@PathVariable UUID id,@RequestParam(defaultValue="0") @Min(0) @Max(1000) int page) { return chat.messages(id,page); }
+    @DeleteMapping("/ai/conversations/{id}")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) { chat.delete(id); }
     @PostMapping("/ai/conversations/{id}/messages")
     public Answer ask(@PathVariable UUID id,@Valid @RequestBody Ask body) { return chat.ask(id,body.requestId(),body.question()); }
     @PostMapping("/admin/ai/contents/{id}/index")

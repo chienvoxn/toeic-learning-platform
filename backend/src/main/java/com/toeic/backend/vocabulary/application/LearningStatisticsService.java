@@ -1,16 +1,6 @@
 
 package com.toeic.backend.vocabulary.application;
 
-import com.toeic.backend.vocabulary.api.DailyLearningProgressResponse;
-import com.toeic.backend.vocabulary.api.LearningProgressResponse;
-import com.toeic.backend.vocabulary.api.LearningStatisticsResponse;
-import com.toeic.backend.vocabulary.api.LearningStreakResponse;
-import com.toeic.backend.vocabulary.domain.ReviewHistory;
-import com.toeic.backend.vocabulary.infrastructure.ReviewHistoryRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -19,6 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.toeic.backend.vocabulary.api.DailyLearningProgressResponse;
+import com.toeic.backend.vocabulary.api.LearningProgressResponse;
+import com.toeic.backend.vocabulary.api.LearningStatisticsResponse;
+import com.toeic.backend.vocabulary.api.LearningStreakResponse;
+import com.toeic.backend.vocabulary.domain.ReviewHistory;
+import com.toeic.backend.vocabulary.infrastructure.ReviewHistoryRepository;
 
 @Service
 public class LearningStatisticsService {
@@ -112,18 +112,19 @@ public class LearningStatisticsService {
 
         return new LearningProgressResponse(days, progress);
     }
-
     /**
      * Current streak includes consecutive UTC days ending today, or yesterday
-     * when the user has not yet reviewed today. The longest streak is limited
-     * to the requested lookback window (1..90 days).
+     * when the user has not yet reviewed today.
+     * Longest streak is limited to the requested lookback window.
      */
     @Transactional(readOnly = true)
     public LearningStreakResponse getStreak(UUID userId, int days) {
         LearningProgressResponse progress = getProgress(userId, days);
         List<DailyLearningProgressResponse> daily = progress.dailyProgress();
+
         int longest = 0;
         int run = 0;
+
         for (DailyLearningProgressResponse day : daily) {
             if (day.reviewCount() > 0) {
                 run++;
@@ -135,14 +136,16 @@ public class LearningStatisticsService {
 
         int current = 0;
         int index = daily.size() - 1;
+
         // A streak survives until the end of the following UTC day.
         if (index >= 0 && daily.get(index).reviewCount() == 0) {
             index--;
         }
+
         for (; index >= 0 && daily.get(index).reviewCount() > 0; index--) {
             current++;
         }
+
         return new LearningStreakResponse(days, current, longest);
     }
-
 }

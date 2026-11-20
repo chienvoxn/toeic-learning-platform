@@ -79,5 +79,36 @@ SELECT 'de410000-0000-4000-8000-000000000001',content_id,1,title,summary,body,'P
 FROM learning_contents WHERE content_id='de400000-0000-4000-8000-000000000001' ON CONFLICT(content_version_id) DO NOTHING;
 UPDATE learning_contents SET current_published_version_id='de410000-0000-4000-8000-000000000001'
 WHERE content_id='de400000-0000-4000-8000-000000000001' AND current_published_version_id IS NULL;
+-- Extra catalog lessons cover the categories shown in the learner web UI.
+CREATE TEMP TABLE demo_lessons(n integer,category text,title text,summary text,body text,difficulty text) ON COMMIT DROP;
+INSERT INTO demo_lessons VALUES
+ (2,'GRAMMAR','Present perfect: for and since','Describe an action connected to the present.',
+  'Use have or has plus the past participle. For describes a duration: She has worked here for three years. Since introduces a starting point: She has worked here since 2023. Use the simple past for a finished time: She started in 2023.','MEDIUM'),
+ (3,'VOCAB','Workplace email vocabulary','Useful words for everyday TOEIC emails.',
+  'An invoice lists the amount a customer must pay. A deadline is the last time to finish a task. A schedule lists planned activities. A participant attends an event. Please send the invoice before the deadline and check the workshop schedule.','EASY'),
+ (4,'READING','Reading a workshop notice','Find dates, locations and instructions in a short notice.',
+  'Workshop notice: The customer workshop begins at 9 a.m. on Friday in Room 3. Participants should register by Thursday and bring a notebook. Coffee is available at reception. Read the heading first, then scan for the requested detail.','EASY'),
+ (5,'LISTENING','Listening for times and places','Practice identifying key details in announcements.',
+  'Sample announcement transcript: Good morning. The customer workshop will begin at nine o clock in Room Three. Please collect your handouts from reception before entering. Listen for the time, room number and action requested. Audio playback is not included in this lesson.','EASY'),
+ (6,'STRATEGIES','TOEIC Reading time management','Plan a steady pace across Reading tasks.',
+  'Read the question before scanning the passage for names, dates and numbers. Answer direct detail questions first. If one question takes too long, mark it and move on. Return with the remaining time; always check the exact wording against the passage.','MEDIUM'),
+ (7,'DOCS','TOEIC practice guide','How to use the local practice material.',
+  'Use the Practice page to answer published questions. Review the explanation after submission. The sample question bank covers Reading Parts 5, 6 and 7. Listening audio and official score conversion are not included in this local demo.','EASY');
+INSERT INTO learning_contents(content_id,category_id,author_id,title,summary,body,difficulty,status,published_at,created_at,updated_at,visibility)
+SELECT ('de400000-0000-4000-8000-'||lpad(d.n::text,12,'0'))::uuid,c.category_id,
+ 'de100000-0000-4000-8000-000000000002'::uuid,d.title,d.summary,d.body,d.difficulty,
+ 'PUBLISHED',now()-interval '1 minute',now(),now(),'PUBLIC'
+FROM demo_lessons d JOIN content_categories c ON c.code=d.category
+ON CONFLICT(content_id) DO NOTHING;
+INSERT INTO learning_content_versions(content_version_id,content_id,version_number,title,summary,body,status,published_at,created_by,created_at,updated_at)
+SELECT ('de410000-0000-4000-8000-'||lpad(d.n::text,12,'0'))::uuid,
+ ('de400000-0000-4000-8000-'||lpad(d.n::text,12,'0'))::uuid,1,d.title,d.summary,d.body,
+ 'PUBLISHED',now()-interval '1 minute','de100000-0000-4000-8000-000000000002'::uuid,now(),now()
+FROM demo_lessons d JOIN content_categories c ON c.code=d.category
+ON CONFLICT(content_version_id) DO NOTHING;
+UPDATE learning_contents c
+SET current_published_version_id=('de410000-0000-4000-8000-'||right(c.content_id::text,12))::uuid
+WHERE c.content_id BETWEEN 'de400000-0000-4000-8000-000000000002' AND 'de400000-0000-4000-8000-000000000007'
+  AND c.current_published_version_id IS NULL;
 -- No attempts, answers, results, review history or fake progress are seeded.
 COMMIT;

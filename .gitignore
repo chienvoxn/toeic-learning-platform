@@ -14,6 +14,10 @@ playwright-report/
 test-results/
 *.local
 
+# Local performance-test credentials and raw JMeter output
+/performance/login-users-*.csv
+/performance/*.jtl
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

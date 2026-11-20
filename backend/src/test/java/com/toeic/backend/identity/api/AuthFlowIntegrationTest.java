@@ -336,9 +336,50 @@ class AuthFlowIntegrationTest {
         var token = token();
         me(token).andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
         var expected = switch (role) {
-            case "LEARNER" -> List.of("ai:chat:self", "content:bookmark:self", "content:history:self", "content:read", "exam:manage:self", "practice:manage:self", "user:password:change:self", "user:read:self", "user:update:self");
-            case "TEACHER" -> List.of("ai:chat:self", "content:manage:self", "content:read", "question:manage:self", "question:read", "user:password:change:self", "user:read:self", "user:update:self");
-            case "ADMIN" -> List.of("ai:chat:self", "ai:knowledge:manage", "audit:read", "content:manage:any", "content:manage:self", "content:publish", "content:read", "content:review", "question:manage:any", "question:manage:self", "question:publish", "question:read", "question:review", "rbac:manage", "system:health:read", "system:settings:manage", "system:usage:read", "user:manage", "user:password:change:self", "user:read:self", "user:update:self");
+            case "LEARNER" -> List.of(
+                    "ai:chat:self",
+                    "content:bookmark:self",
+                    "content:history:self",
+                    "content:read",
+                    "exam:manage:self",
+                    "practice:manage:self",
+                    "user:password:change:self",
+                    "user:read:self",
+                    "user:update:self"
+            );
+            case "TEACHER" -> List.of(
+                    "ai:chat:self",
+                    "content:manage:self",
+                    "content:read",
+                    "question:manage:self",
+                    "question:read",
+                    "user:password:change:self",
+                    "user:read:self",
+                    "user:update:self"
+            );
+            case "ADMIN" -> List.of(
+                    "ai:chat:self",
+                    "ai:knowledge:manage",
+                    "audit:read",
+                    "content:manage:any",
+                    "content:manage:self",
+                    "content:publish",
+                    "content:read",
+                    "content:review",
+                    "question:manage:any",
+                    "question:manage:self",
+                    "question:publish",
+                    "question:read",
+                    "question:review",
+                    "rbac:manage",
+                    "system:health:read",
+                    "system:settings:manage",
+                    "system:usage:read",
+                    "user:manage",
+                    "user:password:change:self",
+                    "user:read:self",
+                    "user:update:self"
+            );
             default -> throw new AssertionError("Unexpected seeded role");
         };
         assertEquals(expected, authentication.authenticate(token).permissions());

@@ -38,10 +38,18 @@ const mapReviewStatus = (state) => {
     return status.toLowerCase();
   }
 
-  return 'learning';
+  if (state.nextReviewAt && new Date(state.nextReviewAt).getTime() <= Date.now()) return 'due';
+  return state.repetitionCount >= 2 ? 'mastered' : 'learning';
 };
 
 export class RemoteVocabularyRepository {
+  updateDeck(id, body) { return apiRequest(`/vocabulary-decks/${id}`, { method: 'PUT', body }); }
+  deleteDeck(id) { return apiRequest(`/vocabulary-decks/${id}`, { method: 'DELETE' }); }
+  getVocabulary(id) { return apiRequest(`/vocabularies/${id}`); }
+  updateVocabulary(id, body) { return apiRequest(`/vocabularies/${id}`, { method: 'PUT', body }); }
+  deleteVocabulary(id) { return apiRequest(`/vocabularies/${id}`, { method: 'DELETE' }); }
+  removeFromDeck(deckId, id) { return apiRequest(`/vocabulary-decks/${deckId}/vocabularies/${id}`, { method: 'DELETE' }); }
+  getReviewHistory(id) { return apiRequest(`/vocabularies/${id}/reviews/history`); }
   async getCatalogDecks() {
     const decks = await apiRequest('/vocabulary/catalog/decks');
 

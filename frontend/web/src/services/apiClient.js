@@ -14,7 +14,18 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest(path, { token, auth = true, baseURL = API_BASE, headers = {}, body, timeoutMs = 15000, ...options } = {}) {
+export async function apiRequest(
+  path,
+  {
+    token,
+    auth = true,
+    baseURL = API_BASE,
+    headers = {},
+    body,
+    timeoutMs = 15000,
+    ...options
+  } = {}
+) {
   const url = path.startsWith('http') || path.startsWith('/api/')
     ? path : `${baseURL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   // token:null is the team's anonymous-request convention; auth:false is also explicit.
@@ -24,7 +35,12 @@ export async function apiRequest(path, { token, auth = true, baseURL = API_BASE,
   try {
     response = await fetch(url, {
       ...options,
-      signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
+      signal: options.signal
+        ? AbortSignal.any([
+            options.signal,
+            AbortSignal.timeout(timeoutMs),
+          ])
+        : AbortSignal.timeout(timeoutMs),
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),

@@ -7,9 +7,9 @@ import org.flywaydb.core.Flyway;
 /** Nhận diện prefix/history thực tế, chọn một V34 và kiểm checksum trước mọi ghi migration. */
 public final class MigrationHistory {
     private MigrationHistory() {}
-    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37");
+    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37","38","39");
     public record Row(int rank, String version, String script, String description, String type, Integer checksum, boolean success) {}
-    public record Selection(String lineage, List<Row> rows) {}
+    public record Selection(String lineage, String v35Lineage, List<Row> rows) {}
 
     public static Selection inspect(Connection connection) throws SQLException {
         if (!"public".equals(connection.getSchema())) throw new IllegalStateException("Only public migration schema is supported");
@@ -27,7 +27,7 @@ public final class MigrationHistory {
             if (exists(connection,"SELECT EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname<>'flyway_schema_history' AND c.relkind IN ('r','p','v','m','S','f'))"))
                 throw new IllegalStateException("Nonempty database without migration history");
             MigrationSchema.verifyEmpty(connection);
-            return new Selection("rag", List.of());
+            return new Selection("rag", "admin03", List.of());
         }
         verifyPrefix(rows);
         String lineage="rag";
@@ -40,7 +40,17 @@ public final class MigrationHistory {
         } else if (!rows.getLast().version().equals("33")) {
             throw new IllegalStateException("Only empty, complete V33 or recognized V34+ histories are supported");
         }
-        return new Selection(lineage, List.copyOf(rows));
+        String v35Lineage="admin03";
+        var v35=rows.stream().filter(r->r.version().equals("35")).findFirst();
+        if (v35.isPresent()) {
+            var row=v35.get();
+            if (row.script().equals("V35__content_review_publication.sql") && row.checksum()==-949250551 && row.description().equals("content review publication")) v35Lineage="admin03";
+            else if (row.script().equals("V35__ai_conversation_delete_cascade.sql") && row.checksum()==359517897 && row.description().equals("ai conversation delete cascade")) {
+                if (!lineage.equals("rag")) throw new IllegalStateException("Unsupported V34/V35 release combination");
+                v35Lineage="rag";
+            } else throw new IllegalStateException("Unknown V35 identity");
+        }
+        return new Selection(lineage, v35Lineage, List.copyOf(rows));
     }
 
     static void verifyPrefix(List<Row> rows) {
@@ -72,7 +82,9 @@ public final class MigrationHistory {
             Set<String> versions=new HashSet<>();selection.rows().forEach(r->versions.add(r.version()));
             boolean settings=(selection.lineage().equals("settings") && versions.contains("34")) || versions.contains("36");
             boolean rag=(selection.lineage().equals("rag") && versions.contains("34")) || versions.contains("37");
-            MigrationSchema.verify(connection,settings,rag,versions.contains("35"));
+            boolean moderation=(selection.v35Lineage().equals("admin03") && versions.contains("35")) || versions.contains("38");
+            boolean softDelete=(selection.v35Lineage().equals("rag") && versions.contains("35")) || versions.contains("39");
+            MigrationSchema.verify(connection,settings,rag,moderation,softDelete);
         }
     }
     private static boolean exists(Connection connection,String query) throws SQLException {

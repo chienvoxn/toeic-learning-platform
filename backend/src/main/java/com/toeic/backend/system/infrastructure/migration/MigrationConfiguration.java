@@ -51,7 +51,7 @@ public class MigrationConfiguration {
             try {
                 var selection=MigrationHistory.inspect(connection);
                 var flyway=Flyway.configure().dataSource(dataSource)
-                        .locations("classpath:db/migration","classpath:db/history/"+selection.lineage())
+                        .locations("classpath:db/migration","classpath:db/history/"+selection.lineage(),"classpath:db/history/v35/"+selection.v35Lineage())
                         .schemas("public").defaultSchema("public").table("flyway_schema_history")
                         .baselineOnMigrate(false).outOfOrder(false).cleanDisabled(true).createSchemas(false)
                         .validateOnMigrate(true).validateMigrationNaming(true).ignoreMigrationPatterns(new String[0]).load();

@@ -22,3 +22,13 @@ test('AI unavailable stays an error without synthetic answer', async () => {
   try { await assert.rejects(chatApi.ask('owned', 'Question', 'request-2'), error => error.code === 'AI_UNAVAILABLE'); }
   finally { globalThis.fetch = original; }
 });
+test('chat deletes only the selected encoded conversation', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/v1/ai/conversations/conversation%2F1');
+    assert.equal(options.method, 'DELETE');
+    return new Response(null, { status: 204 });
+  };
+  try { await chatApi.remove('conversation/1'); }
+  finally { globalThis.fetch = original; }
+});

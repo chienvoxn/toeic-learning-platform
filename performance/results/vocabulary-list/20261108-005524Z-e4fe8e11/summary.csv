@@ -1,0 +1,4 @@
+﻿users,samples,failures,error_percent,average_ms,p50_ms,p95_ms,p99_ms,max_ms,success_p95_ms,throughput_rps,duration_seconds,min_matching_rows,max_matching_rows
+10,100,0,0.0,10.866,9.829,16.28,22.481,22.714,16.28,7.065,14.154,0,0
+50,500,0,0.0,9.025,8.659,13.468,19.27,25.856,13.468,35.282,14.172,0,0
+100,1000,0,0.0,9.455,8.875,16.46,21.56,32.494,16.46,70.905,14.103,0,0

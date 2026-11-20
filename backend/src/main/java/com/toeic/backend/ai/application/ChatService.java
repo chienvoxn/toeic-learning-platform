@@ -1,6 +1,7 @@
 package com.toeic.backend.ai.application;
 
 import com.toeic.backend.ai.application.ChatContracts.*;
+import com.toeic.backend.ai.domain.BasicGreetingResponder;
 import com.toeic.backend.ai.infrastructure.*;
 import com.toeic.backend.content.application.ContentAccessPolicy;
 import com.toeic.backend.identity.application.SessionPrincipal;
@@ -35,7 +36,7 @@ public class ChatService {
         UUID actor=actor("ai:chat:self"),id=UUID.randomUUID();
         return tx.execute(status->{
             store.jdbc().queryForList("select user_id from users where user_id=? for update",actor);
-            if(store.jdbc().queryForObject("select count(*) from ai_conversations where user_id=?",Integer.class,actor)>=100)
+            if(store.jdbc().queryForObject("select count(*) from ai_conversations where user_id=? and deleted_at is null",Integer.class,actor)>=100)
                 throw new ChatFailure(429,"AI_CONVERSATION_LIMIT","Đã đạt giới hạn 100 hội thoại.");
             store.jdbc().update("insert into ai_conversations(conversation_id,user_id,title) values(?,?,?)",id,actor,"Hội thoại mới");
             return store.list(actor,0).stream().filter(c->c.id().equals(id)).findFirst().orElseThrow();
@@ -48,6 +49,18 @@ public class ChatService {
             var filtered=visible(m.answer());
             return new Message(m.id(),m.role(),filtered.answer(),m.createdAt(),filtered);
         }).toList();
+    }
+    /** Ẩn hội thoại của chính người dùng, giữ lại tin nhắn và metadata trong database. */
+    public void delete(UUID conversation) {
+        UUID actor=actor("ai:chat:self");
+        tx.executeWithoutResult(status->{
+            // Serialize deletion with ask() reservations for every conversation of this user.
+            store.jdbc().queryForList("select user_id from users where user_id=? for update",actor);
+            store.own(actor,conversation);
+            if(Boolean.TRUE.equals(store.jdbc().queryForObject("select exists(select 1 from ai_chat_requests where conversation_id=? and status='PENDING')",Boolean.class,conversation)))
+                throw new ChatFailure(409,"AI_BUSY","Hội thoại đang xử lý một câu hỏi và chưa thể xóa.");
+            store.jdbc().update("update ai_conversations set deleted_at=now() where conversation_id=? and user_id=? and deleted_at is null",conversation,actor);
+        });
     }
     private Answer visible(Answer answer) {
         Set<UUID> allowed=new HashSet<>(store.scope(access.canReadMemberContent()).stream().map(Evidence::documentId).toList());
@@ -83,13 +96,21 @@ public class ChatService {
         });
         if(reservation.replay()!=null) return visible(reservation.replay());
         try {
+            var greeting=BasicGreetingResponder.respondTo(question);
             var scope=store.scope(access.canReadMemberContent());
-            if(scope.size()>500) throw new ChatFailure(503,"AI_SCOPE_LIMIT","Cần thu hẹp phạm vi học liệu trước khi hỏi đáp.");
-            var remote=scope.isEmpty()?null:rag.ask(question,scope.stream().map(Evidence::documentId).toList(),reservation.history(),request);
-            Answer answer=remote==null?new Answer(ChatContracts.NO_SOURCE,false,ChatContracts.NO_SOURCE,List.of()):validate(remote,scope);
+            RemoteAnswer remote=null;
+            Answer answer;
+            if(greeting.isPresent()) {
+                answer=new Answer(greeting.get(),false,null,List.of());
+            } else {
+                if(scope.size()>500) throw new ChatFailure(503,"AI_SCOPE_LIMIT","Cần thu hẹp phạm vi học liệu trước khi hỏi đáp.");
+                remote=scope.isEmpty()?null:rag.ask(question,scope.stream().map(Evidence::documentId).toList(),reservation.history(),request);
+                answer=remote==null?new Answer(ChatContracts.NO_SOURCE,false,ChatContracts.NO_SOURCE,List.of()):validate(remote,scope);
+            }
             // Recheck visibility after the remote call, before returning or persisting generated text.
             answer=visible(answer);
             final Answer result=answer;
+            final RemoteAnswer providerResult=remote;
             tx.executeWithoutResult(status->{
                 store.own(actor,conversation);
                 UUID userMessage=UUID.randomUUID(),assistantMessage=UUID.randomUUID();
@@ -98,7 +119,7 @@ public class ChatService {
                 store.jdbc().update("insert into ai_citation_snapshots(message_id,response_json) values(?,?)",assistantMessage,store.encode(result));
                 store.jdbc().update("update ai_conversations set title=case when title='Hội thoại mới' then ? else title end,updated_at=now() where conversation_id=?",question.substring(0,Math.min(80,question.length())),conversation);
                 store.jdbc().update("update ai_chat_requests set status='COMPLETED',response_json=?,finished_at=now() where request_id=?",store.encode(result),request);
-                var usage=remote==null?null:remote.usage();
+                var usage=providerResult==null?null:providerResult.usage();
                 store.jdbc().update("insert into ai_request_logs(request_id,conversation_id,user_id,provider,model,prompt_tokens,completion_tokens,total_tokens,latency_ms,status,created_at) values(?,?,?,?,?,?,?,?,?,'COMPLETED',now())",
                         request,conversation,actor,usage==null?"none":usage.provider(),usage==null?"none":usage.chatModel(),usage==null?0:usage.inputTokens(),usage==null?0:usage.outputTokens(),usage==null?0:usage.totalTokens(),usage==null?0:usage.latencyMs());
             });

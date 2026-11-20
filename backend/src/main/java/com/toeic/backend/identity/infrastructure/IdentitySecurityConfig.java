@@ -1,30 +1,44 @@
+
 package com.toeic.backend.identity.infrastructure;
 
-import com.toeic.backend.identity.application.AuthProperties;
-import com.toeic.backend.identity.application.SessionAuthenticationService;
-import jakarta.servlet.DispatcherType;
 import java.util.Set;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authorization.AuthorizationManagers;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.authorization.AuthorizationManagers;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.toeic.backend.identity.application.AuthProperties;
+import com.toeic.backend.identity.application.SessionAuthenticationService;
+
+import jakarta.servlet.DispatcherType;
+
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(AuthProperties.class)
 public class IdentitySecurityConfig {
+
     private static final Set<String> PUBLIC_POST_PATHS = Set.of(
-            "/api/v1/auth/register", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password", "/api/v1/auth/login",
-            "/api/v1/auth/google/challenge", "/api/v1/auth/google");
-    private static final Set<String> PUBLIC_GET_PATHS = Set.of("/api/health", "/api/health/database");
+            "/api/v1/auth/register",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/reset-password",
+            "/api/v1/auth/login",
+            "/api/v1/auth/google/challenge",
+            "/api/v1/auth/google"
+    );
+
+    private static final Set<String> PUBLIC_GET_PATHS = Set.of(
+            "/api/health",
+            "/api/health/database"
+    );
 
     static boolean isPublicRequest(String method, String path) {
         return ("POST".equals(method) && PUBLIC_POST_PATHS.contains(path))
@@ -32,67 +46,167 @@ public class IdentitySecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain identitySecurity(HttpSecurity http, SessionAuthenticationService sessions,
-                                                AuthErrorWriter errors) throws Exception {
+    public SecurityFilterChain identitySecurity(
+            HttpSecurity http,
+            SessionAuthenticationService sessions,
+            AuthErrorWriter errors
+    ) throws Exception {
         return http
-                // Credentials are sent only in Authorization, never cookies or HTTP sessions.
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
-                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(config ->
+                        config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(config -> config
+
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new)).permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
-                        // Optional bearer auth is still processed; content service filters public/member visibility.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/contents", "/api/v1/contents/*").permitAll()
-                        .requestMatchers("/api/v1/teacher/contents", "/api/v1/teacher/contents/**")
+
+                        // Public authentication endpoints
+                        .requestMatchers(HttpMethod.POST,
+                                PUBLIC_POST_PATHS.toArray(String[]::new)).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                PUBLIC_GET_PATHS.toArray(String[]::new)).permitAll()
+
+                        // Public content
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/contents", "/api/v1/contents/*").permitAll()
+
+                        // Teacher content management
+                        .requestMatchers(
+                                "/api/v1/teacher/contents",
+                                "/api/v1/teacher/contents/**")
                         .hasAnyAuthority("content:manage:self", "content:manage:any")
-                        .requestMatchers("/api/v1/teacher/question-options", "/api/v1/teacher/questions", "/api/v1/teacher/questions/**",
-                                "/api/v1/teacher/question-groups", "/api/v1/teacher/question-groups/**")
+
+                        // Teacher question management
+                        .requestMatchers(
+                                "/api/v1/teacher/question-options",
+                                "/api/v1/teacher/questions",
+                                "/api/v1/teacher/questions/**",
+                                "/api/v1/teacher/question-groups",
+                                "/api/v1/teacher/question-groups/**")
                         .hasAnyAuthority("question:manage:self", "question:manage:any")
-                        .requestMatchers("/api/v1/attempts", "/api/v1/attempts/**").hasAnyAuthority("practice:manage:self", "exam:manage:self")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/contents/*/bookmarks").hasAuthority("content:bookmark:self")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/bookmarks").hasAuthority("content:bookmark:self")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/contents/*/history").hasAuthority("content:history:self")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/content-history").hasAuthority("content:history:self")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").hasAuthority("user:read:self")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me").access(AuthorizationManagers.allOf(
+
+                        // Practice and exam attempts
+                        .requestMatchers(
+                                "/api/v1/attempts",
+                                "/api/v1/attempts/**")
+                        .hasAnyAuthority("practice:manage:self", "exam:manage:self")
+
+                        // Content bookmarks
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/contents/*/bookmarks")
+                        .hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/contents/*/bookmarks")
+                        .hasAuthority("content:bookmark:self")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/users/me/bookmarks")
+                        .hasAuthority("content:bookmark:self")
+
+                        // Content learning history
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/contents/*/history")
+                        .hasAuthority("content:history:self")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/users/me/content-history")
+                        .hasAuthority("content:history:self")
+
+                        // User profile
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/users/me")
+                        .hasAuthority("user:read:self")
+
+                        .requestMatchers(HttpMethod.PATCH,
+                                "/api/v1/users/me")
+                        .access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasAuthority("user:read:self"),
                                 AuthorityAuthorizationManager.hasAuthority("user:update:self")))
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/password")
+
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/users/me/password")
                         .hasAuthority("user:password:change:self")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/questions", "/api/v1/questions/*").access(
-                                AuthorizationManagers.allOf(AuthorityAuthorizationManager.hasAuthority("question:read"),
-                                        AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
-                        .requestMatchers("/api/v1/admin/system-settings", "/api/v1/admin/system-settings/**").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("system:settings:manage")))
-                        .requestMatchers("/api/v1/admin/audit-logs", "/api/v1/admin/audit-logs/**").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("audit:read")))
-                        .requestMatchers("/api/v1/admin/health").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("system:health:read")))
-                        .requestMatchers("/api/v1/admin/usage-statistics").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("system:usage:read")))
-                        .requestMatchers("/api/v1/admin/roles", "/api/v1/admin/roles/**", "/api/v1/admin/permissions", "/api/v1/admin/permissions/**",
-                                "/api/v1/admin/rbac/**", "/api/v1/admin/users/*/roles").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"), AuthorityAuthorizationManager.hasAuthority("rbac:manage")))
-                        .requestMatchers("/api/v1/admin/users", "/api/v1/admin/users/**").access(AuthorizationManagers.allOf(
+
+                        // Question read API
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/questions", "/api/v1/questions/*")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasAuthority("question:read"),
+                                AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
+
+                        // Managed Settings: retain ADMIN plus explicit permission.
+                        .requestMatchers("/api/v1/admin/system-settings", "/api/v1/admin/system-settings/**")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("system:settings:manage")))
+
+                        // Admin audit logs
+                        .requestMatchers(
+                                "/api/v1/admin/audit-logs",
+                                "/api/v1/admin/audit-logs/**")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("audit:read")))
+
+                        // Admin system health
+                        .requestMatchers("/api/v1/admin/health")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("system:health:read")))
+
+                        // Admin usage statistics
+                        .requestMatchers("/api/v1/admin/usage-statistics")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("system:usage:read")))
+
+                        // Admin RBAC management
+                        .requestMatchers(
+                                "/api/v1/admin/roles",
+                                "/api/v1/admin/roles/**",
+                                "/api/v1/admin/permissions",
+                                "/api/v1/admin/permissions/**",
+                                "/api/v1/admin/rbac/**",
+                                "/api/v1/admin/users/*/roles")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("rbac:manage")))
+
+                        // Admin user management
+                        .requestMatchers(
+                                "/api/v1/admin/users",
+                                "/api/v1/admin/users/**")
+                        .access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasRole("ADMIN"),
                                 AuthorityAuthorizationManager.hasAuthority("user:manage")))
-                        .requestMatchers("/api/v1/ai/**").hasAuthority("ai:chat:self")
-                        .requestMatchers("/api/v1/admin/ai/**").access(AuthorizationManagers.allOf(
-                                AuthorityAuthorizationManager.hasRole("ADMIN"),AuthorityAuthorizationManager.hasAuthority("ai:knowledge:manage")))
+
+                        // AI Tutor
+                        .requestMatchers("/api/v1/ai/**")
+                        .hasAuthority("ai:chat:self")
+
+                        // Admin AI knowledge management
+                        .requestMatchers("/api/v1/admin/ai/**")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("ai:knowledge:manage")))
+
+                        // Other admin endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+
+                        // Remaining endpoints require authentication
+                        .anyRequest().authenticated()
+                )
                 .exceptionHandling(config -> config
-                        .authenticationEntryPoint((request, response, exception) -> errors.write(
-                                response, 401, "UNAUTHENTICATED", "Vui long dang nhap."))
-                        .accessDeniedHandler((request, response, exception) -> errors.write(
-                                response, 403, "FORBIDDEN", "Ban khong co quyen truy cap.")))
-                .addFilterBefore(new BearerSessionFilter(sessions, errors), UsernamePasswordAuthenticationFilter.class)
+                        .authenticationEntryPoint((request, response, exception) ->
+                                errors.write(response, 401,
+                                        "UNAUTHENTICATED", "Vui long dang nhap."))
+                        .accessDeniedHandler((request, response, exception) ->
+                                errors.write(response, 403,
+                                        "FORBIDDEN", "Ban khong co quyen truy cap.")))
+                .addFilterBefore(
+                        new BearerSessionFilter(sessions, errors),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }

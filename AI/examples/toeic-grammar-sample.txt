@@ -1,0 +1,19 @@
+TOEIC Grammar Sample: Present Perfect, For, and Since
+
+The present perfect uses have or has plus the past participle. It commonly describes an
+action that started in the past and continues now, or a past action with a present result.
+
+Use "for" with a duration:
+- The sales manager has worked here for three years.
+- We have waited for twenty minutes.
+
+Use "since" with a starting point:
+- The sales manager has worked here since 2023.
+- The office has been open since 8 a.m.
+
+Use the simple past, not the present perfect, with an explicitly finished past time:
+- Correct: She submitted the report yesterday.
+- Incorrect: She has submitted the report yesterday.
+
+This short document was written for this repository's local RAG demonstration. It is not
+official TOEIC test material and contains no copied exam questions.
