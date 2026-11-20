@@ -17,6 +17,10 @@ export class RemoteAssessmentRepository {
     return toServerAttempt(data);
   }
 
+  async getAttemptMedia(attemptId) {
+    return apiRequest(`/attempts/${attemptId}/media`);
+  }
+
   async saveAnswer({ attemptId, questionId, selectedChoiceId }) {
     if (selectedChoiceId === undefined) throw new Error('Thiếu lựa chọn thuộc phiên đã lưu.');
     return apiRequest(`/attempts/${attemptId}/answers/${questionId}`, { method: 'PUT', body: { selectedChoiceId } });
