@@ -33,6 +33,22 @@ test('runtime creation sends camelCase source-specific DTOs and no identity fiel
   assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'SECTION_SNAPSHOT', section: { type: 'READING', questionCount: 8, durationMinutes: 20 } });
   assert.ok(calls.every(call => call.url === '/api/v1/attempts'));
 });
+
+test('Listening Section and all-Part practice preserve the source-specific server payloads', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.startSection({ type: 'LISTENING', questionCount: 7, durationMinutes: 1 });
+  await repo.startPractice({ partNumbers: [1,2,3,4,5,6,7], questionCount: 22 });
+  assert.deepEqual(JSON.parse(calls[0].body), { sourceType: 'SECTION_SNAPSHOT', section: { type: 'LISTENING', questionCount: 7, durationMinutes: 1 } });
+  assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'PRACTICE_SNAPSHOT', practice: { partNumbers: [1,2,3,4,5,6,7], questionCount: 22 } });
+});
+
+test('restored Listening type and expired state come from the pinned server snapshot', () => {
+  const dto = snapshot(); dto.section = { type: 'LISTENING', questionCount: 7, durationMinutes: 1 }; dto.expired = true;
+  const view = toServerAttempt(dto);
+  assert.equal(view.testTitle, 'Section LISTENING');
+  assert.deepEqual(view.section, dto.section); assert.equal(view.expired, true);
+  assert.equal(view.sourceType, 'SECTION_SNAPSHOT');
+});
 test('safe view uses pinned IDs/server deadline and cannot render a key, explanation or media path', () => {
   const dto = snapshot(); dto.answers = [{ questionVersionId: 'version-pinned', selectedChoiceId: 'choice-pinned-b' }];
   const view = toServerAttempt(dto), question = view.parts[0].questions[0];
