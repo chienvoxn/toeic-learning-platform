@@ -31,6 +31,10 @@ export default function VocabDeckListPage() {
   const navigate = useNavigate();
   const [reviewStats, setReviewStats] = useState(null);
   const [dueItems, setDueItems] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationError, setRecommendationError] = useState('');
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [recommendationAttempt, setRecommendationAttempt] = useState(0);
   const [deckCardsById, setDeckCardsById] = useState({});
   const [showDueList, setShowDueList] = useState(false);
   const [dueError, setDueError] = useState('');
@@ -59,6 +63,19 @@ export default function VocabDeckListPage() {
   const [showAllCatalogDecks, setShowAllCatalogDecks] = useState(false);
 
   const [search] = useSearchParams();
+
+  useEffect(() => {
+    if (useMock) return undefined;
+    let active = true;
+    setRecommendationError('');
+    setRecommendationLoading(true);
+    vocabularyRepo.getRecommendations()
+      .then(items => { if (active) setRecommendations(items); })
+      .catch(() => { if (active) setRecommendationError('Không tải được gợi ý từ vựng.'); })
+      .finally(() => { if (active) setRecommendationLoading(false); });
+    return () => { active = false; };
+  }, [recommendationAttempt]);
+
 
   useEffect(() => {
     if (!pendingDueRating) return;
@@ -230,7 +247,13 @@ export default function VocabDeckListPage() {
     return { ...item, card: null, deck: null };
   });
 
+  const recommendedCard = recommendations.find(item => item.vocabulary?.vocabularyId === dueActiveId);
   const activeDue = dueDetails.find((item) => item.vocabularyId === dueActiveId)
+    || (recommendedCard ? {
+      vocabularyId: dueActiveId,
+      card: { word: recommendedCard.vocabulary.word, definitionVi: recommendedCard.vocabulary.meaning,
+        partOfSpeech: recommendedCard.vocabulary.partOfSpeech, exampleEn: recommendedCard.vocabulary.example },
+    } : null)
     || (pendingDueRating?.vocabularyId === dueActiveId
       ? { vocabularyId: dueActiveId, card: Object.values(deckCardsById).flat().find((item) => item.id === dueActiveId) }
       : null);
@@ -262,6 +285,7 @@ export default function VocabDeckListPage() {
       ]);
       sessionStorage.removeItem('toeic:pending-due-review');
       setPendingDueRating(null);
+      setRecommendationAttempt(value => value + 1);
       setDueItems(Array.isArray(nextDue) ? nextDue : []);
       setReviewStats(nextStats);
       setDueActiveId(null);
@@ -393,6 +417,21 @@ export default function VocabDeckListPage() {
             </div>
           </div>
         </section>
+
+        {!useMock && <section className="surface mt-6 p-5" aria-labelledby="recommendation-title">
+          <h2 id="recommendation-title" className="text-xl font-bold">Từ vựng nên học</h2>
+          {recommendationError && <p role="alert">{recommendationError} <button type="button" onClick={() => setRecommendationAttempt(value => value + 1)}>Thử lại</button></p>}
+          {recommendationLoading && <p role="status">Đang tải gợi ý...</p>}
+          {!recommendationLoading && !recommendationError && recommendations.length === 0 && <p>Chưa có từ gợi ý.</p>}
+          <div className="mt-3 space-y-2">
+            {!recommendationLoading && !recommendationError && recommendations.map(item => <button type="button" key={item.vocabulary.vocabularyId}
+              className="block w-full rounded-lg border border-gray-200 p-3 text-left"
+              onClick={() => { openDueReview(item.vocabulary.vocabularyId); setShowDueList(true); }}>
+              <strong>{item.vocabulary.word}</strong>
+              <span className="ml-3 text-sm text-gray-600">{item.reason === 'DUE' ? 'Đã đến lịch ôn' : 'Chưa từng ôn'}</span>
+            </button>)}
+          </div>
+        </section>}
 
         {showReviewPicker && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowReviewPicker(false); }}>

@@ -46,3 +46,14 @@ xóa bộ catalog rồi bắt đầu lại. Thử lỗi mạng và tài khoản 
 
 Ôn đến hạn gửi `Idempotency-Key` UUID cho mỗi lượt. Khi chưa xác nhận được
 kết quả, người học nhấn lại cùng mức đánh giá để gửi lại key đó. Key được giữ trong sessionStorage của tab để thử lại sau reload.
+
+Trang Vocabulary tải `GET /api/v1/vocabulary/recommendations` trong chế độ
+remote. Kết quả DUE hiển thị đã đến lịch ôn, NEW hiển thị chưa từng ôn.
+Người học có thể mở trực tiếp từ được gợi ý và gửi đánh giá bằng cùng luồng
+ôn đến hạn. Khi API lỗi, trang cho phép thử lại và không hiển thị danh sách giả.
+
+Learning Profile và Dashboard hiển thị ngày theo UTC, phù hợp với backend hiện
+tại. Từ đã ôn là số từ đang hoạt động có review state đã đánh giá. Tổng lượt
+ôn là số review history, kể cả lượt của từ đã xóa khỏi sổ tay. Thành thạo là
+repetitionCount ít nhất 5. Tiến độ lượt học là số thẻ đã hoàn thành trong phiên,
+khác số từ thành thạo. Quyết định dùng ngày địa phương vẫn cần nhóm chốt.

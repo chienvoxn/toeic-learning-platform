@@ -86,11 +86,11 @@ export default function ProfileLearningPanel({ userId }) {
       <Metric label="Đã thành thạo" value={overview?.masteredVocabularies} />
     </div>
     <div className="tv3-profile-streak-panel">
-      <div><span>🔥 Chuỗi ngày học hiện tại</span><strong>{valueOrDash(streak?.currentStreak ?? streak?.currentStreakDays)} <small>ngày</small></strong></div>
+      <div><span>🔥 Chuỗi ngày ôn từ vựng hiện tại</span><strong>{valueOrDash(streak?.currentStreak ?? streak?.currentStreakDays)} <small>ngày</small></strong></div>
       <div><span>🏆 Chuỗi dài nhất (30 ngày)</span><strong>{valueOrDash(streak?.longestStreak ?? streak?.longestStreakDays)} <small>ngày</small></strong></div>
     </div>
     <div className="tv3-profile-subsection">
-      <h3>Hoạt động 30 ngày gần đây</h3>
+      <h3>Hoạt động 30 ngày gần đây (UTC)</h3>
       <ProgressChart progress={progress} />
     </div>
     <div className="tv3-profile-subsection">
