@@ -420,6 +420,46 @@ class VocabularyReviewIntegrationTest {
         ).andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void vocabularyApisRequireLearnerVocabularyPermission() throws Exception {
+        String unprivilegedEmail = UUID.randomUUID() + "@example.com";
+        User unprivileged = new User(
+                unprivilegedEmail,
+                encoder.encode(password),
+                "Unprivileged vocabulary tester"
+        );
+        unprivileged.verifyEmail();
+        users.saveAndFlush(unprivileged);
+
+        try {
+            var login = mvc.perform(post("/api/v1/auth/login")
+                            .contentType(APPLICATION_JSON)
+                            .content(mapper.writeValueAsString(Map.of(
+                                    "email", unprivilegedEmail,
+                                    "password", password))))
+                    .andExpect(status().isOk())
+                    .andReturn();
+            String unprivilegedToken = mapper.readTree(login.getResponse().getContentAsString())
+                    .get("accessToken").asString();
+
+            mvc.perform(get("/api/v1/vocabularies")
+                            .header("Authorization", "Bearer " + unprivilegedToken))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+            mvc.perform(get("/api/v1/learning-profile/overview")
+                            .header("Authorization", "Bearer " + unprivilegedToken))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        } finally {
+            jdbc.update("DELETE FROM auth_sessions WHERE user_id = ?", unprivileged.getUserId());
+            jdbc.update("DELETE FROM users WHERE user_id = ?", unprivileged.getUserId());
+        }
+
+        mvc.perform(get("/api/v1/vocabularies")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
     // 2. Rating validation
 
     @Test

@@ -227,6 +227,13 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.5 Vocabulary & SRS
 
+**Authorization implemented:** all routes in this section, the personal
+vocabulary catalog routes, and `/learning-profile/**` require an authenticated
+session with `vocabulary:learn:self`. Migration V38 grants that permission to
+the `LEARNER` system role only. The service layer additionally verifies that
+the requested deck/vocabulary belongs to the authenticated learner; a role or
+permission never grants access to another user's data.
+
 Bảng dưới là contract thiết kế. Các đường dẫn runtime được ghi trong các phần tiếp theo.
 
 | Method | Path | Access | Request | R | Error |
