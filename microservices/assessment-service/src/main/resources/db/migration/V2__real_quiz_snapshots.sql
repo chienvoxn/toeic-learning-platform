@@ -1,0 +1,8 @@
+ALTER TABLE attempts ADD COLUMN quiz_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+ALTER TABLE attempt_questions ADD COLUMN option_a VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE attempt_questions ADD COLUMN option_b VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE attempt_questions ADD COLUMN option_c VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE attempt_questions ADD COLUMN option_d VARCHAR(255) NOT NULL DEFAULT '';
+ALTER TABLE attempt_questions ADD COLUMN explanation TEXT NOT NULL DEFAULT '';
+CREATE TABLE event_outbox(event_id UUID PRIMARY KEY,aggregate_id UUID NOT NULL,actor_id UUID NOT NULL,event_type VARCHAR(50) NOT NULL,published BOOLEAN NOT NULL DEFAULT FALSE,occurred_at TIMESTAMPTZ NOT NULL);
+CREATE INDEX ix_outbox_pending ON event_outbox(occurred_at) WHERE NOT published;

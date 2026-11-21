@@ -1,0 +1,4 @@
+ALTER TABLE identity_users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(100);
+ALTER TABLE identity_users ADD COLUMN IF NOT EXISTS role VARCHAR(30) DEFAULT 'LEARNER' NOT NULL;
+UPDATE identity_users SET password_hash = 'UNUSABLE_LEGACY_PLACEHOLDER' WHERE password_hash IS NULL;
+ALTER TABLE identity_users ALTER COLUMN password_hash SET NOT NULL;

@@ -1,0 +1,149 @@
+name: toeic-microservices-mvp
+x-postgres-env: &pg
+  POSTGRES_USER: toeic
+  POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+x-app-env: &app
+  DB_USER: toeic
+  DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+  INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:?Set INTERNAL_SERVICE_KEY in .env}
+  JAVA_TOOL_OPTIONS: "-Xms64m -Xmx384m"
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    ports: ["127.0.0.1:${GATEWAY_PORT:-8088}:8088"]
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./gateway/proxy_params:/etc/nginx/proxy_params:ro
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      [
+        identity-service,
+        content-service,
+        assessment-service,
+        interaction-service,
+        membership-service,
+      ]
+    restart: unless-stopped
+  identity-db:
+    image: postgres:17-alpine
+    environment: { <<: *pg, POSTGRES_DB: identity_db }
+    volumes: [identity_data:/var/lib/postgresql/data]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U toeic -d identity_db"],
+        interval: 5s,
+        retries: 20,
+      }
+  content-db:
+    image: postgres:17-alpine
+    environment: { <<: *pg, POSTGRES_DB: content_db }
+    volumes: [content_data:/var/lib/postgresql/data]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U toeic -d content_db"],
+        interval: 5s,
+        retries: 20,
+      }
+  assessment-db:
+    image: postgres:17-alpine
+    environment: { <<: *pg, POSTGRES_DB: assessment_db }
+    volumes: [assessment_data:/var/lib/postgresql/data]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U toeic -d assessment_db"],
+        interval: 5s,
+        retries: 20,
+      }
+  membership-db:
+    image: postgres:17-alpine
+    environment: { <<: *pg, POSTGRES_DB: membership_db }
+    volumes: [membership_data:/var/lib/postgresql/data]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U toeic -d membership_db"],
+        interval: 5s,
+        retries: 20,
+      }
+  interaction-db:
+    image: postgres:17-alpine
+    environment: { <<: *pg, POSTGRES_DB: interaction_db }
+    volumes: [interaction_data:/var/lib/postgresql/data]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U toeic -d interaction_db"],
+        interval: 5s,
+        retries: 20,
+      }
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      {
+        RABBITMQ_DEFAULT_USER: "${RABBIT_USER:-toeic}",
+        RABBITMQ_DEFAULT_PASS: "${RABBIT_PASSWORD:?Set RABBIT_PASSWORD in .env}",
+      }
+    ports: ["127.0.0.1:${RABBIT_UI_PORT:-15672}:15672"]
+    volumes: [rabbit_data:/var/lib/rabbitmq]
+    healthcheck:
+      {
+        test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"],
+        interval: 5s,
+        retries: 20,
+      }
+  identity-service:
+    build:
+      context: ./identity-service
+      network: host
+    environment:
+      <<: *app
+      DB_URL: jdbc:postgresql://identity-db:5432/identity_db
+      DEMO_TEACHER_EMAIL: ${DEMO_TEACHER_EMAIL:-}
+      DEMO_TEACHER_PASSWORD: ${DEMO_TEACHER_PASSWORD:-}
+      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+    depends_on: { identity-db: { condition: service_healthy } }
+  content-service:
+    build: ./content-service
+    environment:
+      { <<: *app, DB_URL: "jdbc:postgresql://content-db:5432/content_db" }
+    depends_on: { content-db: { condition: service_healthy } }
+  membership-service:
+    build: ./membership-service
+    environment:
+      <<: *app
+      DB_URL: jdbc:postgresql://membership-db:5432/membership_db
+      ALLOW_DEMO_PLAN_CHANGE: ${ALLOW_DEMO_PLAN_CHANGE:-true}
+    depends_on: { membership-db: { condition: service_healthy } }
+  assessment-service:
+    build: ./assessment-service
+    environment:
+      <<: *app
+      DB_URL: jdbc:postgresql://assessment-db:5432/assessment_db
+      CONTENT_URL: http://content-service:8085
+      MEMBERSHIP_URL: http://membership-service:8082
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: ${RABBIT_USER:-toeic}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD:?Set RABBIT_PASSWORD in .env}
+    depends_on:
+      assessment-db: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      content-service: { condition: service_started }
+      membership-service: { condition: service_started }
+  interaction-service:
+    build: ./interaction-service
+    environment:
+      <<: *app
+      DB_URL: jdbc:postgresql://interaction-db:5432/interaction_db
+      RABBIT_HOST: rabbitmq
+      RABBIT_USER: ${RABBIT_USER:-toeic}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD:?Set RABBIT_PASSWORD in .env}
+    depends_on:
+      interaction-db: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+volumes:
+  identity_data:
+  content_data:
+  assessment_data:
+  membership_data:
+  interaction_data:
+  rabbit_data:
