@@ -5,6 +5,7 @@ import com.toeic.backend.vocabulary.api.CreateVocabularyRequest;
 import com.toeic.backend.vocabulary.api.UpdateVocabularyRequest;
 import com.toeic.backend.vocabulary.api.VocabularyResponse;
 import com.toeic.backend.vocabulary.domain.Vocabulary;
+import com.toeic.backend.vocabulary.infrastructure.DeckVocabularyRepository;
 import com.toeic.backend.vocabulary.infrastructure.VocabularyRepository;
 
 import org.springframework.data.domain.Page;
@@ -21,10 +22,14 @@ public class VocabularyService {
 
     private final VocabularyRepository vocabularyRepository;
 
+    private final DeckVocabularyRepository deckVocabularyRepository;
+
     public VocabularyService(
-            VocabularyRepository vocabularyRepository
+            VocabularyRepository vocabularyRepository,
+            DeckVocabularyRepository deckVocabularyRepository
     ) {
         this.vocabularyRepository = vocabularyRepository;
+        this.deckVocabularyRepository = deckVocabularyRepository;
     }
 
     // 1. CREATE
@@ -96,10 +101,7 @@ public class VocabularyService {
             UUID vocabularyId,
             UpdateVocabularyRequest request
     ) {
-        Vocabulary vocabulary = findOwnedVocabulary(
-                currentUserId,
-                vocabularyId
-        );
+        Vocabulary vocabulary = lockOwnedVocabulary(currentUserId, vocabularyId);
 
         vocabulary.setWord(request.word().trim());
         vocabulary.setMeaning(request.meaning().trim());
@@ -124,12 +126,15 @@ public class VocabularyService {
             UUID currentUserId,
             UUID vocabularyId
     ) {
-        Vocabulary vocabulary = findOwnedVocabulary(
-                currentUserId,
-                vocabularyId
-        );
+        Vocabulary vocabulary = lockOwnedVocabulary(currentUserId, vocabularyId);
+        deckVocabularyRepository.deleteAllForVocabulary(vocabularyId);
+        vocabulary.archive();
+    }
 
-        vocabularyRepository.delete(vocabulary);
+    private Vocabulary lockOwnedVocabulary(UUID currentUserId, UUID vocabularyId) {
+        return vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Vocabulary not found"));
     }
 
     // 6. OWNERSHIP CHECK

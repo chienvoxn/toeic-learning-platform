@@ -3,6 +3,7 @@ package com.toeic.backend.vocabulary.api;
 
 import com.toeic.backend.identity.application.SessionPrincipal;
 import com.toeic.backend.vocabulary.application.VocabularyReviewService;
+import com.toeic.backend.vocabulary.application.VocabularyReviewRequestService;
 
 import jakarta.validation.Valid;
 
@@ -20,10 +21,13 @@ public class VocabularyReviewController {
 
     private final VocabularyReviewService reviewService;
 
+    private final VocabularyReviewRequestService reviewRequests;
+
     public VocabularyReviewController(
-            VocabularyReviewService reviewService
+            VocabularyReviewService reviewService, VocabularyReviewRequestService reviewRequests
     ) {
         this.reviewService = reviewService;
+        this.reviewRequests = reviewRequests;
     }
 
     // 1. SUBMIT REVIEW
@@ -31,8 +35,12 @@ public class VocabularyReviewController {
     public ResponseEntity<ReviewStateResponse> submitReview(
             @AuthenticationPrincipal SessionPrincipal principal,
             @PathVariable UUID id,
-            @Valid @RequestBody SubmitReviewRequest request
+            @Valid @RequestBody SubmitReviewRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) UUID key
     ) {
+        if (key != null) {
+            return ResponseEntity.ok(reviewRequests.submit(principal.userId(), id, request.rating(), key));
+        }
         ReviewStateResponse response = ReviewStateResponse.from(
                 reviewService.submitReview(
                         principal.userId(),

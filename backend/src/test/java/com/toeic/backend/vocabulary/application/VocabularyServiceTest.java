@@ -5,6 +5,7 @@ import com.toeic.backend.vocabulary.api.CreateVocabularyRequest;
 import com.toeic.backend.vocabulary.api.UpdateVocabularyRequest;
 import com.toeic.backend.vocabulary.api.VocabularyResponse;
 import com.toeic.backend.vocabulary.domain.Vocabulary;
+import com.toeic.backend.vocabulary.infrastructure.DeckVocabularyRepository;
 import com.toeic.backend.vocabulary.infrastructure.VocabularyRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class VocabularyServiceTest {
 
     @Mock
     private VocabularyRepository vocabularyRepository;
+
+    @Mock
+    private DeckVocabularyRepository deckVocabularyRepository;
 
     @InjectMocks
     private VocabularyService vocabularyService;
@@ -195,7 +199,7 @@ class VocabularyServiceTest {
                 "Updated note"
         );
 
-        when(vocabularyRepository.findById(vocabularyId))
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
                 .thenReturn(Optional.of(vocabulary));
 
         // UPDATE su dung saveAndFlush thay vi save.
@@ -239,8 +243,8 @@ class VocabularyServiceTest {
                 null
         );
 
-        when(vocabularyRepository.findById(vocabularyId))
-                .thenReturn(Optional.of(otherVocabulary));
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
+                .thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -254,15 +258,15 @@ class VocabularyServiceTest {
     }
 
     @Test
-    void delete_shouldDeleteOwnedVocabulary() {
+    void delete_shouldUnlinkOwnedVocabulary() {
         UUID vocabularyId = vocabulary.getVocabularyId();
 
-        when(vocabularyRepository.findById(vocabularyId))
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
                 .thenReturn(Optional.of(vocabulary));
 
         vocabularyService.delete(userId, vocabularyId);
 
-        verify(vocabularyRepository).delete(vocabulary);
+        verify(deckVocabularyRepository).deleteAllForVocabulary(vocabularyId);
     }
 
     @Test
@@ -275,8 +279,8 @@ class VocabularyServiceTest {
 
         UUID vocabularyId = otherVocabulary.getVocabularyId();
 
-        when(vocabularyRepository.findById(vocabularyId))
-                .thenReturn(Optional.of(otherVocabulary));
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
+                .thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -285,7 +289,6 @@ class VocabularyServiceTest {
 
         assertEquals(404, exception.getStatusCode().value());
 
-        verify(vocabularyRepository, never())
-                .delete(any(Vocabulary.class));
+        verifyNoInteractions(deckVocabularyRepository);
     }
 }

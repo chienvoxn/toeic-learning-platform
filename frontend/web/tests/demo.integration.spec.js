@@ -157,8 +157,12 @@ test('Học liệu và vocabulary qua UI/API thật; bookmark, enroll, SRS và q
   await page.locator('a[href$="/review"]').click();
   await page.waitForURL(/\/vocabulary\/[0-9a-f-]+\/review/);
   await page.getByRole('button', { name: 'Lật thẻ xem nghĩa', exact: true }).click();
-  const review = page.waitForResponse(item => /\/vocabularies\/[^/]+\/reviews$/.test(item.url()) && item.request().method() === 'POST');
-  await page.getByRole('button', { name: /^TỐT/ }).click(); expect((await review).status()).toBe(200);
+  const review = page.waitForResponse(item => /\/vocabulary-decks\/[^/]+\/learning-session\/reviews$/.test(item.url()) && item.request().method() === 'POST');
+  await page.getByRole('button', { name: /^TỐT/ }).click();
+  const response = await review;
+  expect(response.status()).toBe(200);
+  const reviewResult = await response.json();
+  expect(reviewResult.session.data.completedIds).toContain(reviewResult.review.vocabularyId);
   expect((await api(page, 'GET', '/teacher/questions')).status).toBe(403);
   const overview = await api(page, 'GET', '/learning-profile/overview'); expect(overview.status).toBe(200); expect(overview.data.totalReviews).toBeGreaterThan(0);
 });
