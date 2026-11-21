@@ -1,7 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { RemoteAssessmentRepository } from '../src/features/assessment/repositories/assessment.api.js';
-import { toServerAttempt, toServerResult } from '../src/features/assessment/api/server-attempt.mapper.js';
+import { toServerAttempt, toServerResult, attachAttemptMedia, attachResultMedia } from '../src/features/assessment/api/server-attempt.mapper.js';
 import { AnswerSaveQueue } from '../src/features/assessment/answer-save-queue.js';
 import { remainingSeconds } from '../src/features/assessment/attempt-time.js';
 
@@ -104,4 +104,118 @@ test('failed/expired saves remain unsaved and block submit until an actual retry
   assert.equal(queue.status, 'error'); assert.equal(queue.pending.size, 1);
   await assert.rejects(queue.flush(), /chưa lưu/);
   fail = false; await queue.retry(); await queue.flush(); assert.equal(queue.status, 'saved');
+});
+
+test('Listening Part 1-4 media mapper attaches pre-signed audio/image URLs and hides transcript until GRADED', async () => {
+  const listeningSnapshot = {
+    attemptId: 'attempt-listening-1',
+    sourceType: 'SECTION_SNAPSHOT',
+    status: 'IN_PROGRESS',
+    startedAt: '2026-11-21T02:00:00Z',
+    expiresAt: '2026-11-21T02:45:00Z',
+    expired: false,
+    totalQuestions: 2,
+    section: { type: 'LISTENING', durationMinutes: 45, questionCount: 2 },
+    answers: [],
+    questions: [
+      {
+        order: 1,
+        questionId: 'q-p1',
+        questionVersionId: 'qv-p1',
+        partNumber: 1,
+        questionText: 'Look at the picture.',
+        choices: [{ choiceId: 'c1', label: 'A', content: 'A' }, { choiceId: 'c2', label: 'B', content: 'B' }],
+        assets: [{ resourceId: 'res-img-1', resourceType: 'IMAGE' }, { resourceId: 'res-aud-1', resourceType: 'AUDIO' }],
+      },
+      {
+        order: 2,
+        questionId: 'q-p3',
+        questionVersionId: 'qv-p3',
+        partNumber: 3,
+        questionText: 'Where does the conversation take place?',
+        choices: [{ choiceId: 'c3', label: 'A', content: 'A' }, { choiceId: 'c4', label: 'B', content: 'B' }],
+        assets: [],
+        passage: {
+          groupVersionId: 'gv-p3',
+          instruction: 'Listen to the conversation.',
+          passageText: 'Schedule table',
+          assets: [{ resourceId: 'res-aud-3', resourceType: 'AUDIO' }],
+        },
+      },
+    ],
+  };
+
+  const mediaInProgress = {
+    attemptId: 'attempt-listening-1',
+    sourceType: 'SECTION_SNAPSHOT',
+    status: 'IN_PROGRESS',
+    questions: [
+      {
+        order: 1,
+        questionVersionId: 'qv-p1',
+        partNumber: 1,
+        assets: [
+          { resourceId: 'res-img-1', resourceType: 'IMAGE', mimeType: 'image/svg+xml', url: 'http://localhost:9000/toeic-media/image/p1.svg?X-Amz-Signature=1' },
+          { resourceId: 'res-aud-1', resourceType: 'AUDIO', mimeType: 'audio/wav', durationSeconds: 4, url: 'http://localhost:9000/toeic-media/audio/p1.wav?X-Amz-Signature=2', transcript: 'SHOULD_NOT_SHOW_WHILE_IN_PROGRESS' },
+        ],
+        passageAssets: [],
+      },
+      {
+        order: 2,
+        questionVersionId: 'qv-p3',
+        partNumber: 3,
+        groupVersionId: 'gv-p3',
+        assets: [],
+        passageAssets: [
+          { resourceId: 'res-aud-3', resourceType: 'AUDIO', mimeType: 'audio/wav', durationSeconds: 6, url: 'http://localhost:9000/toeic-media/audio/p3.wav?X-Amz-Signature=3', transcript: 'SHOULD_NOT_SHOW_PASSAGE_TRANSCRIPT' },
+        ],
+      },
+    ],
+  };
+
+  const baseAttempt = toServerAttempt(listeningSnapshot);
+  const enrichedAttempt = attachAttemptMedia(baseAttempt, mediaInProgress);
+  assert.equal(enrichedAttempt.parts[0].questions[0].imageAssets.length, 1);
+  assert.equal(enrichedAttempt.parts[0].questions[0].audioAssets.length, 1);
+  assert.equal(enrichedAttempt.parts[1].questions[0].passage.audioAssets.length, 1);
+  assert.equal(JSON.stringify(enrichedAttempt).includes('SHOULD_NOT_SHOW'), false);
+
+  const gradedDto = {
+    attemptId: 'attempt-listening-1',
+    status: 'GRADED',
+    totalQuestions: 2,
+    correctCount: 2,
+    incorrectCount: 0,
+    unansweredCount: 0,
+    rawScore: 2,
+    accuracy: 100,
+    questions: [
+      { questionVersionId: 'qv-p1', selectedChoiceId: 'c1', correctChoiceId: 'c1', isCorrect: true, explanation: 'Exp 1' },
+      { questionVersionId: 'qv-p3', selectedChoiceId: 'c3', correctChoiceId: 'c3', isCorrect: true, explanation: 'Exp 3' },
+    ],
+  };
+  const mediaGraded = {
+    ...mediaInProgress,
+    status: 'GRADED',
+    questions: [
+      {
+        ...mediaInProgress.questions[0],
+        assets: [
+          mediaInProgress.questions[0].assets[0],
+          { ...mediaInProgress.questions[0].assets[1], transcript: '(A) A presenter is pointing at a chart.' },
+        ],
+      },
+      {
+        ...mediaInProgress.questions[1],
+        passageAssets: [
+          { ...mediaInProgress.questions[1].passageAssets[0], transcript: 'Woman: Room B projector is broken.' },
+        ],
+      },
+    ],
+  };
+
+  const baseResult = toServerResult(gradedDto, baseAttempt);
+  const enrichedResult = attachResultMedia(baseResult, mediaGraded);
+  assert.equal(enrichedResult.questions[0].transcript, '(A) A presenter is pointing at a chart.');
+  assert.equal(enrichedResult.questions[1].passageTranscript, 'Woman: Room B projector is broken.');
 });

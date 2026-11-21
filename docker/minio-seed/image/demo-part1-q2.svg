@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <rect width="640" height="360" rx="16" fill="#0f172a"/>
+  <rect x="28" y="28" width="584" height="304" rx="12" fill="#f8fafc"/>
+  <rect x="56" y="56" width="220" height="160" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <circle cx="120" cy="115" r="24" fill="#1d4ed8"/>
+  <rect x="86" y="148" width="68" height="48" rx="8" fill="#3b82f6"/>
+  <rect x="304" y="68" width="260" height="28" rx="6" fill="#1e293b"/>
+  <rect x="304" y="114" width="220" height="18" rx="4" fill="#64748b"/>
+  <rect x="304" y="146" width="240" height="18" rx="4" fill="#94a3b8"/>
+  <rect x="56" y="244" width="528" height="56" rx="10" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="76" y="278" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700" fill="#1e3a8a">Part 1 Photo 2: Colleagues reviewing documents</text>
+</svg>

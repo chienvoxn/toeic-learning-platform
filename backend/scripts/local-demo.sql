@@ -70,6 +70,95 @@ FROM demo_questions d CROSS JOIN generate_series(1,4)c(k) ON CONFLICT(choice_id)
 UPDATE questions SET current_published_version_id=('de310000-0000-4000-8000-'||right(question_id::text,12))::uuid
 WHERE question_id BETWEEN 'de300000-0000-4000-8000-000000000001' AND 'de300000-0000-4000-8000-000000000011' AND current_published_version_id IS NULL;
 
+-- Listening Part 1-4 demo groups, questions, media resources (MinIO object keys) and version-pinned transcripts.
+INSERT INTO media_resources(resource_id,resource_type,storage_url,mime_type,file_size,duration_seconds,transcript,visibility,owner_id,created_at)
+VALUES
+ ('de500000-0000-4000-8000-000000000001','IMAGE','image/demo-part1-q1.svg','image/svg+xml',1420,NULL,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000002','AUDIO','audio/demo-part1-q1.wav','audio/wav',64044,4,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000003','IMAGE','image/demo-part1-q2.svg','image/svg+xml',1420,NULL,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000004','AUDIO','audio/demo-part1-q2.wav','audio/wav',64044,4,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000005','AUDIO','audio/demo-part2-q1.wav','audio/wav',64044,4,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000006','AUDIO','audio/demo-part2-q2.wav','audio/wav',64044,4,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000007','AUDIO','audio/demo-part3-g1.wav','audio/wav',96044,6,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000008','IMAGE','image/demo-part3-g1.svg','image/svg+xml',1560,NULL,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now()),
+ ('de500000-0000-4000-8000-000000000009','AUDIO','audio/demo-part4-g1.wav','audio/wav',96044,6,NULL,'PUBLIC','de100000-0000-4000-8000-000000000002',now())
+ON CONFLICT(resource_id) DO NOTHING;
+
+INSERT INTO question_groups(group_id,group_type,created_by,status,created_at,updated_at)
+VALUES ('de200000-0000-4000-8000-000000000003','CONVERSATION','de100000-0000-4000-8000-000000000002','PUBLISHED',now(),now()),
+       ('de200000-0000-4000-8000-000000000004','SHORT_TALK','de100000-0000-4000-8000-000000000002','PUBLISHED',now(),now())
+ON CONFLICT(group_id) DO NOTHING;
+INSERT INTO question_group_versions(group_version_id,group_id,version_number,instruction,passage_text,status,published_at,created_at)
+VALUES ('de210000-0000-4000-8000-000000000003','de200000-0000-4000-8000-000000000003',1,
+        'Listen to the conversation and look at the conference room schedule.',
+        'Conference Room Schedule: Room A (9:00 AM - Design Review), Room B (10:30 AM - Budget Meeting), Room C (2:00 PM - Client Training).',
+        'PUBLISHED',now()-interval '1 minute',now()),
+       ('de210000-0000-4000-8000-000000000004','de200000-0000-4000-8000-000000000004',1,
+        'Listen to the announcement at an office building.',
+        'Questions refer to the following recorded office announcement.',
+        'PUBLISHED',now()-interval '1 minute',now())
+ON CONFLICT(group_version_id) DO NOTHING;
+UPDATE question_groups SET current_published_version_id=CASE WHEN group_id='de200000-0000-4000-8000-000000000003' THEN 'de210000-0000-4000-8000-000000000003'::uuid ELSE 'de210000-0000-4000-8000-000000000004'::uuid END
+WHERE group_id IN ('de200000-0000-4000-8000-000000000003','de200000-0000-4000-8000-000000000004') AND current_published_version_id IS NULL;
+
+INSERT INTO question_group_version_resources(group_version_id,resource_id,display_order,transcript)
+VALUES
+ ('de210000-0000-4000-8000-000000000003','de500000-0000-4000-8000-000000000007',1,
+  E'Woman: Hi Minh, the projector in Room B is being repaired this morning.\nMan: Thanks for letting me know. Our 10:30 budget meeting is scheduled there. Can we move it to Room C?\nWoman: Room C is free until the 2:00 PM client training, so I will update the booking for you.'),
+ ('de210000-0000-4000-8000-000000000003','de500000-0000-4000-8000-000000000008',2,NULL),
+ ('de210000-0000-4000-8000-000000000004','de500000-0000-4000-8000-000000000009',1,
+  E'Attention all staff: This Friday afternoon, the IT department will upgrade the wireless network on the third floor starting at 4:00 PM. Please save your cloud documents before 3:45 PM and pick up your temporary security badge at the front desk.')
+ON CONFLICT(group_version_id,resource_id) DO NOTHING;
+
+CREATE TEMP TABLE demo_listening_questions(n integer,part integer,position integer,prompt text,a text,b text,c text,d text,explanation text) ON COMMIT DROP;
+INSERT INTO demo_listening_questions VALUES
+ (12,1,NULL,'Look at the picture and listen to the four statements in the audio.','A presenter is pointing at a chart on the screen.','Passengers are boarding a train at the station.','Boxes are being loaded onto a delivery truck.','A chef is preparing food in a restaurant kitchen.','Statement (A) best describes the workplace presentation shown in the photograph.'),
+ (13,1,NULL,'Look at the picture and listen to the four statements in the audio.','Two colleagues are reviewing documents at a desk.','Workers are repairing a roof outdoors.','Customers are paying at a supermarket counter.','Bicycles are parked beside a subway entrance.','Statement (A) accurately describes the two colleagues working together at the desk.'),
+ (14,2,NULL,'Listen to the question and choose the best response.','At 2:00 PM in Conference Room C.','Yes, I printed thirty copies.','No, the flight was on time.',NULL,'The question asks WHEN and WHERE the training session starts, so a time and room location is the natural answer.'),
+ (15,2,NULL,'Listen to the question and choose the best response.','Ms. Lan from the accounting team.','About fifteen minutes by taxi.','It is on the second shelf.',NULL,'The question asks WHO approved the travel budget, so naming the person in charge is correct.'),
+ (16,3,1,'Look at the graphic. Which meeting needs to be moved to another room?','The Budget Meeting','The Design Review','The Client Training','The New Hire Orientation','The man says their 10:30 meeting in Room B needs to move, which corresponds to the Budget Meeting on the schedule.'),
+ (17,3,2,'What does the woman offer to do next?','Update the room reservation','Order lunch for the clients','Call the projector manufacturer','Print the training manual','The woman says she will update the booking to Room C.'),
+ (18,4,1,'What will happen on Friday afternoon at 4:00 PM?','The wireless network will be upgraded.','The building lobby will be painted.','A fire drill will take place.','The cafeteria will open early.','The speaker announces that the IT department will upgrade the wireless network starting at 4:00 PM.'),
+ (19,4,2,'What are employees asked to do before 3:45 PM?','Save their cloud documents','Move their cars from the garage','Submit their monthly timesheets','Return borrowed laptops','Employees are instructed to save their cloud documents before 3:45 PM.');
+
+INSERT INTO questions(question_id,group_id,part_id,topic_id,question_type_id,created_by,status,created_at,updated_at)
+SELECT ('de300000-0000-4000-8000-'||lpad(d.n::text,12,'0'))::uuid,
+ CASE WHEN d.part IN (1,2) THEN NULL ELSE ('de200000-0000-4000-8000-'||lpad(d.part::text,12,'0'))::uuid END,
+ p.part_id,t.topic_id,qt.question_type_id,'de100000-0000-4000-8000-000000000002','PUBLISHED',now(),now()
+FROM demo_listening_questions d JOIN toeic_parts p ON p.part_number=d.part JOIN topics t ON t.name='Local Demo Workplace' JOIN question_types qt ON qt.code='SINGLE_CHOICE'
+ON CONFLICT(question_id) DO NOTHING;
+
+INSERT INTO question_versions(question_version_id,question_id,group_version_id,version_number,question_text,status,explanation,difficulty,published_at,created_at,group_question_order)
+SELECT ('de310000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,('de300000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,
+ CASE WHEN part IN (1,2) THEN NULL ELSE ('de210000-0000-4000-8000-'||lpad(part::text,12,'0'))::uuid END,
+ 1,prompt,'PUBLISHED',explanation,'EASY',now()-interval '1 minute',now(),position FROM demo_listening_questions
+ON CONFLICT(question_version_id) DO NOTHING;
+
+INSERT INTO question_choices(choice_id,question_version_id,choice_label,content,is_correct,display_order)
+SELECT ('de320000-0000-4000-'||lpad(c.k::text,4,'0')||'-'||lpad(d.n::text,12,'0'))::uuid,
+ ('de310000-0000-4000-8000-'||lpad(d.n::text,12,'0'))::uuid,chr(64+c.k),
+ CASE c.k WHEN 1 THEN d.a WHEN 2 THEN d.b WHEN 3 THEN d.c ELSE d.d END,c.k=1,c.k
+FROM demo_listening_questions d CROSS JOIN generate_series(1,4)c(k)
+WHERE c.k <= CASE WHEN d.part=2 THEN 3 ELSE 4 END
+ON CONFLICT(choice_id) DO NOTHING;
+
+UPDATE questions SET current_published_version_id=('de310000-0000-4000-8000-'||right(question_id::text,12))::uuid
+WHERE question_id BETWEEN 'de300000-0000-4000-8000-000000000012' AND 'de300000-0000-4000-8000-000000000019' AND current_published_version_id IS NULL;
+
+INSERT INTO question_resources(question_version_id,resource_id,transcript)
+VALUES
+ ('de310000-0000-4000-8000-000000000012','de500000-0000-4000-8000-000000000001',NULL),
+ ('de310000-0000-4000-8000-000000000012','de500000-0000-4000-8000-000000000002',
+  '(A) A presenter is pointing at a chart on the screen. (B) Passengers are boarding a train at the station. (C) Boxes are being loaded onto a delivery truck. (D) A chef is preparing food in a restaurant kitchen.'),
+ ('de310000-0000-4000-8000-000000000013','de500000-0000-4000-8000-000000000003',NULL),
+ ('de310000-0000-4000-8000-000000000013','de500000-0000-4000-8000-000000000004',
+  '(A) Two colleagues are reviewing documents at a desk. (B) Workers are repairing a roof outdoors. (C) Customers are paying at a supermarket counter. (D) Bicycles are parked beside a subway entrance.'),
+ ('de310000-0000-4000-8000-000000000014','de500000-0000-4000-8000-000000000005',
+  'Question: When and where will the client training session take place? — (A) At 2:00 PM in Conference Room C. (B) Yes, I printed thirty copies. (C) No, the flight was on time.'),
+ ('de310000-0000-4000-8000-000000000015','de500000-0000-4000-8000-000000000006',
+  'Question: Who approved the travel budget for the regional conference? — (A) Ms. Lan from the accounting team. (B) About fifteen minutes by taxi. (C) It is on the second shelf.')
+ON CONFLICT(question_version_id,resource_id) DO NOTHING;
+
 INSERT INTO learning_contents(content_id,category_id,author_id,title,summary,body,difficulty,status,published_at,created_at,updated_at,visibility)
 SELECT 'de400000-0000-4000-8000-000000000001',category_id,'de100000-0000-4000-8000-000000000002','Workplace grammar: present simple','Original local demo lesson',
  'Use the present simple for routines. A singular subject takes an -s ending: The manager reviews the report every Monday. Practice this pattern with workplace sentences.', 'EASY','PUBLISHED',now()-interval '1 minute',now(),now(),'PUBLIC'

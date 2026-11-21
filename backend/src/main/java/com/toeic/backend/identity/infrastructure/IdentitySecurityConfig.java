@@ -92,6 +92,12 @@ public class IdentitySecurityConfig {
                         .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**")
                         .hasAnyAuthority("test:manage:self", "test:manage:any")
 
+                        // Teacher media storage (MinIO/S3 upload & presign)
+                        .requestMatchers(
+                                "/api/v1/teacher/media",
+                                "/api/v1/teacher/media/**")
+                        .hasAnyAuthority("question:manage:self", "question:manage:any", "content:manage:self", "content:manage:any")
+
                         // Practice and exam attempts
                         .requestMatchers(
                                 "/api/v1/attempts",
