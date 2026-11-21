@@ -39,9 +39,9 @@ public final class MigrationSchema {
         Collections.sort(output);return String.join("\n",output)+"\n";
     }
 
-    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete) throws SQLException {
+    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts) throws SQLException {
         String expected;
-        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v39.txt")) {
+        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
             expected = new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n","\n");
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot read release schema evidence", e); }
@@ -57,7 +57,7 @@ public final class MigrationSchema {
         }
         if (!filtered.toString().equals(normalizedSignature(connection))) throw new IllegalStateException("Schema differs from release migration evidence");
         // An existing feature's grants can have been revoked; never restore them.
-        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish'";
+        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish','test:manage:self','test:manage:any'";
         var actual = new HashSet<String>();
         try (var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT code FROM public.permissions WHERE code IN (" + codes + ")")) {
             while (rows.next()) actual.add(rows.getString(1));
@@ -66,6 +66,7 @@ public final class MigrationSchema {
         if (settings) required.add("system:settings:manage");
         if (rag) required.addAll(Set.of("ai:chat:self", "ai:knowledge:manage"));
         if (moderation) required.addAll(Set.of("content:review","content:publish","question:review","question:publish"));
+        if (examDrafts) required.addAll(Set.of("test:manage:self","test:manage:any"));
         if (!actual.equals(required)) throw new IllegalStateException("Partial feature permission catalog");
     }
 

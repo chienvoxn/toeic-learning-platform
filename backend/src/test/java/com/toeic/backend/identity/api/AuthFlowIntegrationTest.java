@@ -353,6 +353,7 @@ class AuthFlowIntegrationTest {
                     "content:read",
                     "question:manage:self",
                     "question:read",
+                    "test:manage:self",
                     "user:password:change:self",
                     "user:read:self",
                     "user:update:self"
@@ -375,6 +376,8 @@ class AuthFlowIntegrationTest {
                     "system:health:read",
                     "system:settings:manage",
                     "system:usage:read",
+                    "test:manage:any",
+                    "test:manage:self",
                     "user:manage",
                     "user:password:change:self",
                     "user:read:self",

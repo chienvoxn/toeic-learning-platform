@@ -190,6 +190,15 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.4 Tests/Blueprint/Attempts
 
+**EXAM-04 DRAFT runtime 2026-11-20–21:** [API, payload, AC và giới hạn](EXAM04_Draft_Authoring_20261120.md).
+Teacher/Admin có `test:manage:self`/`test:manage:any` tạo/đọc/sửa DRAFT tại `/teacher/tests`;
+PUT `/teacher/tests/{testId}/versions/{versionId}` dùng `{revision,document}`. Chọn nguyên
+publication unit qua `/teacher/tests/question-units?partNumber=3&page=0`, pin QuestionVersion/
+GroupVersion vào test_questions, không tạo/publish bank. Ownership404, stale revision409,
+version đã pin hoặc PUBLISHED/RETIRED409, sai refs/group422. DRAFT có thể thiếu câu/thời lượng;
+không coi bảng DESIGN bên dưới là mandatory blueprint đã chốt. Chưa có publish/unpublish,
+version fork, TEST_VERSION runtime hoặc quy đổi TOEIC. Giữ nguyên năm route Practice/Section.
+
 **EXAM-01 runtime — quyết định sản phẩm 2026-11-11:** [Section Listening/Reading, payload và kiểm thử](EXAM01_Section_Attempts.md). Dùng chung năm route `/attempts` bên dưới, thêm sourceType=SECTION_SNAPSHOT với section `{type,questionCount,durationMinutes}`. LISTENING đủ Part 1–4; READING đủ Part 5–7; tổng 1–100 và 1–120 phút là giới hạn sản phẩm, nguyên nhóm/đúng tổng hoặc 409 SECTION_QUESTIONS_INSUFFICIENT. Permission exam:manage:self mặc định LEARNER; mỗi attempt kiểm permission đúng source sau ownership, không dùng union endpoint để bypass. Pin version/group/order + cấu hình/server expiry V27. Save chỉ trước hạn, submit lần đầu sau hạn được chấm các lựa chọn đã lưu; không nhận body. Không worker tự chốt (EXAM-03) hoặc phụ thuộc CRUD TestVersion (EXAM-04), không quy đổi TOEIC.
 
 **Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.

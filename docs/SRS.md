@@ -261,6 +261,12 @@ bộ đề bị chặn EXAM04 chưa tích hợp. Không đánh dấu toàn bộ 
 
 ### UC-14 — Quản lý bộ đề
 
+**EXAM-04 DRAFT runtime 2026-11-20–21:** [Phạm vi đã triển khai, API và kiểm chứng](EXAM04_Draft_Authoring_20261120.md).
+Teacher tạo/đọc/sửa bản nháp với quyền own/any, version refs đúng Part/nguyên nhóm/thứ tự,
+expected revision và audit nguyên tử. Bản được attempt pin không được sửa. Blueprint mandatory,
+review/publish/unpublish, version fork và conversion chưa thành contract runtime trong lượt này;
+luồng DESIGN bên dưới không tự mở các chức năng đó. DRAFT rỗng hoặc chưa có thời lượng được lưu.
+
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**

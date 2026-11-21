@@ -13,6 +13,7 @@ const items = [
 ];
 
 import ModerationNavigation from '@/features/admin/ModerationNavigation';
+import ExamDraftNavigation from '@/features/assessment/ExamDraftNavigation';
 
 export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onCollapse }) {
   const { user, logout } = useAuth();
@@ -40,6 +41,7 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
         <nav aria-label="Điều hướng chính" className="sidebar-nav">{items.map(navItem)}</nav>
         <div className="sidebar-personal">
           {user && <ModerationNavigation />}
+          {user && <ExamDraftNavigation />}
           {user?.adminCapabilities?.userManagement && navItem(['Quản lý người dùng', '/admin/users', 'imgSvg11'])}
           {user?.adminCapabilities?.rbacManagement && navItem(['Vai trò và quyền', '/admin/roles', 'imgSvg11'])}
           {user?.adminCapabilities?.auditRead && navItem(['Audit quản trị', '/admin/audit', 'imgSvg11'])}

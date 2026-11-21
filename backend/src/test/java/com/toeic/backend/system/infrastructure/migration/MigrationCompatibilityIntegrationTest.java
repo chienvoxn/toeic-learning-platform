@@ -63,11 +63,11 @@ class MigrationCompatibilityIntegrationTest {
         }
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(all.toString().getBytes(StandardCharsets.UTF_8)));
     }
-    @ParameterizedTest @ValueSource(strings={"empty","v33","settings","rag","settings-admin35","rag-admin35","rag-rag35","settings37","rag37","rag-rag36","rag-rag37","rag-rag38"})
+    @ParameterizedTest @ValueSource(strings={"empty","v33","settings","rag","settings-admin35","rag-admin35","rag-rag35","settings37","rag37","rag-rag36","rag-rag37","rag-rag38","settings39","rag39","rag-rag39"})
     void historiesConvergeAndRestartWithoutRewritingOldRows(String kind) throws Exception {
         String db=database(kind.equals("empty")?null:kind.equals("v33")?v33:kind.startsWith("settings")?settings:rag);
-        if(kind.endsWith("-admin35") || kind.endsWith("37") || kind.startsWith("rag-rag")) {
-            String target=kind.endsWith("-admin35")?"35":kind.startsWith("rag-rag")?kind.substring(7):"37";
+        if(kind.endsWith("-admin35") || kind.endsWith("37") || kind.endsWith("39") || kind.startsWith("rag-rag")) {
+            String target=kind.endsWith("-admin35")?"35":kind.startsWith("rag-rag")?kind.substring(7):kind.endsWith("39")?"39":"37";
             Flyway.configure().dataSource(source(db)).locations("classpath:db/migration",
                 "classpath:db/history/"+(kind.startsWith("settings")?"settings":"rag"),
                 "classpath:db/history/v35/"+(kind.startsWith("rag-rag")?"rag":"admin03")).target(target).cleanDisabled(true).load().migrate();
@@ -79,7 +79,7 @@ class MigrationCompatibilityIntegrationTest {
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("39",flyway.info().current().getVersion().toString());
+        assertEquals("40",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {

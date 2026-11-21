@@ -1,5 +1,10 @@
 # V35 compatibility — source tích hợp 20/11/2026
 
+**Phần nối tiếp TV2 EXAM-04 (working tree 20–21/11):** [V40 và bằng chứng mới](EXAM04_Draft_Authoring_20261120.md).
+Coordinator nhận thêm release40 và fingerprint bảng DRAFT mới; policy historical V34/V35,
+SQL cũ và các giới hạn hỗ trợ ở báo cáo này giữ nguyên. Số39/40 history rows và test phía
+dưới là bằng chứng của commit tích hợp trước, không phải kết quả của cây EXAM-04 mới.
+
 Phạm vi lượt tích hợp được người dùng xác nhận: giữ nguyên chính sách V34 của
 0e6b37c, nhận diện thêm hai lịch sử V35. Develop đã rà: a1a85b6. Không triển khai
 thêm tính năng ADMIN, G1, media hay EXAM-04 trong commit tích hợp.
