@@ -20,14 +20,28 @@ public class PracticeAttemptRepository {
         // Không fetch join collection: PostgreSQL không khóa phía nullable của outer join.
         return entityManager.createQuery("""
                 select a from PracticeAttempt a
-                where a.attemptId = :id and a.userId = :actor and a.sourceType in ('PRACTICE_SNAPSHOT','SECTION_SNAPSHOT','TEST_VERSION')
+                where a.attemptId = :id and a.userId = :actor and (
+                    a.sourceType in ('PRACTICE_SNAPSHOT','SECTION_SNAPSHOT')
+                    or (
+                        a.sourceType = 'TEST_VERSION'
+                        and a.attemptType = 'FULL_TEST'
+                        and a.testVersionId is not null
+                    )
+                )
                 """, PracticeAttempt.class).setParameter("id", attemptId).setParameter("actor", actorId)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList().stream().findFirst();
     }
     public Optional<PracticeAttempt> findOwn(UUID actorId, UUID attemptId) {
         return entityManager.createQuery("""
                 select a from PracticeAttempt a left join fetch a.questions
-                where a.attemptId = :id and a.userId = :actor and a.sourceType in ('PRACTICE_SNAPSHOT','SECTION_SNAPSHOT','TEST_VERSION')
+                where a.attemptId = :id and a.userId = :actor and (
+                    a.sourceType in ('PRACTICE_SNAPSHOT','SECTION_SNAPSHOT')
+                    or (
+                        a.sourceType = 'TEST_VERSION'
+                        and a.attemptType = 'FULL_TEST'
+                        and a.testVersionId is not null
+                    )
+                )
                 """, PracticeAttempt.class).setParameter("id", attemptId).setParameter("actor", actorId)
                 .getResultList().stream().findFirst();
     }
