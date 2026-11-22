@@ -56,6 +56,6 @@ public class PracticeSessionService {
                 .map(q->{var a=saved.get(q.getQuestionVersionId());return new PracticeSessionDtos.SavedAnswer(a.questionVersionId(),a.selectedChoiceId(),a.updatedAt());}).toList();
         return new PracticeSessionDtos.Session(attempt.getAttemptId(),attempt.getSourceType(),attempt.getStatus(),attempt.getStartedAt(),
                 attempt.getExpiresAt(),!OffsetDateTime.now(clock).isBefore(attempt.getExpiresAt()),attempt.getTotalQuestions(),questions,selections,
-                SectionDtos.configuration(attempt));
+                SectionDtos.configuration(attempt),attempt.getTestSnapshot());
     }
 }

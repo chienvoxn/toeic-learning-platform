@@ -656,3 +656,16 @@ Log provider/model, token counts, latency, cost, status, trace ID; do not log ra
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
+
+## Triển khai TestVersion publication / Full Mock — 2026-11-21
+
+Contract người dùng đã chốt và API thực tế được mô tả tại
+[TV2_Publication_FullMock_20261121.md](TV2_Publication_FullMock_20261121.md).
+Phần này bổ sung EXAM-04 DRAFT đã triển khai và thay mô tả DESIGN cũ về luồng publication/runtime tương ứng.
+Teacher version transitions dùng `/api/v1/teacher/tests/{testId}/versions/{versionId}/…`;
+review/publish yêu cầu ACTIVE ADMIN và `test:review`/`test:publish`, contributor cycle và expectedRevision.
+Full Mock tạo bằng `POST /api/v1/attempts` với `{sourceType:"TEST_VERSION",testVersionId:"uuid"}`;
+lưu đáp án, submit, result vẫn dùng routes attempts hiện có, không nhận câu/blueprint/deadline từ client.
+Unpublish/retire chặn start mới nhưng giữ phiên đã pin; hết hạn chặn sửa và cho explicit submit các đáp án đã lưu.
+Blueprint số liệu chính thức còn chờ xác nhận, không coi fixture nhỏ là cấu trúc TOEIC đã phê duyệt.
+Không worker EXAM-03, quy đổi điểm hoặc bypass G1/media trong gói này.

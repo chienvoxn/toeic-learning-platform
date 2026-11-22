@@ -1,6 +1,7 @@
 package com.toeic.backend.assessment.infrastructure;
 
 import com.toeic.backend.assessment.domain.ExamDraftDocument;
+import com.toeic.backend.assessment.application.ExamDraftException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,6 +42,17 @@ public class ExamDraftRepository {
     }
     public boolean pinned(UUID version) {
         return Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from attempts where test_version_id=?)",Boolean.class,version));
+    }
+    public boolean working(UUID test){return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM test_versions WHERE test_id=? AND status IN ('DRAFT','IN_REVIEW','APPROVED'))",Boolean.class,test));}
+    public List<Map<String,Object>> versions(UUID test){return jdbc.queryForList("SELECT v.test_version_id AS \"versionId\",v.version_number AS version,v.status,d.revision,m.source_version_id AS \"sourceVersionId\" FROM test_versions v LEFT JOIN test_version_drafts d USING(test_version_id) LEFT JOIN moderation_versions m ON m.kind='tests' AND m.version_id=v.test_version_id WHERE v.test_id=? ORDER BY v.version_number DESC",test);}
+    public UUID blueprint(UUID version){return jdbc.queryForObject("SELECT blueprint_id FROM test_versions WHERE test_version_id=?",UUID.class,version);}
+    public void selectBlueprint(UUID version,UUID blueprint){jdbc.update("UPDATE test_versions SET blueprint_id=? WHERE test_version_id=?",blueprint,version);jdbc.update("UPDATE test_version_drafts SET revision=revision+1 WHERE test_version_id=?",version);}
+    public Draft fork(Draft source,UUID actor){
+        int next=jdbc.queryForObject("SELECT coalesce(max(version_number),0)+1 FROM test_versions WHERE test_id=?",Integer.class,source.testId());UUID version=UUID.randomUUID();
+        jdbc.update("INSERT INTO test_versions(test_version_id,test_id,version_number,status,created_at,blueprint_id,duration_seconds,total_questions) SELECT ?,test_id,?,'DRAFT',CURRENT_TIMESTAMP,blueprint_id,duration_seconds,total_questions FROM test_versions WHERE test_version_id=?",version,next,source.versionId());
+        jdbc.update("INSERT INTO test_version_drafts(test_version_id,revision,document) SELECT ?,0,document FROM test_version_drafts WHERE test_version_id=?",version,source.versionId());
+        jdbc.update("INSERT INTO test_questions(test_version_id,question_version_id,question_group_version_id,question_order,points) SELECT ?,question_version_id,question_group_version_id,question_order,points FROM test_questions WHERE test_version_id=?",version,source.versionId());
+        return find(source.testId(),version,false).orElseThrow(ExamDraftException::missing);
     }
     public void create(UUID actor, UUID test, UUID version, ExamDraftDocument document, OffsetDateTime now) {
         jdbc.update("insert into tests(test_id,created_by,title,description,test_type,status,created_at,updated_at) values(?,?,?,?,?,'DRAFT',?,?)",

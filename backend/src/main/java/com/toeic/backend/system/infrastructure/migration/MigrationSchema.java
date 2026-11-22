@@ -39,9 +39,9 @@ public final class MigrationSchema {
         Collections.sort(output);return String.join("\n",output)+"\n";
     }
 
-    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts) throws SQLException {
+    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock) throws SQLException {
         String expected;
-        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
+        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(fullMock?"schema-v41.txt":examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
             expected = new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n","\n");
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot read release schema evidence", e); }
@@ -55,9 +55,9 @@ public final class MigrationSchema {
                     || line.startsWith("index|ai_conversations|idx_ai_conversations_active_user|"))) continue;
             filtered.append(line).append('\n');
         }
-        if (!filtered.toString().equals(normalizedSignature(connection))) throw new IllegalStateException("Schema differs from release migration evidence");
+        if (!filtered.toString().equals(normalizedSignature(connection,fullMock))) throw new IllegalStateException("Schema differs from release migration evidence");
         // An existing feature's grants can have been revoked; never restore them.
-        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish','test:manage:self','test:manage:any'";
+        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish','test:manage:self','test:manage:any','test:review','test:publish'";
         var actual = new HashSet<String>();
         try (var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT code FROM public.permissions WHERE code IN (" + codes + ")")) {
             while (rows.next()) actual.add(rows.getString(1));
@@ -67,6 +67,7 @@ public final class MigrationSchema {
         if (rag) required.addAll(Set.of("ai:chat:self", "ai:knowledge:manage"));
         if (moderation) required.addAll(Set.of("content:review","content:publish","question:review","question:publish"));
         if (examDrafts) required.addAll(Set.of("test:manage:self","test:manage:any"));
+        if(fullMock)required.addAll(Set.of("test:review","test:publish"));
         if (!actual.equals(required)) throw new IllegalStateException("Partial feature permission catalog");
     }
 
@@ -114,21 +115,36 @@ public final class MigrationSchema {
     }
 
     public static String normalizedSignature(Connection connection) throws SQLException {
+        boolean full=false;try(var st=connection.createStatement();var rs=st.executeQuery("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='attempts' AND column_name='test_blueprint_snapshot')")){rs.next();full=rs.getBoolean(1);}
+        return normalizedSignature(connection,full);
+    }
+    private static String normalizedSignature(Connection connection,boolean fullMock) throws SQLException {
         // pg_dump/restore reparses six CHECK expressions with different placement of
         // varchar[] -> text[] casts. These exact alternatives were reproduced by
         // round-tripping the canonical SQL schema, independently of upgrade targets.
         // No general stripping of casts, constraints or validation flags is allowed.
-        try (var canonical=MigrationSchema.class.getResourceAsStream("/db/compatibility/schema-v39.txt");
-             var restored=MigrationSchema.class.getResourceAsStream("/db/compatibility/restored-constraints.txt")) {
+        try (var canonical=MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(fullMock?"schema-v41.txt":"schema-v39.txt"));
+             var restored=MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(fullMock?"restored-constraints-v41.txt":"restored-constraints.txt"));
+             var restoredIndexes=fullMock?MigrationSchema.class.getResourceAsStream("/db/compatibility/restored-indexes-v41.txt"):null) {
             if (canonical==null || restored==null) throw new IllegalStateException("Missing restore equivalence evidence");
+            String canonicalText=new String(canonical.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n");
             Map<String,String> originals=new HashMap<>();
-            for(String line:new String(canonical.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n").split("\n"))
+            for(String line:canonicalText.split("\n"))
                 if(line.startsWith("constraint|"))originals.put(constraintKey(line),line);
             Map<String,String> alternatives=new HashMap<>();
             for(String line:new String(restored.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n").split("\n")) {
                 String original=originals.get(constraintKey(line));
                 if(original==null)throw new IllegalStateException("Invalid restore equivalence evidence");
                 alternatives.put(line,original);
+            }
+            if(fullMock){
+                if(restoredIndexes==null)throw new IllegalStateException("Missing V41 index restore evidence");
+                var indexes=new HashMap<String,String>();
+                for(String line:canonicalText.split("\n"))if(line.startsWith("index|"))indexes.put(indexKey(line),line);
+                for(String line:new String(restoredIndexes.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n").split("\n")){
+                    String original=indexes.get(indexKey(line));if(original==null)throw new IllegalStateException("Invalid index restore evidence");
+                    alternatives.put(line,original);
+                }
             }
             var normalized=new ArrayList<String>();
             for(String line:signature(connection).split("\n"))normalized.add(alternatives.getOrDefault(line,line));
@@ -138,6 +154,11 @@ public final class MigrationSchema {
     private static String constraintKey(String line) {
         String[] parts=line.split("\\|",4);
         if(parts.length<4 || !parts[0].equals("constraint"))throw new IllegalStateException("Invalid constraint evidence");
+        return parts[0]+"|"+parts[1]+"|"+parts[2];
+    }
+    private static String indexKey(String line){
+        String[] parts=line.split("\\|",4);
+        if(parts.length<4||!parts[0].equals("index"))throw new IllegalStateException("Invalid index evidence");
         return parts[0]+"|"+parts[1]+"|"+parts[2];
     }
 }

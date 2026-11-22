@@ -24,8 +24,11 @@ public class ExamDraftService {
     private final RbacRepository audit;
     private final Clock clock;
     private final QuestionVersionRepository versions;
-    public ExamDraftService(ExamDraftRepository drafts, PracticePublicationRepository bank, ExamAccess access, RbacRepository audit, Clock clock, QuestionVersionRepository versions) {
-        this.drafts=drafts; this.bank=bank; this.access=access; this.audit=audit; this.clock=clock; this.versions=versions;
+    private final ExamReferencePolicy references;
+    private final ExamMutationAccess mutations;
+    private final com.toeic.backend.system.application.ModerationEvidence evidence;
+    public ExamDraftService(ExamDraftRepository drafts, PracticePublicationRepository bank, ExamAccess access, RbacRepository audit, Clock clock, QuestionVersionRepository versions,ExamReferencePolicy references,ExamMutationAccess mutations,com.toeic.backend.system.application.ModerationEvidence evidence) {
+        this.drafts=drafts; this.bank=bank; this.access=access; this.audit=audit; this.clock=clock; this.versions=versions;this.references=references;this.mutations=mutations;this.evidence=evidence;
     }
     public record UnitQuestion(UUID questionVersionId, UUID groupVersionId, String questionText) { }
     public record QuestionUnit(int partNumber, List<UnitQuestion> questions) { }
@@ -65,74 +68,26 @@ public class ExamDraftService {
         owned(actorId,test,false); return drafts.find(test,version,false).orElseThrow(ExamDraftException::missing);
     }
     public ExamDraftRepository.Draft create(UUID actorId, ExamDraftDocument document) {
+        mutations.manage(mutations.lock(actorId));
         validate(document); var now=OffsetDateTime.now(clock); var test=UUID.randomUUID(); var version=UUID.randomUUID();
         drafts.create(actorId,test,version,document,now);
+        evidence.record("tests",test,version,null,actorId,true);
         audit.audit(actorId,"TEST_CREATED","TEST",test,null,Map.of("versionId",version,"revision",0,"status","DRAFT"),now);
         return drafts.find(test,version,false).orElseThrow(ExamDraftException::missing);
     }
     public ExamDraftRepository.Draft update(UUID actorId, UUID test, UUID version, int revision, ExamDraftDocument document) {
-        owned(actorId,test,true); var draft=drafts.find(test,version,true).orElseThrow(ExamDraftException::missing);
+        var a=mutations.lock(actorId);mutations.manage(a);
+        if(!drafts.owns(test,actorId,mutations.any(a),true))throw ExamDraftException.missing();
+        var draft=drafts.find(test,version,true).orElseThrow(ExamDraftException::missing);
         if(!"DRAFT".equals(draft.status()) || draft.document()==null || drafts.pinned(version))throw ExamDraftException.immutable();
-        if(revision!=draft.revision())throw ExamDraftException.stale();
+        if(revision!=draft.revision()||revision==Integer.MAX_VALUE)throw ExamDraftException.stale();
         validate(document); var now=OffsetDateTime.now(clock); drafts.update(draft,document,now);
+        evidence.record("tests",test,version,null,actorId,false);
         audit.audit(actorId,"TEST_UPDATED","TEST",test,Map.of("versionId",version,"revision",revision),Map.of("versionId",version,"revision",revision+1),now);
         return drafts.find(test,version,false).orElseThrow(ExamDraftException::missing);
     }
     private void owned(UUID actor, UUID test, boolean lock) {
         if(!drafts.owns(test,actor,access.has("test:manage:any"),lock))throw ExamDraftException.missing();
     }
-    private void validate(ExamDraftDocument doc) {
-        if(doc==null || doc.title()==null || doc.title().isBlank() || doc.title().length()>255
-                || doc.description()!=null && doc.description().length()>10000
-                || !Set.of("PRACTICE","LISTENING","READING","FULL").contains(doc.testType()==null?"":doc.testType())
-                || doc.durationSeconds()!=null && doc.durationSeconds()<1 || doc.sections().size()>2)throw ExamDraftException.invalid();
-        var refs=new ArrayList<ExamDraftDocument.Question>(); var parts=new HashSet<Integer>(); int lastSection=0;
-        var partByQuestion=new HashMap<UUID,Integer>();
-        for(var section:doc.sections()) {
-            int position="LISTENING".equals(section.type())?1:"READING".equals(section.type())?2:0;
-            if(position<=lastSection || doc.testType().equals("LISTENING")&&position!=1 || doc.testType().equals("READING")&&position!=2)throw ExamDraftException.invalid();
-            lastSection=position; int lastPart=0;
-            for(var part:section.parts()) {
-                int number=part.partNumber();
-                if(number<1 || number>7 || number<=lastPart || !parts.add(number) || (number<=4)!=(position==1))throw ExamDraftException.invalid();
-                lastPart=number;
-                for(var q:part.questions()) {
-                    if(q.questionVersionId()==null || partByQuestion.put(q.questionVersionId(),number)!=null)throw ExamDraftException.invalid();
-                    refs.add(q);
-                }
-            }
-        }
-        // DRAFT có thể thiếu Section/câu/thời lượng; chưa áp blueprint TOEIC chính thức.
-        if(refs.isEmpty())return;
-        if(!access.has("question:read"))throw new AccessDeniedException("Question read permission required");
-        var now=OffsetDateTime.now(clock); var pool=bank.practicePool(parts,null,null,now);
-        var selected=pool.stream().filter(m->partByQuestion.containsKey(m.candidate().questionVersionId())).toList();
-        if(selected.size()!=refs.size())throw ExamDraftException.reference();
-        bank.lockSelected(selected);
-        pool=bank.practicePool(parts,null,null,now);
-        var byId=pool.stream().collect(Collectors.toMap(m->m.candidate().questionVersionId(),m->m));
-        for(var ref:refs) {
-            var m=byId.get(ref.questionVersionId());
-            if(m==null || !m.eligible() || m.candidate().partNumber()!=partByQuestion.get(ref.questionVersionId())
-                    || !Objects.equals(ref.groupVersionId(),m.candidate().groupVersionId()))throw ExamDraftException.reference();
-        }
-        var seenGroups=new HashSet<UUID>();
-        for(int i=0;i<refs.size();) {
-            var ref=refs.get(i); var member=byId.get(ref.questionVersionId());
-            if(member==null || !member.eligible() || member.candidate().partNumber()!=partByQuestion.get(ref.questionVersionId())
-                    || !Objects.equals(ref.groupVersionId(),member.candidate().groupVersionId()))throw ExamDraftException.reference();
-            if(ref.groupVersionId()==null) { i++; continue; }
-            if(!seenGroups.add(ref.groupVersionId()))throw ExamDraftException.reference();
-            var group=pool.stream().filter(m->ref.groupVersionId().equals(m.candidate().groupVersionId())).toList();
-            if(group.stream().anyMatch(m->!m.eligible() || m.groupOrder()==null || m.groupOrder()<1
-                    || m.candidate().partNumber()!=member.candidate().partNumber())
-                    || group.stream().map(PracticePublicationRepository.PoolMember::groupOrder).distinct().count()!=group.size())throw ExamDraftException.reference();
-            var ordered=group.stream().sorted(Comparator.comparing(PracticePublicationRepository.PoolMember::groupOrder)).toList();
-            for(var m:ordered) {
-                if(i>=refs.size() || !refs.get(i).questionVersionId().equals(m.candidate().questionVersionId())
-                        || !Objects.equals(refs.get(i).groupVersionId(),ref.groupVersionId()))throw ExamDraftException.reference();
-                i++;
-            }
-        }
-    }
+    private void validate(ExamDraftDocument doc) { references.validate(doc,true); }
 }

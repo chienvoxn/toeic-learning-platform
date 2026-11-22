@@ -14,7 +14,8 @@ public final class PracticeResultDtos {
             int correctCount, int incorrectCount, int unansweredCount, int rawScore, BigDecimal accuracy,
             int listeningCorrectCount, int readingCorrectCount, List<QuestionResult> questions,
             @JsonInclude(JsonInclude.Include.NON_NULL) SectionDtos.Configuration section,
-            @JsonInclude(JsonInclude.Include.NON_NULL) List<SectionDtos.PartResult> parts) {
+            @JsonInclude(JsonInclude.Include.NON_NULL) List<SectionDtos.PartResult> parts,
+            @JsonInclude(JsonInclude.Include.NON_NULL) com.toeic.backend.assessment.domain.TestAttemptSnapshot test) {
         public Result { questions = List.copyOf(questions);if(parts!=null)parts=List.copyOf(parts); }
     }
 }

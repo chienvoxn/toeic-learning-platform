@@ -9,8 +9,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes=PracticeAttemptController.class)
+@RestControllerAdvice(assignableTypes={PracticeAttemptController.class,FullMockCatalogController.class})
 public class PracticeExceptionHandler {
+    @ExceptionHandler(com.toeic.backend.system.application.ModerationException.class)
+    public ResponseEntity<Error> publication(com.toeic.backend.system.application.ModerationException ex){return error(ex.status(),ex.code(),ex.getMessage());}
+    @ExceptionHandler(com.toeic.backend.assessment.application.ExamDraftException.class)
+    public ResponseEntity<Error> exam(com.toeic.backend.assessment.application.ExamDraftException ex){return error(ex.getStatus(),ex.getCode(),ex.getMessage());}
     @ExceptionHandler(PracticeException.class)
     public ResponseEntity<Error> business(PracticeException ex) { return error(ex.getStatus(),ex.getCode(),ex.getMessage()); }
     @ExceptionHandler({HttpMessageNotReadableException.class,MethodArgumentTypeMismatchException.class})

@@ -22,7 +22,7 @@ export default function AttemptPage({ remote = false }) {
   const [timedOutId, setTimedOutId] = useState(null);
   const [strictAudioOverride, setStrictAudioOverride] = useState(null);
   const attemptBase = remote ? '/practice/attempts' : '/attempts';
-  const catalogPath = remote ? '/practice' : '/tests';
+  const catalogPath = remote && attempt?.sourceType !== 'TEST_VERSION' ? '/practice' : '/tests';
 
   useEffect(() => {
     if (attempt?.status === 'GRADED') navigate(`${attemptBase}/${attemptId}/result`, { replace: true });
@@ -34,7 +34,7 @@ export default function AttemptPage({ remote = false }) {
   const questions = attempt.parts.flatMap(p => p.questions);
   const answered = questions.filter(q => q.userAnswer).length;
   const expired = attempt.expired || timedOutId === attemptId;
-  const submitDisabled = isSubmitting || (remote && expired && attempt.sourceType !== 'SECTION_SNAPSHOT');
+  const submitDisabled = isSubmitting || (remote && expired && !['SECTION_SNAPSHOT', 'TEST_VERSION'].includes(attempt.sourceType));
   const hasListeningMedia = questions.some(q => q.partNumber <= 4 || q.hasMedia);
   const strictExamMode = strictAudioOverride !== null ? strictAudioOverride : attempt.sourceType === 'SECTION_SNAPSHOT';
   const isDisabled = isSubmitting || attempt.status !== 'IN_PROGRESS' || (remote && expired);

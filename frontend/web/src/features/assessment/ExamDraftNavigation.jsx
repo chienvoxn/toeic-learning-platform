@@ -4,5 +4,5 @@ import { examDraftApi } from './exam-drafts.api';
 
 export default function ExamDraftNavigation() {
   const result = useAdminReport(examDraftApi.capabilities, null, true);
-  return result.data?.manage ? <Link className="sidebar-link" to="/teacher/tests">Biên soạn bộ đề</Link> : null;
+  return (result.data?.manage || result.data?.review || result.data?.publish) ? <Link className="sidebar-link" to="/teacher/tests">Biên soạn bộ đề</Link> : null;
 }

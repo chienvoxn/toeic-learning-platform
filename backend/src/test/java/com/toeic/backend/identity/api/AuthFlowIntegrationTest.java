@@ -378,6 +378,8 @@ class AuthFlowIntegrationTest {
                     "system:usage:read",
                     "test:manage:any",
                     "test:manage:self",
+                    "test:publish",
+                    "test:review",
                     "user:manage",
                     "user:password:change:self",
                     "user:read:self",

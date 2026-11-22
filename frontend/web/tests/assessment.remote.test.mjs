@@ -13,6 +13,17 @@ const snapshot = () => ({ attemptId: 'attempt-pinned', sourceType: 'SECTION_SNAP
     isCorrect: true, explanation: 'must not enter session view', correctChoiceId: 'choice-pinned-a',
     assets: [{ resourceId: 'media', storageUrl: 'must-not-enter-view' }] }] });
 let calls;
+
+test('Full Mock uses the shared attempts API and preserves the server blueprint snapshot', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.startFullMock('test-version-pin');
+  assert.deepEqual(JSON.parse(calls[0].body), { sourceType: 'TEST_VERSION', testVersionId: 'test-version-pin' });
+  assert.equal(calls[0].url, '/api/v1/attempts');
+  const dto = snapshot(); dto.sourceType = 'TEST_VERSION'; dto.test = { title: 'Published mock', version: 3, blueprint: { code: 'LAB', version: 2, durationSeconds: 600 } };
+  const view = toServerAttempt(dto);
+  assert.deepEqual(view.test, dto.test); assert.equal(view.testTitle, 'Published mock · v3');
+  assert.equal(view.expiresAt, Date.parse(dto.expiresAt));
+});
 test('timer never signals expiry during the last positive fraction of a server deadline', () => {
   assert.equal(remainingSeconds(2000, 1001), 1);
   assert.equal(remainingSeconds(2000, 1999), 1);

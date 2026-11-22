@@ -9,14 +9,18 @@ export default function TeacherTestsPage() {
   const [query, setQuery] = useState({ partNumber: 1, page: 0 });
   const [draft, setDraft] = useState(null), [editor, setEditor] = useState(empty), [selected, setSelected] = useState([]);
   const [busy, setBusy] = useState(false), [stale, setStale] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+  const [reason, setReason] = useState(''), [blueprint, setBlueprint] = useState('');
+  const caps = useAdminReport(api.capabilities, null, true, revision);
+  const blueprints = useAdminReport(api.blueprints, null, true, revision);
+  const history = useAdminReport(api.versions, draft?.testId, !!draft, revision);
   const list = useAdminReport(api.list, page, true, revision);
-  const bank = useAdminReport(api.units, query, true);
-  const editable = !draft || draft.status === 'DRAFT' && draft.document;
+  const bank = useAdminReport(api.units, query, caps.data?.readQuestions === true);
+  const editable = draft ? (draft.capabilities?.edit ?? (draft.status === 'DRAFT' && draft.document)) : (caps.data?.manage ?? true);
   function reset() { setDraft(null); setEditor(empty()); setSelected([]); setError(''); setNotice(''); setStale(false); }
-  async function read(id) {
+  async function read(id, version) {
     setBusy(true); setError(''); setNotice('');
     try {
-      const value = await api.read(id); setDraft(value); setStale(false);
+      const value = await (version ? api.readVersion(id, version) : api.read(id)); setDraft(value); setStale(false);
       setEditor(value.document ? { ...value.document, description: value.document.description ?? '', durationSeconds: value.document.durationSeconds ?? '' } : empty());
       setSelected(value.document ? documentUnits(value.document) : []);
     } catch (e) { setError(e.message); } finally { setBusy(false); }
@@ -32,6 +36,14 @@ export default function TeacherTestsPage() {
       if (e.status === 409) setStale(true);
     } finally { setBusy(false); }
   }
+  async function command(action) {
+    setBusy(true); setError(''); setNotice('');
+    try { const value = action === 'blueprint' ? await api.chooseBlueprint(draft, blueprint) : await api.command(draft, action === 'submit' ? 'submit-review' : action, ['return','revoke'].includes(action) ? reason : undefined);
+      setDraft(value); setEditor(value.document ? { ...value.document, description: value.document.description ?? '', durationSeconds: value.document.durationSeconds ?? '' } : empty());
+      setSelected(value.document ? documentUnits(value.document) : []); setReason(''); setRevision(n => n + 1); setNotice('Đã cập nhật trên máy chủ.');
+    } catch(e) { setError(`${e.message}${e.code ? ` (${e.code})` : ''}`); if(e.status === 409) setStale(true); }
+    finally { setBusy(false); }
+  }
   function move(index, delta) {
     const other = index + delta;
     if (other < 0 || other >= selected.length || selected[index].partNumber !== selected[other].partNumber) return;
@@ -39,7 +51,7 @@ export default function TeacherTestsPage() {
   }
   return <LearnerTemplate><div className="space-y-5">
     <h1>Biên soạn bộ đề</h1>
-    <p>Bản nháp có thể chưa đủ câu hoặc thời lượng. Duyệt, xuất bản, ngừng xuất bản và phát audio chưa có trong luồng này.</p>
+    <p>Duyệt và xuất bản theo quyền ADMIN, contributor và revision. Full Mock phải khớp blueprint đã cấu hình.</p>
     {(error || list.error) && <p role="alert">{error || list.error}</p>}
     {notice && <p role="status">{notice}</p>}
     <section className="border rounded-lg p-4 space-y-3" aria-label="Danh sách bộ đề">
@@ -50,6 +62,16 @@ export default function TeacherTestsPage() {
     </section>
     {draft && <p>Phiên bản {draft.version} · {draft.status} · Lần sửa {draft.revision}</p>}
     {draft && <button disabled={busy} onClick={() => read(draft.testId)}>Đọc lại bản trên máy chủ</button>}
+    {draft && <section className="border rounded p-4 space-y-3" aria-label="Publication bộ đề">
+      <p>Nguồn: {draft.sourceVersionId || 'Phiên bản đầu'} · Blueprint: {draft.blueprintId || 'Chưa chọn'}</p>
+      {history.error && <p role="alert">{history.error}</p>}
+      <div>{history.data?.map(v => <button key={v.versionId} disabled={busy} onClick={() => read(draft.testId, v.versionId)}>v{v.version} {v.status}</button>)}</div>
+      {editable && <><label htmlFor="test-blueprint">Blueprint đã cấu hình</label><select id="test-blueprint" value={blueprint} onChange={e => setBlueprint(e.target.value)}><option value="">Chọn blueprint</option>{blueprints.data?.map(b => <option key={b.blueprintId} value={b.blueprintId}>{b.code}/v{b.version} {b.name}</option>)}</select><button disabled={busy || stale || !blueprint} onClick={() => command('blueprint')}>Gắn blueprint</button></>}
+      {blueprints.error && <p role="alert">{blueprints.error}</p>}
+      {(draft.capabilities?.return || draft.capabilities?.revoke) && <label>Lý do<textarea maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} /></label>}
+      {Object.entries({submit:'Gửi duyệt',approve:'Duyệt',return:'Trả lại',revoke:'Thu hồi duyệt',publish:'Xuất bản',fork:'Tạo DRAFT từ bản hiện hành',retire:'Ngừng cung cấp'}).filter(([key]) => draft.capabilities?.[key]).map(([key,label]) => <button key={key} disabled={busy || stale || (['return','revoke'].includes(key) && !reason.trim())} onClick={() => command(key)}>{label}</button>)}
+      <p>Ngừng cung cấp chặn phiên mới; phiên đã pin tiếp tục theo thời hạn và quyền hiện hành.</p>
+    </section>}
     {!editable && <p>Phiên bản này chỉ đọc. Không sửa dữ liệu của phiên bản đã xuất bản hoặc đã được sử dụng.</p>}
     <form onSubmit={save} className="border rounded-lg p-4 space-y-3">
       <fieldset disabled={busy || !editable || stale || !!list.error} className="space-y-3">

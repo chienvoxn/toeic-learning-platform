@@ -8,6 +8,7 @@ async function setup(page, failure) {
     const req = route.request(), path = new URL(req.url()).pathname;
     if (path === '/api/v1/users/me') return route.fulfill({ json: { userId: 'teacher', fullName: 'Teacher', status: 'ACTIVE', roles: ['TEACHER'] } });
     if (path.endsWith('/tests/capabilities')) return route.fulfill({ json: { manage: !failure?.forbidden, readQuestions: true } });
+    if (path === '/api/v1/teacher/blueprints' || path.endsWith('/versions')) return route.fulfill({ json: [] });
     if (path.includes('/teacher/tests')) {
       calls.push({ method: req.method(), path, body: req.postDataJSON() });
       if (failure?.forbidden) return route.fulfill({ status: 403, json: { code: 'FORBIDDEN', message: 'Không có quyền biên soạn bộ đề.' } });

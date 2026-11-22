@@ -79,7 +79,7 @@ class MigrationCompatibilityIntegrationTest {
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("40",flyway.info().current().getVersion().toString());
+        assertEquals("41",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {
@@ -96,6 +96,37 @@ class MigrationCompatibilityIntegrationTest {
             while(r.next())out.append(r.getString(1)).append('\n');
         }
         return out.toString();
+    }
+    @ParameterizedTest @ValueSource(strings={"single","duplicate"})
+    void v40DraftDataUpgradeAndLegacyDuplicatePreflight(String kind)throws Exception {
+        String db=database(v33);original(db,"rag","40").migrate();
+        sql(db,"""
+            INSERT INTO users(user_id,email,password_hash,full_name,status,created_at,updated_at)
+              VALUES('a9111111-1111-1111-1111-111111111111','v40-draft@example.invalid','fixture-only','Legacy draft','ACTIVE',now(),now());
+            INSERT INTO tests(test_id,created_by,title,test_type,status,created_at,updated_at)
+              VALUES('a9222222-2222-2222-2222-222222222222','a9111111-1111-1111-1111-111111111111','Retained','FULL','DRAFT',now(),now());
+            INSERT INTO test_versions(test_version_id,test_id,version_number,status,created_at)
+              VALUES('a9333333-3333-3333-3333-333333333333','a9222222-2222-2222-2222-222222222222',1,'DRAFT',now());
+            INSERT INTO test_version_drafts VALUES('a9333333-3333-3333-3333-333333333333',7,'{"title":"Retained","testType":"FULL","sections":[]}');
+            """);
+        if(kind.equals("duplicate"))sql(db,"INSERT INTO test_versions(test_version_id,test_id,version_number,status,created_at) VALUES('a9444444-4444-4444-4444-444444444444','a9222222-2222-2222-2222-222222222222',2,'DRAFT',now())");
+        String old=history(db),before=snapshot(db);
+        if(kind.equals("duplicate")){assertThrows(Exception.class,()->run(db,new MockEnvironment()));assertEquals(before,snapshot(db));}
+        else{
+            run(db,new MockEnvironment()).validate();assertTrue(history(db).startsWith(old));
+            try(var c=source(db).getConnection();var s=c.createStatement();var rows=s.executeQuery("SELECT revision,document->>'title' FROM test_version_drafts")){assertTrue(rows.next());assertEquals(7,rows.getInt(1));assertEquals("Retained",rows.getString(2));}
+            String migrated=snapshot(db);run(db,new MockEnvironment().withProperty("app.migrations.mode","validate"));assertEquals(migrated,snapshot(db));
+        }
+    }
+    @ParameterizedTest @ValueSource(strings={"restore","wrong-index"})
+    void v41RestoreIndexWhitelistIsExact(String kind)throws Exception {
+        String db=database(v33);original(db,"rag","41").migrate();
+        String definition=Files.readString(Path.of("src/main/resources/db/compatibility/restored-indexes-v41.txt")).strip().split("\\|",-1)[3];
+        if(kind.equals("wrong-index"))definition="CREATE UNIQUE INDEX uq_test_working_version ON test_versions(test_id) WHERE status='DRAFT'";
+        sql(db,"DROP INDEX uq_test_working_version; "+definition);String before=snapshot(db);
+        if(kind.equals("restore"))run(db,new MockEnvironment().withProperty("app.migrations.mode","validate")).validate();
+        else assertThrows(Exception.class,()->run(db,new MockEnvironment()));
+        assertEquals(before,snapshot(db));
     }
     @ParameterizedTest @ValueSource(strings={"spring.flyway.locations","spring.flyway.enabled","spring.flyway.baseline-on-migrate","spring.flyway.out-of-order","spring.flyway.validate-on-migrate","spring.flyway.ignore-migration-patterns","spring.flyway.schemas","spring.flyway.table","spring.jpa.hibernate.ddl-auto","spring.sql.init.mode","spring.datasource.hikari.connection-init-sql"})
     void configurationIsRejectedBeforeMutation(String property) throws Exception {

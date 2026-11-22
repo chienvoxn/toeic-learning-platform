@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.*;
 @PreAuthorize("isAuthenticated()")
 public class ModerationService {
     private final ModerationRepository data;private final RbacMutationGuard rights;private final JdbcTemplate jdbc;
-    private final RbacRepository audit;private final MediaPublicationPolicy media;private final Clock clock;
-    public ModerationService(ModerationRepository data,RbacMutationGuard rights,JdbcTemplate jdbc,RbacRepository audit,MediaPublicationPolicy media,Clock clock){this.data=data;this.rights=rights;this.jdbc=jdbc;this.audit=audit;this.media=media;this.clock=clock;}
+    private final RbacRepository audit;private final MediaPublicationPolicy media;private final Clock clock;private final AssessmentPublication assessment;
+    public ModerationService(ModerationRepository data,RbacMutationGuard rights,JdbcTemplate jdbc,RbacRepository audit,MediaPublicationPolicy media,Clock clock,AssessmentPublication assessment){this.data=data;this.rights=rights;this.jdbc=jdbc;this.audit=audit;this.media=media;this.clock=clock;this.assessment=assessment;}
     private RbacMutationGuard.State actor(){
         var auth=SecurityContextHolder.getContext().getAuthentication();
         if(auth==null || !(auth.getPrincipal() instanceof SessionPrincipal p))throw new AccessDeniedException("Session required");
@@ -74,6 +74,7 @@ public class ModerationService {
         if(p.status().equals("ARCHIVED"))throw ModerationException.conflict("PARENT_ARCHIVED");
         if(!data.complete(kind,parent,e))throw ModerationException.conflict("CONTRIBUTOR_EVIDENCE_REQUIRED");
         if(e.revision()!=expected || expected==Long.MAX_VALUE)throw ModerationException.conflict("STALE_REVISION");
+        if(kind==Kind.tests&&expected>=Integer.MAX_VALUE)throw ModerationException.conflict("STALE_REVISION");
         String required=switch(command){case "submit"->"DRAFT";case "approve","return"->"IN_REVIEW";case "revoke","publish"->"APPROVED";default->throw ModerationException.invalid();};
         if(!required.equals(v.status()))throw ModerationException.conflict("MODERATION_STATE_CONFLICT");
         if(Set.of("approve","publish").contains(command)&&data.contributor(kind,parent,e,a.userId()))throw ModerationException.conflict("SELF_REVIEW_FORBIDDEN");
@@ -82,17 +83,18 @@ public class ModerationService {
         if(command.equals("submit"))validate(kind,version);
         String next=switch(command){case "submit"->"IN_REVIEW";case "approve"->"APPROVED";case "return","revoke"->"DRAFT";default->"PUBLISHED";};
         if(command.equals("publish")){
-            validate(kind,version);media.validate(kind,version,a,visibility);data.publish(kind,parent,version,visibility);
-            jdbc.update("UPDATE moderation_versions SET revision=revision+1 WHERE kind=? AND version_id=?",kind.name(),version);
+            validate(kind,version);media.validate(kind,version,a,visibility);if(kind==Kind.tests)assessment.freeze(version);data.publish(kind,parent,version,visibility);
+            data.publishedRevision(kind,version);
         }else data.state(kind,version,next,command.equals("approve")?e.revision()+1:null);
         if(command.equals("submit"))data.contributor(kind,version,a.userId(),"SUBMITTED");
         data.decision(kind,version,expected,a.userId(),command,reason);
-        String resource=kind==Kind.contents?"CONTENT":kind==Kind.questions?"QUESTION":"QUESTION_GROUP";
+        String resource=kind==Kind.contents?"CONTENT":kind==Kind.questions?"QUESTION":kind==Kind.tests?"TEST":"QUESTION_GROUP";
         String action=switch(command){case "submit"->"SUBMITTED";case "approve"->"APPROVED";case "return"->"RETURNED";case "revoke"->"APPROVAL_REVOKED";default->"PUBLISHED";};
         audit.audit(a.userId(),resource+"_"+action,resource,parent,Map.of("status",v.status(),"versionId",version,"revision",expected),Map.of("status",next,"versionId",version,"revision",expected+1),OffsetDateTime.now(clock));
         return view(a,kind,data.parent(kind,parent,false),new Version(version,next));
     }
     private void validate(Kind k,UUID version){
+        if(k==Kind.tests){assessment.validate(version);return;}
         var payload=data.payload(k,version);
         if(k==Kind.contents){if(payload.get("title")==null||payload.get("title").toString().isBlank()||payload.get("body")==null||payload.get("body").toString().isBlank())throw ModerationException.conflict("CONTENT_INCOMPLETE");}
         if(k==Kind.questions){

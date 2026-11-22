@@ -17,7 +17,7 @@ public class PracticeAccess {
         var auth=SecurityContextHolder.getContext().getAuthentication();
         String permission=switch(sourceType) {
             case "PRACTICE_SNAPSHOT"->"practice:manage:self";
-            case "SECTION_SNAPSHOT"->"exam:manage:self";
+            case "SECTION_SNAPSHOT","TEST_VERSION"->"exam:manage:self";
             default->throw PracticeException.missing();
         };
         if(!isActor(actorId)||auth.getAuthorities().stream().noneMatch(a->a.getAuthority().equals(permission))) {

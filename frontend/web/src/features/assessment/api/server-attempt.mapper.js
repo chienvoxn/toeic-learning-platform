@@ -17,7 +17,7 @@ export function toServerAttempt(dto) {
   }
   return { id: dto.attemptId, sourceType: dto.sourceType, status: dto.status, expiresAt,
     startedAt: dto.startedAt, expired: dto.expired, totalQuestions: dto.totalQuestions,
-    section: dto.section, testTitle: dto.sourceType === 'SECTION_SNAPSHOT' ? `Section ${dto.section?.type || ''}` : 'Luyện tập theo Part',
+    section: dto.section, test: dto.test, testTitle: dto.test ? `${dto.test.title} · v${dto.test.version}` : dto.sourceType === 'SECTION_SNAPSHOT' ? `Section ${dto.section?.type || ''}` : 'Luyện tập theo Part',
     parts: [...parts.values()], remote: true };
 }
 
@@ -34,7 +34,7 @@ export function toServerResult(dto, session) {
   return { id: dto.attemptId, status: dto.status, submittedAt: dto.submittedAt, totalQuestions: dto.totalQuestions,
     rawCorrect: dto.correctCount, rawScore: dto.rawScore, accuracyRate: dto.accuracy,
     incorrectCount: dto.incorrectCount, unansweredCount: dto.unansweredCount,
-    partResults: dto.parts, section: dto.section, questions, remote: true };
+    partResults: dto.parts, section: dto.section, test: dto.test, questions, remote: true };
 }
 
 function splitAssets(assets = [], includeTranscript = false) {

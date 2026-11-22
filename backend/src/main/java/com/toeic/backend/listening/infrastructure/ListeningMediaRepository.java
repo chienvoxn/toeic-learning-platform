@@ -121,7 +121,7 @@ public class ListeningMediaRepository {
                 FROM attempts
                 WHERE attempt_id = ?
                   AND user_id = ?
-                  AND attempt_source_type IN ('PRACTICE_SNAPSHOT', 'SECTION_SNAPSHOT')
+                  AND (attempt_source_type IN ('PRACTICE_SNAPSHOT', 'SECTION_SNAPSHOT') OR (attempt_source_type='TEST_VERSION' AND test_blueprint_snapshot IS NOT NULL))
                 """,
                 (rs, i) -> new AttemptHeader(
                         rs.getObject("attempt_id", UUID.class),

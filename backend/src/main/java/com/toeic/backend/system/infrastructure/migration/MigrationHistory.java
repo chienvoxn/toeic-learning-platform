@@ -7,7 +7,7 @@ import org.flywaydb.core.Flyway;
 /** Nhận diện prefix/history thực tế, chọn một V34 và kiểm checksum trước mọi ghi migration. */
 public final class MigrationHistory {
     private MigrationHistory() {}
-    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37","38","39","40");
+    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37","38","39","40","41");
     public record Row(int rank, String version, String script, String description, String type, Integer checksum, boolean success) {}
     public record Selection(String lineage, String v35Lineage, List<Row> rows) {}
 
@@ -84,7 +84,9 @@ public final class MigrationHistory {
             boolean rag=(selection.lineage().equals("rag") && versions.contains("34")) || versions.contains("37");
             boolean moderation=(selection.v35Lineage().equals("admin03") && versions.contains("35")) || versions.contains("38");
             boolean softDelete=(selection.v35Lineage().equals("rag") && versions.contains("35")) || versions.contains("39");
-            MigrationSchema.verify(connection,settings,rag,moderation,softDelete,versions.contains("40"));
+            MigrationSchema.verify(connection,settings,rag,moderation,softDelete,versions.contains("40"),versions.contains("41"));
+            if(!versions.contains("41") && exists(connection,"SELECT EXISTS(SELECT test_id FROM test_versions WHERE status IN ('DRAFT','IN_REVIEW','APPROVED') GROUP BY test_id HAVING count(*)>1)"))
+                throw new IllegalStateException("V41 requires at most one working test version per test; resolve legacy versions explicitly before migration");
         }
     }
     private static boolean exists(Connection connection,String query) throws SQLException {

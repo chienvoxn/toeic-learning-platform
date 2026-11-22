@@ -11,6 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
 final class ExamDraftRequest {
     private static final JsonMapper JSON=JsonMapper.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build();
     record Edit(int revision, ExamDraftDocument document) { }
+    static JsonNode tree(String body){try{return JSON.readTree(body);}catch(RuntimeException e){throw ExamDraftException.invalid();}}
     static Edit parse(String body, boolean update) {
         try {
             var root=JSON.readTree(body); int revision=0; JsonNode doc=root;
@@ -36,21 +37,22 @@ final class ExamDraftRequest {
         } catch(ExamDraftException e) { throw e; }
         catch(RuntimeException e) { throw ExamDraftException.invalid(); }
     }
-    private static void fields(JsonNode node, String... allowed) {
+    static void fields(JsonNode node, String... allowed) {
         if(node==null || !node.isObject())throw ExamDraftException.invalid();
         int count=0; for(var field:allowed)if(node.has(field))count++;
         if(count!=node.size())throw ExamDraftException.invalid();
     }
-    private static JsonNode array(JsonNode node) { if(node==null || !node.isArray())throw ExamDraftException.invalid(); return node; }
-    private static String text(JsonNode node, boolean nullable) {
+    static JsonNode array(JsonNode node) { if(node==null || !node.isArray())throw ExamDraftException.invalid(); return node; }
+    static String text(JsonNode node, boolean nullable) {
         if(nullable && (node==null || node.isNull()))return null;
         if(node==null || !node.isString())throw ExamDraftException.invalid(); return node.asString();
     }
-    private static int integer(JsonNode node) {
+    static int integer(JsonNode node) {
         if(node==null || !node.isIntegralNumber() || !node.canConvertToInt())throw ExamDraftException.invalid(); return node.asInt();
     }
-    private static UUID uuid(JsonNode node, boolean nullable) {
+    static UUID uuid(JsonNode node, boolean nullable) {
         var raw=text(node,nullable); if(raw==null)return null;
-        var id=UUID.fromString(raw); if(!id.toString().equalsIgnoreCase(raw))throw ExamDraftException.invalid(); return id;
+        try { var id=UUID.fromString(raw); if(!id.toString().equalsIgnoreCase(raw))throw ExamDraftException.invalid(); return id; }
+        catch(IllegalArgumentException e){throw ExamDraftException.invalid();}
     }
 }

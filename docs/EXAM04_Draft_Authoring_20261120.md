@@ -298,3 +298,10 @@ Report máy ở `backend/target/exam04-staged-proof.json`, `exam04-index-export.
 `exam04-index-package-tests.log`. Không đưa các artifact/POM tạm/report vào commit.
 Chưa có full pass của source cuối và chưa có CI của commit mới. Develop98d81c0 chưa
 được tích hợp trong commit riêng này; không nhận code Listening remote đã kiểm trên cây này.
+
+## Phần tiếp nối 2026-11-21
+
+Sau mốc tích hợp `ee95862`, publication/version và runtime Full Mock được triển khai trong working tree riêng,
+theo [runbook TV2 Publication / Full Mock](TV2_Publication_FullMock_20261121.md).
+Các kết quả staged/commit và full local cũ ở trên giữ nguyên nhãn lịch sử; không dùng để chứng minh code mới.
+Gói tiếp nối không stage/commit/push, không thay SQL V40 hoặc historical V34/V35, và giữ attribution PR #61.

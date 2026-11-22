@@ -16,7 +16,11 @@ public class MediaPublicationPolicy {
     @Transactional(propagation=Propagation.MANDATORY)
     public void validate(Kind kind,UUID version,State actor,String visibility){
         String table=kind==Kind.contents?"learning_content_version_resources":kind==Kind.questions?"question_resources":"question_group_version_resources";
-        var ids=jdbc.query("SELECT resource_id FROM "+table+" WHERE "+kind.version+"=? ORDER BY resource_id",(r,n)->r.getObject(1,UUID.class),version);
+        var ids=kind==Kind.tests?jdbc.query("""
+            SELECT resource_id FROM question_resources WHERE question_version_id IN (SELECT question_version_id FROM test_questions WHERE test_version_id=?)
+            UNION SELECT resource_id FROM question_group_version_resources WHERE group_version_id IN (SELECT question_group_version_id FROM test_questions WHERE test_version_id=?)
+            ORDER BY resource_id
+            """,(r,n)->r.getObject(1,UUID.class),version,version):jdbc.query("SELECT resource_id FROM "+table+" WHERE "+kind.version+"=? ORDER BY resource_id",(r,n)->r.getObject(1,UUID.class),version);
         var rows=new LinkedHashMap<UUID,MediaReuseRepository.Media>();
         for(var id:ids)rows.put(id,media.lockMedia(id).orElseThrow(()->ModerationException.conflict("PUBLICATION_MEDIA_UNAVAILABLE")));
         for(var entry:rows.entrySet()){

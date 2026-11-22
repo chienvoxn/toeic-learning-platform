@@ -12,6 +12,12 @@ export class RemoteAssessmentRepository {
       body: { sourceType: 'SECTION_SNAPSHOT', section: { type, questionCount, durationMinutes } } }));
   }
 
+  async getCatalog() { return apiRequest('/tests'); }
+
+  async startFullMock(testVersionId) {
+    return toServerAttempt(await apiRequest('/attempts', { method: 'POST', body: { sourceType: 'TEST_VERSION', testVersionId } }));
+  }
+
   async getAttempt(attemptId) {
     const data = await apiRequest(`/attempts/${attemptId}`);
     return toServerAttempt(data);

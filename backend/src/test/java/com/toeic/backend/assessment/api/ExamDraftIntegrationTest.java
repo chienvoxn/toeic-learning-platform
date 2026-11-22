@@ -48,6 +48,7 @@ class ExamDraftIntegrationTest extends PracticeTestSupport {
     @AfterEach void cleanupDrafts() {
         reset(audit);
         for(var test:created) {
+            jdbc.update("delete from moderation_versions where kind='tests' and parent_id=?",test);
             jdbc.update("delete from audit_logs where entity_type='TEST' and entity_id=?",test);
             jdbc.update("update attempts set test_version_id=null where test_version_id in(select test_version_id from test_versions where test_id=?)",test);
             jdbc.update("delete from test_questions where test_version_id in(select test_version_id from test_versions where test_id=?)",test);

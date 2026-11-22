@@ -8,7 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes=TeacherTestController.class)
+@RestControllerAdvice(assignableTypes={TeacherTestController.class,TestBlueprintController.class})
 public class ExamDraftExceptionHandler {
     @ExceptionHandler(ExamDraftException.class)
     public ResponseEntity<Error> business(ExamDraftException e) {
@@ -19,4 +19,6 @@ public class ExamDraftExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Error> reference(DataIntegrityViolationException e) { return business(ExamDraftException.reference()); }
     public record Error(String code,String message,String traceId,List<Object> details) { }
+    @ExceptionHandler(com.toeic.backend.system.application.ModerationException.class)
+    public ResponseEntity<Error> moderation(com.toeic.backend.system.application.ModerationException e){return ResponseEntity.status(e.status()).body(new Error(e.code(),e.getMessage(),UUID.randomUUID().toString(),List.of()));}
 }

@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/teacher/tests")
 public class TeacherTestController {
     private final ExamDraftService service;
-    public TeacherTestController(ExamDraftService service) { this.service=service; }
+    private final ExamWorkflowService workflow;
+    public TeacherTestController(ExamDraftService service,ExamWorkflowService workflow) { this.service=service;this.workflow=workflow; }
     private static void noParams(MultiValueMap<String,String> params) { if(!params.isEmpty())throw ExamDraftException.invalid(); }
     @GetMapping("/capabilities")
     public Object capabilities(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params) {
-        noParams(params);return service.capabilities(actor.userId());
+        noParams(params);return workflow.capabilities(actor.userId());
     }
     @GetMapping("/question-units")
     public Object units(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params) {
@@ -34,22 +35,38 @@ public class TeacherTestController {
         int page=0;
         try { if(params.containsKey("page")) { var raw=params.getFirst("page"); if(raw==null || !raw.matches("0|[1-9][0-9]*"))throw ExamDraftException.invalid(); page=Integer.parseInt(raw); } }
         catch(NumberFormatException e) { throw ExamDraftException.invalid(); }
-        return service.list(actor.userId(),page);
+        return workflow.list(actor.userId(),page);
     }
     @GetMapping({"/{testId}","/{testId}/versions/{versionId}"})
     public Object read(@AuthenticationPrincipal SessionPrincipal actor, @PathVariable UUID testId,
             @PathVariable(required=false) UUID versionId, @RequestParam MultiValueMap<String,String> params) {
-        noParams(params); return service.read(actor.userId(),testId,versionId);
+        noParams(params); return workflow.read(actor.userId(),testId,versionId);
     }
     @PostMapping(consumes="application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public Object create(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params, @RequestBody String body) {
-        noParams(params); return service.create(actor.userId(),ExamDraftRequest.parse(body,false).document());
+        noParams(params); var draft=service.create(actor.userId(),ExamDraftRequest.parse(body,false).document());return workflow.read(actor.userId(),draft.testId(),draft.versionId());
     }
     @PutMapping(path="/{testId}/versions/{versionId}",consumes="application/json")
     public Object save(@AuthenticationPrincipal SessionPrincipal actor, @PathVariable UUID testId, @PathVariable UUID versionId,
             @RequestParam MultiValueMap<String,String> params, @RequestBody String body) {
         noParams(params); var edit=ExamDraftRequest.parse(body,true);
-        return service.update(actor.userId(),testId,versionId,edit.revision(),edit.document());
+        service.update(actor.userId(),testId,versionId,edit.revision(),edit.document());return workflow.read(actor.userId(),testId,versionId);
+    }
+    @GetMapping("/{testId}/versions")
+    public Object versions(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@RequestParam MultiValueMap<String,String> params){noParams(params);return workflow.versions(actor.userId(),testId);}
+    @PostMapping("/{testId}/versions/{versionId}/{command:submit-review|approve|return|revoke|publish}")
+    public Object transition(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@PathVariable String command,@RequestParam MultiValueMap<String,String> params,@RequestBody com.toeic.backend.system.api.ModerationRequest body){
+        noParams(params);String action=command.equals("submit-review")?"submit":command;var value=body.validate(action,false);
+        return workflow.transition(actor.userId(),testId,versionId,action,value.expectedRevision(),value.reason());
+    }
+    @PostMapping("/{testId}/versions/{versionId}/{command:fork|retire|unpublish}")
+    public Object versionCommand(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@PathVariable String command,@RequestParam MultiValueMap<String,String> params,@RequestBody String body){
+        noParams(params);var n=ExamDraftRequest.tree(body);ExamDraftRequest.fields(n,"expectedRevision");long revision=ExamDraftRequest.integer(n.get("expectedRevision"));
+        return command.equals("fork")?workflow.fork(actor.userId(),testId,versionId,revision):workflow.retire(actor.userId(),testId,versionId,revision);
+    }
+    @PutMapping("/{testId}/versions/{versionId}/blueprint")
+    public Object blueprint(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@RequestParam MultiValueMap<String,String> params,@RequestBody String body){
+        noParams(params);var n=ExamDraftRequest.tree(body);ExamDraftRequest.fields(n,"expectedRevision","blueprintId");return workflow.blueprint(actor.userId(),testId,versionId,ExamDraftRequest.integer(n.get("expectedRevision")),ExamDraftRequest.uuid(n.get("blueprintId"),false));
     }
 }

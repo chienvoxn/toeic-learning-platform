@@ -13,7 +13,8 @@ public class ModerationRepository {
     public enum Kind {
         contents("learning_contents","content_id","learning_content_versions","content_version_id","author_id","content"),
         questions("questions","question_id","question_versions","question_version_id","created_by","question"),
-        groups("question_groups","group_id","question_group_versions","group_version_id","created_by","question");
+        groups("question_groups","group_id","question_group_versions","group_version_id","created_by","question"),
+        tests("tests","test_id","test_versions","test_version_id","created_by","test");
         public final String parents,id,versions,version,owner,permission;
         Kind(String p,String i,String v,String vi,String o,String permission){parents=p;id=i;versions=v;version=vi;owner=o;this.permission=permission;}
         public static Kind parse(String value){try{return valueOf(value);}catch(IllegalArgumentException e){throw ModerationException.invalid();}}
@@ -33,8 +34,8 @@ public class ModerationRepository {
         (r,n)->new Evidence(r.getObject(1,UUID.class),r.getObject(2,UUID.class),r.getLong(3),(Long)r.getObject(4),r.getBoolean(5)),k.name(),version).stream().findFirst().orElse(null);}
     public void record(Kind k,UUID parent,UUID version,UUID source,UUID actor,boolean created){
         var old=evidence(k,version);
-        if(old==null)jdbc.update("INSERT INTO moderation_versions(kind,parent_id,version_id,source_version_id,cycle_key,revision,evidence_complete) VALUES (?,?,?,?,?,0,?)",
-            k.name(),parent,version,source,source==null?parent:source,created);
+        if(old==null)jdbc.update("INSERT INTO moderation_versions(kind,parent_id,version_id,source_version_id,cycle_key,revision,evidence_complete) VALUES (?,?,?,?,?,?,?)",
+            k.name(),parent,version,source,source==null?parent:source,k==Kind.tests?jdbc.queryForObject("SELECT revision FROM test_version_drafts WHERE test_version_id=?",Integer.class,version):0,created);
         else jdbc.update("UPDATE moderation_versions SET revision=revision+1,approved_revision=null WHERE kind=? AND version_id=?",k.name(),version);
         contributor(k,version,actor,created?"CREATED":"EDITED");
     }
@@ -44,6 +45,11 @@ public class ModerationRepository {
     public void state(Kind k,UUID version,String state,Long approval){
         jdbc.update("UPDATE "+k.versions+" SET status=? WHERE "+k.version+"=?",state,version);
         jdbc.update("UPDATE moderation_versions SET revision=revision+1,approved_revision=? WHERE kind=? AND version_id=?",approval,k.name(),version);
+        if(k==Kind.tests)jdbc.update("UPDATE test_version_drafts SET revision=revision+1 WHERE test_version_id=?",version);
+    }
+    public void publishedRevision(Kind k,UUID version){
+        jdbc.update("UPDATE moderation_versions SET revision=revision+1 WHERE kind=? AND version_id=?",k.name(),version);
+        if(k==Kind.tests)jdbc.update("UPDATE test_version_drafts SET revision=revision+1 WHERE test_version_id=?",version);
     }
     public void publish(Kind k,UUID parent,UUID version,String visibility){
         jdbc.update("UPDATE "+k.versions+" SET status='PUBLISHED',published_at=CURRENT_TIMESTAMP WHERE "+k.version+"=?",version);
@@ -52,6 +58,7 @@ public class ModerationRepository {
     }
     public void decision(Kind k,UUID version,long revision,UUID actor,String action,String reason){jdbc.update("INSERT INTO moderation_decisions VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP)",UUID.randomUUID(),k.name(),version,revision,actor,action,reason);}
     public Map<String,Object> payload(Kind k,UUID version){
+        if(k==Kind.tests)return jdbc.queryForMap("SELECT d.document::text, v.blueprint_id AS \"blueprintId\",v.blueprint_snapshot::text AS \"blueprintSnapshot\" FROM test_version_drafts d JOIN test_versions v USING(test_version_id) WHERE d.test_version_id=?",version);
         var columns=k==Kind.contents?"title,summary,body":k==Kind.questions?"question_text,explanation,difficulty,group_version_id":"instruction,passage_text";
         var value=new LinkedHashMap<>(jdbc.queryForMap("SELECT "+columns+" FROM "+k.versions+" WHERE "+k.version+"=?",version));
         if(k==Kind.questions)value.put("choices",jdbc.queryForList("SELECT choice_label,content,is_correct,display_order FROM question_choices WHERE question_version_id=? ORDER BY display_order",version));

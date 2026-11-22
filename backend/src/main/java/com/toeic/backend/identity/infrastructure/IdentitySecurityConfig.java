@@ -89,8 +89,11 @@ public class IdentitySecurityConfig {
                         .hasAnyAuthority("question:manage:self", "question:manage:any")
 
                         // Teacher test drafts: ownership is also checked by ExamDraftService.
-                        .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**")
-                        .hasAnyAuthority("test:manage:self", "test:manage:any")
+                        .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**", "/api/v1/teacher/blueprints", "/api/v1/teacher/blueprints/**")
+                        .hasAnyAuthority("test:manage:self", "test:manage:any", "test:review", "test:publish")
+
+                        .requestMatchers(HttpMethod.GET,"/api/v1/tests","/api/v1/tests/**")
+                        .hasAuthority("exam:manage:self")
 
                         // Teacher media storage (MinIO/S3 upload & presign)
                         .requestMatchers(
