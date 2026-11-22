@@ -39,9 +39,9 @@ public final class MigrationSchema {
         Collections.sort(output);return String.join("\n",output)+"\n";
     }
 
-    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock) throws SQLException {
+    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock, boolean expiryWorker) throws SQLException {
         String expected;
-        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(fullMock?"schema-v41.txt":examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
+        try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(expiryWorker?"schema-v42.txt":fullMock?"schema-v41.txt":examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
             expected = new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n","\n");
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot read release schema evidence", e); }

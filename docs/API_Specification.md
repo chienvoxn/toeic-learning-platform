@@ -669,3 +669,7 @@ lưu đáp án, submit, result vẫn dùng routes attempts hiện có, không nh
 Unpublish/retire chặn start mới nhưng giữ phiên đã pin; hết hạn chặn sửa và cho explicit submit các đáp án đã lưu.
 Blueprint số liệu chính thức còn chờ xác nhận, không coi fixture nhỏ là cấu trúc TOEIC đã phê duyệt.
 Không worker EXAM-03, quy đổi điểm hoặc bypass G1/media trong gói này.
+
+## Bổ sung EXAM-03 — 2026-11-22
+
+[Worker Full Mock expiry](EXAM03_Worker_20261122.md) bổ sung tự chốt chỉ cho TEST_VERSION/FULL_MOCK có pin/snapshot hợp lệ. Scheduler chạy độc lập token/browser, claim parent SKIP LOCKED, reuse grading transaction và durable retry V42. Năm route attempts giữ nguyên; GET không tự grade. Hết hạn chặn save; UI đọc lại trạng thái đến GRADED rồi đọc result DB. Worker/submit tay chỉ commit một bộ kết quả. Practice và Section giữ policy cũ, không tự chốt bởi worker này. Chưa seed blueprint chính thức hoặc thực thi đề xuất khóa/chuyển Section 45/75 phút.

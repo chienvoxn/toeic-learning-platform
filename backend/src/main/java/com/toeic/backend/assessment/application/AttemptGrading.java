@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.*;
 @Transactional(propagation = Propagation.MANDATORY)
 class AttemptGrading {
     private final PracticeAnswerRepository answers;
-    private final PracticeQuestionCatalog catalog;
-    AttemptGrading(PracticeAnswerRepository answers, PracticeQuestionCatalog catalog) {
+    private final com.toeic.backend.questionbank.application.PinnedQuestionGrading catalog;
+    AttemptGrading(PracticeAnswerRepository answers, com.toeic.backend.questionbank.application.PinnedQuestionGrading catalog) {
         this.answers = answers; this.catalog = catalog;
     }
     PracticeResultDtos.Result grade(UUID actorId, PracticeAttempt attempt, OffsetDateTime now) {
@@ -26,11 +26,15 @@ class AttemptGrading {
                 || !pins.stream().map(q -> q.getQuestionVersionId()).collect(java.util.stream.Collectors.toSet()).containsAll(saved.keySet())) {
             throw new PracticeQuestionCatalog.Unavailable(false);
         }
+        // Invalid late persisted data is quarantined, never silently counted or overwritten.
+        if(attempt.isTestVersion() && saved.values().stream().anyMatch(a->!a.updatedAt().isBefore(attempt.getExpiresAt()))) {
+            throw new PracticeQuestionCatalog.Unavailable(false);
+        }
         int correct = 0, listening = 0, reading = 0;
         var parts = new TreeMap<Integer,int[]>();
         for (var pin : pins) {
             var versionId = pin.getQuestionVersionId();
-            var key = catalog.markingKey(actorId,versionId,pin.getGroupVersionId());
+            var key = catalog.key(versionId,pin.getGroupVersionId());
             if(attempt.isSection()&&!SectionDtos.configuration(attempt).partNumbers().contains(key.partNumber())) {
                 throw new PracticeQuestionCatalog.Unavailable(false);
             }
@@ -50,6 +54,7 @@ class AttemptGrading {
             answers.partResult(attemptId,part.getKey(),count[0],count[1],accuracy(count[1],count[0]));
         }
         attempt.completeGrading(now,correct,listening,reading);
+        if(attempt.isTestVersion())answers.clearExpiryRetry(attemptId);
         return storedResult(attempt);
     }
     PracticeResultDtos.Result storedResult(PracticeAttempt attempt) {

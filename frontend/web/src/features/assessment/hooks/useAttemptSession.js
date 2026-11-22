@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { assessmentRepo } from '../repositories/assessment.repo';
 import { AnswerSaveQueue } from '../answer-save-queue';
 import { attachAttemptMedia } from '../api/server-attempt.mapper';
+import { watchExpiredAttempt } from '../expired-attempt-watcher';
 
 export function useAttemptSession(attemptId, repository = assessmentRepo) {
   const [attempt, setAttempt] = useState(null);
@@ -10,6 +11,7 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
   const [loadError, setLoadError] = useState('');
   const [saveStatus, setSaveStatus] = useState('saved');
   const [saveError, setSaveError] = useState('');
+  const [expiryError, setExpiryError] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const sequence = useRef(0);
   const queue = useRef(null);
@@ -40,6 +42,21 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
     return () => { active = false; window.removeEventListener('beforeunload', leaving); };
   }, [attemptId, repository]);
 
+  const source = attempt?.sourceType, status = attempt?.status, deadline = attempt?.expiresAt;
+  useEffect(() => {
+    if (source !== 'TEST_VERSION' || status !== 'IN_PROGRESS' || !Number.isFinite(deadline)) return;
+    let stop = () => {};
+    const timer = setTimeout(() => {
+      queue.current?.seal();
+      setAttempt(previous => previous ? { ...previous, expired: true } : previous);
+      stop = watchExpiredAttempt({ read: () => repository.getAttempt(attemptId),
+        onSnapshot: value => { queue.current?.reconcileSaved(value); setAttempt(value); setExpiryError(''); },
+        onError: () => setExpiryError('Chưa đọc được trạng thái máy chủ. Bộ đếm đã hết hạn; hệ thống vẫn tự chốt bài. Đang thử đọc lại.'),
+      });
+    }, Math.max(0, deadline - Date.now()));
+    return () => { clearTimeout(timer); stop(); };
+  }, [attemptId, repository, source, status, deadline]);
+
   const persist = useCallback(payload => {
     return queue.current?.enqueue(payload);
   }, []);
@@ -61,10 +78,11 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
     if (submitting.current) throw new Error('Bài thi đang được nộp.');
     submitting.current = true; setIsSubmitting(true);
     try {
-      await queue.current?.flush();
+      if (attempt?.sourceType === 'TEST_VERSION' && (attempt.expired || Date.now() >= attempt.expiresAt)) queue.current?.seal();
+      else await queue.current?.flush();
       return await repository.submitAttempt(attemptId);
     } finally { submitting.current = false; setIsSubmitting(false); }
-  }, [attemptId, repository]);
-  return { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam,
+  }, [attemptId, repository, attempt]);
+  return { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, expiryError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam,
     retryLastSave: () => queue.current?.retry() };
 }

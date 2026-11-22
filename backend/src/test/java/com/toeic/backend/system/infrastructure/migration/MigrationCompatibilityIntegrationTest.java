@@ -79,7 +79,7 @@ class MigrationCompatibilityIntegrationTest {
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("41",flyway.info().current().getVersion().toString());
+        assertEquals("42",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {
@@ -120,7 +120,7 @@ class MigrationCompatibilityIntegrationTest {
     }
     @ParameterizedTest @ValueSource(strings={"restore","wrong-index"})
     void v41RestoreIndexWhitelistIsExact(String kind)throws Exception {
-        String db=database(v33);original(db,"rag","41").migrate();
+        String db=database(v33);original(db,"rag","42").migrate();
         String definition=Files.readString(Path.of("src/main/resources/db/compatibility/restored-indexes-v41.txt")).strip().split("\\|",-1)[3];
         if(kind.equals("wrong-index"))definition="CREATE UNIQUE INDEX uq_test_working_version ON test_versions(test_id) WHERE status='DRAFT'";
         sql(db,"DROP INDEX uq_test_working_version; "+definition);String before=snapshot(db);

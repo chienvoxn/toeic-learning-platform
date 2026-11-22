@@ -17,7 +17,7 @@ import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessm
 export default function AttemptPage({ remote = false }) {
   const { attemptId } = useParams();
   const navigate = useNavigate();
-  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
+  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, expiryError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
   const [error, setError] = useState('');
   const [timedOutId, setTimedOutId] = useState(null);
   const [strictAudioOverride, setStrictAudioOverride] = useState(null);
@@ -64,7 +64,7 @@ export default function AttemptPage({ remote = false }) {
             <div>
               <h1>{attempt.testTitle}</h1>
               <small>Part {questions[currentIndex]?.partNumber} · {answered}/{questions.length} câu</small>
-              <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} />
+              <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} retryDisabled={expired && attempt.sourceType === 'TEST_VERSION'} />
             </div>
           </div>
           <CountdownTimer expiresAt={attempt.expiresAt} onExpire={remote ? () => setTimedOutId(attemptId) : () => submit(true)} />
@@ -108,10 +108,11 @@ export default function AttemptPage({ remote = false }) {
           )}
           {expired && remote && (
             <p role="status" className="integration-notice">
-              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên Practice hết hạn không nhận nộp mới.'}
+              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'TEST_VERSION' ? 'Máy chủ đang tự chốt Full Mock. Chỉ đáp án đã lưu trước hạn được chấm; đang đọc lại trạng thái và kết quả.' : attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên Practice hết hạn không nhận nộp mới.'}
             </p>
           )}
           {(error || saveError) && <p className="form-error" role="alert">{error || saveError}</p>}
+          {expiryError && <p role="alert">{expiryError}</p>}
           {saveStatus === 'error' && (
             <p>
               Các lựa chọn chưa lưu không được dùng để chấm.{' '}
