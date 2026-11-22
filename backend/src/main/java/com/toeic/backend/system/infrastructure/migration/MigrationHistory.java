@@ -7,9 +7,15 @@ import org.flywaydb.core.Flyway;
 /** Nhận diện prefix/history thực tế, chọn một V34 và kiểm checksum trước mọi ghi migration. */
 public final class MigrationHistory {
     private MigrationHistory() {}
-    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42");
+    public static final List<String> VERSIONS = List.of("1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","27.1","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43");
     public record Row(int rank, String version, String script, String description, String type, Integer checksum, boolean success) {}
-    public record Selection(String lineage, String v35Lineage, List<Row> rows) {}
+    public record Selection(String lineage, String v35Lineage, String v36Lineage, List<Row> rows) {}
+
+    public static List<String> versions(String v36Lineage) {
+        if (v36Lineage.equals("completion")) return VERSIONS;
+        if (!v36Lineage.equals("vocabulary")) throw new IllegalStateException("Unknown V36 lineage");
+        var versions=new ArrayList<>(VERSIONS);versions.add(versions.indexOf("39"),"38.1");return List.copyOf(versions);
+    }
 
     public static Selection inspect(Connection connection) throws SQLException {
         if (!"public".equals(connection.getSchema())) throw new IllegalStateException("Only public migration schema is supported");
@@ -27,9 +33,19 @@ public final class MigrationHistory {
             if (exists(connection,"SELECT EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname<>'flyway_schema_history' AND c.relkind IN ('r','p','v','m','S','f'))"))
                 throw new IllegalStateException("Nonempty database without migration history");
             MigrationSchema.verifyEmpty(connection);
-            return new Selection("rag", "admin03", List.of());
+            return new Selection("rag", "admin03", "completion", List.of());
         }
-        verifyPrefix(rows);
+        String v36Lineage="completion";
+        var v36=rows.stream().filter(r->"36".equals(r.version())).findFirst();
+        if(v36.isPresent()) {
+            var row=v36.get();
+            if(row.script().equals("V36__complete_settings.sql") && Objects.equals(row.checksum(),-725710829)
+                    && row.description().equals("complete settings")) v36Lineage="completion";
+            else if(row.script().equals("V36__vocabulary_archive_and_catalog_deck_deletion.sql") && Objects.equals(row.checksum(),747431657)
+                    && row.description().equals("vocabulary archive and catalog deck deletion")) v36Lineage="vocabulary";
+            else throw new IllegalStateException("Unknown V36 identity");
+        }
+        verifyPrefix(rows,versions(v36Lineage));
         String lineage="rag";
         var v34=rows.stream().filter(r->r.version().equals("34")).findFirst();
         if (v34.isPresent()) {
@@ -50,14 +66,19 @@ public final class MigrationHistory {
                 v35Lineage="rag";
             } else throw new IllegalStateException("Unknown V35 identity");
         }
-        return new Selection(lineage, v35Lineage, List.copyOf(rows));
+        if(v36Lineage.equals("vocabulary") && (!lineage.equals("rag") || !v35Lineage.equals("rag")))
+            throw new IllegalStateException("Unsupported V34/V35/vocabulary release combination");
+        return new Selection(lineage, v35Lineage, v36Lineage, List.copyOf(rows));
     }
 
     static void verifyPrefix(List<Row> rows) {
-        if (rows.size()>VERSIONS.size()) throw new IllegalStateException("Unknown or duplicate history version");
+        verifyPrefix(rows,VERSIONS);
+    }
+    static void verifyPrefix(List<Row> rows,List<String> expected) {
+        if (rows.size()>expected.size()) throw new IllegalStateException("Unknown or duplicate history version");
         for (int i=0;i<rows.size();i++) {
             var row=rows.get(i);
-            if (row.rank()!=i+1 || !VERSIONS.get(i).equals(row.version()) || !row.success() || !"SQL".equals(row.type()) || row.checksum()==null)
+            if (row.rank()!=i+1 || !expected.get(i).equals(row.version()) || !row.success() || !"SQL".equals(row.type()) || row.checksum()==null)
                 throw new IllegalStateException("Failed, gapped, duplicate or unknown migration history");
         }
     }
@@ -68,7 +89,7 @@ public final class MigrationHistory {
             if (migration.getVersion()==null || resolved.put(migration.getVersion().toString(),migration)!=null)
                 throw new IllegalStateException("Unknown or duplicate packaged migration");
         }
-        if (!new ArrayList<>(resolved.keySet()).equals(VERSIONS)) throw new IllegalStateException("Packaged migration set differs from release");
+        if (!new ArrayList<>(resolved.keySet()).equals(versions(selection.v36Lineage()))) throw new IllegalStateException("Packaged migration set differs from release");
         for (var row:selection.rows()) {
             var migration=resolved.get(row.version());
             String location=migration.getPhysicalLocation();
@@ -80,11 +101,15 @@ public final class MigrationHistory {
         }
         if (!selection.rows().isEmpty()) {
             Set<String> versions=new HashSet<>();selection.rows().forEach(r->versions.add(r.version()));
-            boolean settings=(selection.lineage().equals("settings") && versions.contains("34")) || versions.contains("36");
-            boolean rag=(selection.lineage().equals("rag") && versions.contains("34")) || versions.contains("37");
-            boolean moderation=(selection.v35Lineage().equals("admin03") && versions.contains("35")) || versions.contains("38");
+            boolean completion=selection.v36Lineage().equals("completion"),bridge=versions.contains("38.1");
+            boolean settings=(selection.lineage().equals("settings") && versions.contains("34")) || (completion && versions.contains("36")) || bridge;
+            boolean rag=(selection.lineage().equals("rag") && versions.contains("34")) || (completion && versions.contains("37"));
+            boolean moderation=(selection.v35Lineage().equals("admin03") && versions.contains("35")) || (completion && versions.contains("38")) || bridge;
             boolean softDelete=(selection.v35Lineage().equals("rag") && versions.contains("35")) || versions.contains("39");
-            MigrationSchema.verify(connection,settings,rag,moderation,softDelete,versions.contains("40"),versions.contains("41"),versions.contains("42"));
+            MigrationSchema.verify(connection,settings,rag,moderation,softDelete,versions.contains("40"),versions.contains("41"),versions.contains("42"),
+                    (!completion && versions.contains("36")) || versions.contains("43"),
+                    (!completion && versions.contains("37")) || versions.contains("43"),
+                    (!completion && versions.contains("38")) || versions.contains("43"));
             if(!versions.contains("41") && exists(connection,"SELECT EXISTS(SELECT test_id FROM test_versions WHERE status IN ('DRAFT','IN_REVIEW','APPROVED') GROUP BY test_id HAVING count(*)>1)"))
                 throw new IllegalStateException("V41 requires at most one working test version per test; resolve legacy versions explicitly before migration");
         }

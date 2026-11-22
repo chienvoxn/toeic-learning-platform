@@ -36,7 +36,7 @@ class MigrationCompatibilityIntegrationTest {
         DATABASES.add(name);return name;
     }
     static Flyway original(String database,String lineage,String target) {
-        return Flyway.configure().dataSource(source(database)).locations("classpath:db/migration","classpath:db/history/"+lineage,"classpath:db/history/v35/admin03")
+        return Flyway.configure().dataSource(source(database)).locations("classpath:db/migration","classpath:db/history/v36/completion","classpath:db/history/"+lineage,"classpath:db/history/v35/admin03")
                 .target(target).cleanDisabled(true).load();
     }
     @BeforeAll static void seedOriginalHistories() throws Exception {
@@ -68,7 +68,7 @@ class MigrationCompatibilityIntegrationTest {
         String db=database(kind.equals("empty")?null:kind.equals("v33")?v33:kind.startsWith("settings")?settings:rag);
         if(kind.endsWith("-admin35") || kind.endsWith("37") || kind.endsWith("39") || kind.startsWith("rag-rag")) {
             String target=kind.endsWith("-admin35")?"35":kind.startsWith("rag-rag")?kind.substring(7):kind.endsWith("39")?"39":"37";
-            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration",
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/v36/completion",
                 "classpath:db/history/"+(kind.startsWith("settings")?"settings":"rag"),
                 "classpath:db/history/v35/"+(kind.startsWith("rag-rag")?"rag":"admin03")).target(target).cleanDisabled(true).load().migrate();
         }
@@ -79,7 +79,7 @@ class MigrationCompatibilityIntegrationTest {
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("42",flyway.info().current().getVersion().toString());
+        assertEquals("43",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {
@@ -120,7 +120,7 @@ class MigrationCompatibilityIntegrationTest {
     }
     @ParameterizedTest @ValueSource(strings={"restore","wrong-index"})
     void v41RestoreIndexWhitelistIsExact(String kind)throws Exception {
-        String db=database(v33);original(db,"rag","42").migrate();
+        String db=database(v33);original(db,"rag","43").migrate();
         String definition=Files.readString(Path.of("src/main/resources/db/compatibility/restored-indexes-v41.txt")).strip().split("\\|",-1)[3];
         if(kind.equals("wrong-index"))definition="CREATE UNIQUE INDEX uq_test_working_version ON test_versions(test_id) WHERE status='DRAFT'";
         sql(db,"DROP INDEX uq_test_working_version; "+definition);String before=snapshot(db);
@@ -146,7 +146,7 @@ class MigrationCompatibilityIntegrationTest {
                 Files.writeString(directory.resolve("V1__failed.sql"),"CREATE TABLE incomplete_marker(id integer); SELECT 1/0;");
                 Files.writeString(directory.resolve("V1__failed.sql.conf"),"executeInTransaction=false\n");
             }
-            var fixture=Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","filesystem:"+directory).target(kind.equals("wrong-checksum")?"34":"latest").cleanDisabled(true);
+            var fixture=Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/v36/completion","filesystem:"+directory).target(kind.equals("wrong-checksum")?"34":"latest").cleanDisabled(true);
             if(!kind.equals("wrong-checksum"))fixture.locations("filesystem:"+directory);
             var original=fixture.load();
             if(kind.equals("failed-history"))assertThrows(Exception.class,original::migrate);else original.migrate();
@@ -160,7 +160,7 @@ class MigrationCompatibilityIntegrationTest {
                 case "partial-settings"->sql(db,"ALTER TABLE system_settings ADD COLUMN revision bigint NOT NULL DEFAULT 0");
                 case "empty-domain"->sql(db,"CREATE DOMAIN unexpected AS integer");
                 case "history-column"->sql(db,"ALTER TABLE flyway_schema_history ADD COLUMN unexpected int");
-                case "unknown-version"->{Path directory=Files.createTempDirectory("toeic-migration-future-");Files.writeString(directory.resolve("V99__unknown.sql"),"SELECT 1;");Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/rag","classpath:db/history/v35/admin03","filesystem:"+directory).cleanDisabled(true).load().migrate();}
+                case "unknown-version"->{Path directory=Files.createTempDirectory("toeic-migration-future-");Files.writeString(directory.resolve("V99__unknown.sql"),"SELECT 1;");Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/v36/completion","classpath:db/history/rag","classpath:db/history/v35/admin03","filesystem:"+directory).cleanDisabled(true).load().migrate();}
                 default->throw new AssertionError(kind);
             }
         }
@@ -175,9 +175,9 @@ class MigrationCompatibilityIntegrationTest {
             Path directory=Files.createTempDirectory("toeic-v35-negative-");
             String sql=Files.readString(Path.of("src/main/resources/db/history/v35/rag/V35__ai_conversation_delete_cascade.sql"));
             Files.writeString(directory.resolve(kind.equals("v35-script")?"V35__unknown_identity.sql":"V35__ai_conversation_delete_cascade.sql"),sql+(kind.equals("v35-checksum")?"\n-- deliberately invalid checksum fixture\n":""));
-            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/rag","filesystem:"+directory).target("35").cleanDisabled(true).load().migrate();
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/v36/completion","classpath:db/history/rag","filesystem:"+directory).target("35").cleanDisabled(true).load().migrate();
         } else {
-            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/"+(kind.equals("settings-rag35")?"settings":"rag"),
+            Flyway.configure().dataSource(source(db)).locations("classpath:db/migration","classpath:db/history/v36/completion","classpath:db/history/"+(kind.equals("settings-rag35")?"settings":"rag"),
                 "classpath:db/history/v35/"+v35).target("35").cleanDisabled(true).load().migrate();
             switch(kind) {
                 case "soft-column-only"->sql(db,"ALTER TABLE ai_conversations ADD COLUMN deleted_at timestamptz");

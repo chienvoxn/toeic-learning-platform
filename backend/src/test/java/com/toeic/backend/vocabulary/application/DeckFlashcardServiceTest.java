@@ -70,7 +70,8 @@ class DeckFlashcardServiceTest {
     @Test
     void addVocabulary_shouldAddSuccessfully() {
         mockOwnedDeck();
-        mockOwnedVocabulary();
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
+                .thenReturn(Optional.of(vocabulary));
 
         when(deckVocabularyRepository
                 .existsByIdDeckIdAndIdVocabularyId(deckId, vocabularyId))
@@ -89,7 +90,8 @@ class DeckFlashcardServiceTest {
     @Test
     void addVocabulary_shouldReturn409WhenDuplicate() {
         mockOwnedDeck();
-        mockOwnedVocabulary();
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
+                .thenReturn(Optional.of(vocabulary));
 
         when(deckVocabularyRepository
                 .existsByIdDeckIdAndIdVocabularyId(deckId, vocabularyId))
@@ -132,14 +134,8 @@ class DeckFlashcardServiceTest {
     void addVocabulary_shouldReturn404WhenVocabularyNotOwned() {
         mockOwnedDeck();
 
-        Vocabulary otherVocabulary = new Vocabulary(
-                UUID.randomUUID(),
-                "private",
-                "not owned"
-        );
-
-        when(vocabularyRepository.findById(vocabularyId))
-                .thenReturn(Optional.of(otherVocabulary));
+        when(vocabularyRepository.findOwnedByIdForUpdate(vocabularyId, userId))
+                .thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,

@@ -39,12 +39,14 @@ public final class MigrationSchema {
         Collections.sort(output);return String.join("\n",output)+"\n";
     }
 
-    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock, boolean expiryWorker) throws SQLException {
+    public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock, boolean expiryWorker,
+            boolean vocabularyArchive,boolean vocabularyReviews,boolean vocabularyPermission) throws SQLException {
         String expected;
         try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(expiryWorker?"schema-v42.txt":fullMock?"schema-v41.txt":examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
             expected = new String(input.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n","\n");
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot read release schema evidence", e); }
+        expected=vocabularyEvidence(expected,vocabularyArchive,vocabularyReviews);
         var filtered = new StringBuilder();
         for (String line : expected.split("\n")) {
             String[] parts = line.split("\\|", -1);
@@ -57,7 +59,7 @@ public final class MigrationSchema {
         }
         if (!filtered.toString().equals(normalizedSignature(connection,fullMock))) throw new IllegalStateException("Schema differs from release migration evidence");
         // An existing feature's grants can have been revoked; never restore them.
-        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish','test:manage:self','test:manage:any','test:review','test:publish'";
+        String codes = "'system:settings:manage','ai:chat:self','ai:knowledge:manage','content:review','content:publish','question:review','question:publish','test:manage:self','test:manage:any','test:review','test:publish','vocabulary:learn:self'";
         var actual = new HashSet<String>();
         try (var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT code FROM public.permissions WHERE code IN (" + codes + ")")) {
             while (rows.next()) actual.add(rows.getString(1));
@@ -68,7 +70,28 @@ public final class MigrationSchema {
         if (moderation) required.addAll(Set.of("content:review","content:publish","question:review","question:publish"));
         if (examDrafts) required.addAll(Set.of("test:manage:self","test:manage:any"));
         if(fullMock)required.addAll(Set.of("test:review","test:publish"));
+        if(vocabularyPermission)required.add("vocabulary:learn:self");
         if (!actual.equals(required)) throw new IllegalStateException("Partial feature permission catalog");
+    }
+
+    /** Ghép đúng delta metadata từ SQL gốc; không nới so sánh schema hoặc chuẩn hóa tùy ý. */
+    private static String vocabularyEvidence(String expected,boolean archive,boolean reviews) {
+        if(!archive && !reviews)return expected;
+        try(var input=MigrationSchema.class.getResourceAsStream("/db/compatibility/vocabulary-schema.txt")) {
+            if(input==null)throw new IllegalStateException("Missing vocabulary schema evidence");
+            var lines=new TreeSet<>(Arrays.asList(expected.split("\n")));
+            for(String line:new String(input.readAllBytes(),StandardCharsets.UTF_8).replace("\r\n","\n").split("\n")) {
+                if(line.isEmpty())continue;
+                String[] parts=line.split("\\|",-1);
+                if(parts.length<3)throw new IllegalStateException("Invalid vocabulary schema evidence");
+                if(parts[1].equals("vocabulary_review_requests")) {if(reviews)lines.add(line);}
+                else if(line.startsWith("column|vocabularies|archived_at|")) {if(archive)lines.add(line);}
+                else if(line.startsWith("constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_personal_deck|")) {
+                    if(archive){lines.removeIf(x->x.startsWith("constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_personal_deck|"));lines.add(line);}
+                } else throw new IllegalStateException("Unexpected vocabulary schema evidence entry");
+            }
+            lines.remove("");return String.join("\n",lines)+"\n";
+        }catch(java.io.IOException e){throw new IllegalStateException("Cannot read vocabulary schema evidence",e);}
     }
 
     public static String signature(Connection connection) throws SQLException {

@@ -466,6 +466,16 @@ Table deck_vocabularies {
   }
 }
 
+**Ghi chú runtime Vocabulary:** V30 bổ sung bảng `vocabulary_learning_sessions`
+lưu snapshot theo user và deck, kèm revision. V36 thêm `vocabularies.archived_at`
+và cập nhật khóa ngoại enrollment để xóa bản sao bộ catalog. V37 thêm
+`vocabulary_review_requests` lưu key theo user, từ, rating và response để
+phát lại kết quả khi client retry. Các định nghĩa bên dưới giữ bản ERD v1.6.
+
+V36/V37 trong ghi chú này là lineage vocabulary lịch sử. Lineage completion
+nhận cùng schema qua V43, giữ SQL/history đã áp dụng; xem
+[compatibility V36–V38](MIGRATION36_38_Source_Compatibility.md).
+
 Table review_states {
   review_state_id uuid [pk]
   user_id uuid [not null]

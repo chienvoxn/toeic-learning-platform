@@ -117,7 +117,7 @@ export class RemoteVocabularyRepository {
     );
   }
 
-  async rateCard(cardId, rating) {
+  async rateCard(cardId, rating, requestKey) {
     const normalized =
       typeof rating === 'string'
         ? ratings[rating.toUpperCase()]
@@ -133,6 +133,7 @@ export class RemoteVocabularyRepository {
 
     return apiRequest(`/vocabularies/${cardId}/reviews`, {
       method: 'POST',
+      headers: requestKey ? { 'Idempotency-Key': requestKey } : {},
       body: { rating: normalized },
     });
   }
@@ -198,23 +199,25 @@ export class RemoteVocabularyRepository {
     );
   }
 
-  async saveLearningSession(deckId, data) {
+  async saveLearningSession(deckId, expectedRevision, data) {
     return apiRequest(
-      `/vocabulary-decks/${deckId}/learning-session`,
-      {
-        method: 'PUT',
-        body: data,
-      }
+      `/vocabulary-decks/${deckId}/learning-session?expectedRevision=${expectedRevision}`,
+      { method: 'PUT', body: data }
     );
   }
 
-  async clearLearningSession(deckId) {
+  async clearLearningSession(deckId, expectedRevision) {
     return apiRequest(
-      `/vocabulary-decks/${deckId}/learning-session`,
-      {
-        method: 'DELETE',
-      }
+      `/vocabulary-decks/${deckId}/learning-session?expectedRevision=${expectedRevision}`,
+      { method: 'DELETE' }
     );
+  }
+
+  async rateLearningSession(deckId, request) {
+    return apiRequest(`/vocabulary-decks/${deckId}/learning-session/reviews`, {
+      method: 'POST',
+      body: request,
+    });
   }
 
   async getDueReviews() {

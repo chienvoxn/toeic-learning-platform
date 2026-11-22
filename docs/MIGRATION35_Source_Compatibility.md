@@ -1,5 +1,7 @@
 # V35 compatibility — source tích hợp 20/11/2026
 
+**Nối tiếp 22/11/2026:** [Hai lineage V36–V38 và release43](MIGRATION36_38_Source_Compatibility.md). Giữ chính sách và SQL/checksum V34/V35; không gán số test hoặc CI cũ cho cây tích hợp mới.
+
 **Phần nối tiếp TV2 EXAM-04 (working tree 20–21/11):** [V40 và bằng chứng mới](EXAM04_Draft_Authoring_20261120.md).
 Coordinator nhận thêm release40 và fingerprint bảng DRAFT mới; policy historical V34/V35,
 SQL cũ và các giới hạn hỗ trợ ở báo cáo này giữ nguyên. Số39/40 history rows và test phía

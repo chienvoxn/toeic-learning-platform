@@ -1,0 +1,14 @@
+column|vocabularies|archived_at|timestamp with time zone|false|||
+column|vocabulary_review_requests|created_at|timestamp with time zone|true|now()||
+column|vocabulary_review_requests|rating|integer|true|||
+column|vocabulary_review_requests|request_key|uuid|true|||
+column|vocabulary_review_requests|response|jsonb|true|||
+column|vocabulary_review_requests|user_id|uuid|true|||
+column|vocabulary_review_requests|vocabulary_id|uuid|true|||
+constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_personal_deck|FOREIGN KEY (personal_deck_id) REFERENCES vocabulary_decks(deck_id) ON DELETE CASCADE|true|false|false
+constraint|vocabulary_review_requests|vocabulary_review_requests_pkey|PRIMARY KEY (user_id, request_key)|true|false|false
+constraint|vocabulary_review_requests|vocabulary_review_requests_rating_check|CHECK (((rating >= 1) AND (rating <= 4)))|true|false|false
+constraint|vocabulary_review_requests|vocabulary_review_requests_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|vocabulary_review_requests|vocabulary_review_requests_vocabulary_id_fkey|FOREIGN KEY (vocabulary_id) REFERENCES vocabularies(vocabulary_id)|true|false|false
+index|vocabulary_review_requests|vocabulary_review_requests_pkey|CREATE UNIQUE INDEX vocabulary_review_requests_pkey ON public.vocabulary_review_requests USING btree (user_id, request_key)|true|true
+relation|vocabulary_review_requests|r|p|false|false

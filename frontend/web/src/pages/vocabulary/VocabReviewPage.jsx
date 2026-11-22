@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Volume2, ChevronLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
@@ -8,7 +8,7 @@ import { vocabularyRepo } from '@/features/vocabulary/repositories/vocabulary.re
 import './VocabReviewPage.layout.css';
 import { useMock } from '@/lib/runtime-config';
 import { readReviewSession, saveReviewSession, clearReviewSession } from '@/features/vocabulary/reviewProgress';
-import { restoreLearningQueue, restoreLearningSession, readyLearningQueue, applyLearningRating } from '@/features/vocabulary/learningQueue';
+import { restoreLearningSession, readyLearningQueue, applyLearningRating } from '@/features/vocabulary/learningQueue';
 
 const ratings = [
   [1, 'HỌC LẠI', '10 phút'],
@@ -19,161 +19,178 @@ const ratings = [
 
 export default function VocabReviewPage() {
   const { deckId } = useParams();
+  return <ReviewRound key={deckId} deckId={deckId} />;
+}
+
+async function loadRound(deckId) {
+  const [cards, deck, remote] = await Promise.all([
+    vocabularyRepo.getDeckCards(deckId),
+    vocabularyRepo.getDeckDetail(deckId),
+    useMock ? null : vocabularyRepo.getLearningSession(deckId),
+  ]);
+  const snapshot = useMock ? readReviewSession(deckId, cards) : remote?.data ?? {};
+  return { cards, deck, snapshot, revision: remote?.revision ?? 0 };
+}
+
+function ReviewRound({ deckId }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const [exitOpen, setExitOpen] = useState(false);
   const [exitError, setExitError] = useState('');
-  const [exiting, setExiting] = useState(false);
-  const [completedIds, setCompletedIds] = useState([]);
-  const [deferredUntil, setDeferredUntil] = useState({});
-  const [clock, setClock] = useState(Date.now);
-  useEffect(() => { const timer = setInterval(() => setClock(Date.now()), 1000); return () => clearInterval(timer); }, []);
-  const [roundIds, setRoundIds] = useState([]);
-  const [roundNumber, setRoundNumber] = useState(1);
-  const [attempts, setAttempts] = useState(0);
   const [data, setData] = useState(null);
-  const [currentId, setCurrentId] = useState(null);
-  const [reviewedIds, setReviewedIds] = useState([]);
+  const [session, setSession] = useState(() => restoreLearningSession([]));
+  const [revision, setRevision] = useState(0);
+  const [pendingRating, setPendingRating] = useState(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
+  const [clock, setClock] = useState(Date.now);
   const [revealed, setRevealed] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState(state?.notice ?? '');
   const [lastSchedule, setLastSchedule] = useState(null);
 
   useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     let active = true;
-    setDeferredUntil({}); setData(null); setError(''); setCompleted(false); setReviewedIds([]); setCurrentId(null); setCompletedIds([]); setRoundIds([]); setRoundNumber(1); setAttempts(0); setExitOpen(false);
-    Promise.all([vocabularyRepo.getDeckCards(deckId), vocabularyRepo.getDecks(),
-      vocabularyRepo.getLearningSession ? vocabularyRepo.getLearningSession(deckId) : Promise.resolve(null)])
-      .then(([cards, decks, remote]) => {
-        if (!active) return;
-        const ids = new Set(cards.map((card) => card.id));
-        const previous = restoreLearningSession(cards, useMock ? readReviewSession(deckId, cards) : (remote?.data ?? {}));
-        const reviewed = Array.isArray(previous?.reviewedIds)
-          ? [...new Set(previous.reviewedIds.filter((id) => ids.has(id)))] : [];
-        const easy = (previous.completedIds || []).filter((id) => ids.has(id));
-        // Always recover every unfinished word, including legacy sessions.
-        const initialRound = restoreLearningQueue(cards, easy, previous.roundIds);
-        const nextId = initialRound.includes(previous.currentId) ? previous.currentId : initialRound[0] ?? null;
-        setData({ cards, deck: decks.find((deck) => deck.id === deckId) });
-        setReviewedIds(reviewed);
-        setCompletedIds(easy);
-        setDeferredUntil(previous.deferredUntil);
-        setRoundIds(initialRound);
-        setRoundNumber(previous.roundNumber || (reviewed.length === cards.length && easy.length < cards.length ? 2 : 1));
-        setAttempts(previous.attempts || 0);
-        setCurrentId(nextId);
-        setCompleted(cards.length > 0 && easy.length === cards.length);
-      })
-      .catch((err) => { if (active) setError(err.message || 'Không tải được bộ thẻ.'); });
+    loadRound(deckId).then(({ cards, deck, snapshot, revision }) => {
+      if (!active) return;
+      setData({ cards, deck });
+      setSession(restoreLearningSession(cards, snapshot));
+      setRevision(revision);
+    }).catch((err) => { if (active) setError(err.message || 'Không tải được bộ thẻ.'); });
     return () => { active = false; };
   }, [deckId]);
 
-  const reviewedSet = useMemo(() => new Set(reviewedIds), [reviewedIds]);
+  const { reviewedIds, completedIds, deferredUntil, roundIds, roundNumber, attempts, currentId } = session;
   const completedSet = useMemo(() => new Set(completedIds), [completedIds]);
   const readyIds = readyLearningQueue(roundIds, deferredUntil, clock);
   const card = data?.cards.find((item) => item.id === currentId && readyIds.includes(item.id))
     ?? data?.cards.find((item) => item.id === readyIds[0]);
   const progress = data?.cards.length ? Math.round(completedIds.length / data.cards.length * 100) : 0;
   const pendingCount = data ? data.cards.length - completedIds.length : 0;
+  const completed = data?.cards.length > 0 && pendingCount === 0;
+  const blocked = saving || needsRefresh || Boolean(pendingRating);
 
-  async function rate(value) {
-    if (saving || !card) return;
-    setSaving(true); setError('');
+  function showSnapshot(snapshot, cards = data.cards) {
+    setSession(restoreLearningSession(cards, snapshot?.data ?? {}));
+    setRevision(snapshot?.revision ?? 0);
+    setClock(Date.now());
+    setRevealed(false);
+  }
+
+  async function refreshRound() {
+    setSaving(true);
+    setNeedsRefresh(true);
     try {
-      // Every rating is recorded by the existing backend SRS service.
-      const result = await vocabularyRepo.rateCard(card.id, value);
-      const updatedReviewed = reviewedSet.has(card.id) ? reviewedIds : [...reviewedIds, card.id];
-      const next = applyLearningRating(data.cards, completedIds, roundIds, card.id, value, result, deferredUntil);
-      const updatedEasy = next.completedIds;
-      const nextIds = next.queue;
-      const allEasy = next.completed;
-      const nextId = nextIds[0] ?? null;
-      const nextRoundNumber = roundNumber + (result.intervalDays === 0 && nextIds.length === 1 ? 1 : 0);
-      const nextAttempts = attempts + 1;
-      const saved = saveReviewSession(deckId, {
-        reviewedIds: updatedReviewed, completedIds: updatedEasy, deferredUntil: next.deferredUntil,
-        roundIds: nextIds, roundNumber: nextRoundNumber, currentId: nextId,
-        attempts: nextAttempts,
-      });
-      if (vocabularyRepo.saveLearningSession) {
-        try {
-          await vocabularyRepo.saveLearningSession(deckId, {
-            reviewedIds: updatedReviewed, completedIds: updatedEasy, deferredUntil: next.deferredUntil,
-            roundIds: nextIds, roundNumber: nextRoundNumber,
-            currentId: nextId, attempts: nextAttempts,
-          });
-        } catch {
-          setError('Đã lưu đánh giá, nhưng chưa đồng bộ được tiến độ lên tài khoản. Tiến độ vẫn được giữ trên thiết bị này.');
+      const fresh = await loadRound(deckId);
+      setData({ cards: fresh.cards, deck: fresh.deck });
+      showSnapshot({ data: fresh.snapshot, revision: fresh.revision }, fresh.cards);
+      setNeedsRefresh(false);
+      setLastSchedule(null);
+      setError('Đã tải tiến độ mới nhất. Hãy kiểm tra thẻ hiện tại trước khi tiếp tục.');
+    } catch {
+      setError('Chưa tải lại được tiến độ từ máy chủ.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitRating(request) {
+    if (saving || needsRefresh) return;
+    setSaving(true);
+    setError('');
+    try {
+      if (useMock) {
+        const result = await vocabularyRepo.rateCard(request.vocabularyId, request.rating);
+        const next = applyLearningRating(data.cards, completedIds, roundIds, request.vocabularyId,
+          request.rating, result, deferredUntil);
+        const snapshot = {
+          reviewedIds: [...new Set([...reviewedIds, request.vocabularyId])],
+          completedIds: next.completedIds, deferredUntil: next.deferredUntil, roundIds: next.queue,
+          roundNumber: roundNumber + (result.intervalDays === 0 && next.queue.length === 1 ? 1 : 0),
+          attempts: attempts + 1, currentId: next.queue[0] ?? null,
+        };
+        if (!saveReviewSession(deckId, snapshot)) {
+          setError('Trình duyệt chưa lưu được tiến độ.');
         }
-      } else if (!saved) setError('Đánh giá đã lưu, nhưng trình duyệt không lưu được tiến độ.');
-      setReviewedIds(updatedReviewed);
-      setCompletedIds(updatedEasy);
-      setDeferredUntil(next.deferredUntil); setClock(Date.now());
-      setRoundIds(nextIds);
-      setRoundNumber(nextRoundNumber);
-      setAttempts(nextAttempts);
-      setCurrentId(nextId);
-      setRevealed(false);
-      setLastSchedule(result?.nextReviewAt ?? null);
-      setCompleted(allEasy);
+        showSnapshot({ data: snapshot });
+        setLastSchedule(result.nextReviewAt);
+      } else {
+        const result = await vocabularyRepo.rateLearningSession(deckId, request);
+        showSnapshot(result.session);
+        setLastSchedule(result.review.nextReviewAt);
+      }
+      setPendingRating(null);
     } catch (err) {
-      setError(err.message || 'Chưa lưu được đánh giá. Hãy thử lại.');
-    } finally { setSaving(false); }
+      if (!useMock && (err.status === 409 || err.status === 404)) {
+        setPendingRating(null);
+        await refreshRound();
+      } else if (!useMock && (!err.status || err.status >= 500)) {
+        setPendingRating(request);
+        setError('Chưa xác nhận được kết quả đánh giá. Bạn có thể gửi lại cùng yêu cầu.');
+      } else {
+        setPendingRating(null);
+        setError(err.message || 'Chưa lưu được đánh giá.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function rate(value) {
+    if (blocked || !card) return;
+    void submitRating({ vocabularyId: card.id, rating: value, expectedRevision: revision });
+  }
+
+  async function changeRound(save) {
+    const snapshot = { ...session, currentId: card?.id ?? null };
+    if (!useMock) {
+      const result = save
+        ? await vocabularyRepo.saveLearningSession(deckId, revision, snapshot)
+        : await vocabularyRepo.clearLearningSession(deckId, revision);
+      showSnapshot(result);
+    } else if (save) {
+      if (!saveReviewSession(deckId, snapshot)) throw new Error('Không thể lưu tiến độ trên trình duyệt.');
+    } else {
+      clearReviewSession(deckId);
+      showSnapshot(null);
+    }
   }
 
   async function restart() {
-    if (saving || !data) return;
-    if (vocabularyRepo.clearLearningSession) {
-      try { await vocabularyRepo.clearLearningSession(deckId); }
-      catch { setError('Chưa thể bắt đầu lượt mới vì không xóa được tiến độ trên tài khoản.'); return; }
+    if (blocked || !data) return;
+    setSaving(true);
+    setError('');
+    try {
+      await changeRound(false);
+      setLastSchedule(null);
+    } catch (err) {
+      if (err.status === 409 || err.status === 404) await refreshRound();
+      else setError(err.message || 'Chưa thể bắt đầu lượt mới.');
+    } finally {
+      setSaving(false);
     }
-    clearReviewSession(deckId);
-    setReviewedIds([]);
-    setDeferredUntil({});
-    setCompletedIds([]);
-    setRoundIds(data.cards.map((item) => item.id));
-    setRoundNumber(1);
-    setAttempts(0);
-    setCurrentId(data.cards[0]?.id ?? null);
-    setCompleted(false);
-    setRevealed(false);
-    setLastSchedule(null);
   }
 
   async function exit(save) {
-    if (saving || exiting) return;
+    if (blocked || !data) return;
     setExitError('');
-    setExiting(true);
+    setSaving(true);
     try {
-      if (save) {
-        const snapshot = { reviewedIds, completedIds, deferredUntil, roundIds, roundNumber, attempts, currentId: card?.id ?? null };
-        const localSaved = saveReviewSession(deckId, snapshot);
-        if (vocabularyRepo.saveLearningSession) {
-          try {
-            await vocabularyRepo.saveLearningSession(deckId, snapshot);
-          } catch (err) {
-            setExitError(`Không đồng bộ được tiến độ lên tài khoản: ${err?.message || 'Lỗi kết nối'}. ${localSaved ? 'Tiến độ đã được lưu trên trình duyệt. Bạn có thể thử lại.' : 'Không thể lưu tiến độ trên trình duyệt.'}`);
-            return;
-          }
-        } else if (!localSaved) {
-          setExitError('Không thể lưu tiến độ trên trình duyệt. Vui lòng thử lại.');
-          return;
-        }
-      } else {
-        if (vocabularyRepo.clearLearningSession) {
-          try {
-            await vocabularyRepo.clearLearningSession(deckId);
-          } catch (err) {
-            setExitError(`Không thể xóa phiên học trên tài khoản: ${err?.message || 'Lỗi kết nối'}. Hãy kiểm tra Backend và thử lại.`);
-            return;
-          }
-        }
-        clearReviewSession(deckId);
-      }
-      setExitOpen(false);
+      await changeRound(save);
       navigate('/vocabulary');
+    } catch (err) {
+      if (err.status === 409 || err.status === 404) {
+        setExitOpen(false);
+        await refreshRound();
+      } else {
+        setExitError(err.message || 'Chưa lưu được phiên học.');
+      }
     } finally {
-      setExiting(false);
+      setSaving(false);
     }
   }
 
@@ -186,24 +203,33 @@ export default function VocabReviewPage() {
   }
 
   return <LearnerTemplate variant="flashcard"><div className="flashcard-page">
-    <button type="button" className="breadcrumb-back review-back-button" onClick={() => setExitOpen(true)} disabled={saving}><ChevronLeft size={13} />Quay lại thư viện</button>
+    <button type="button" className="breadcrumb-back review-back-button" onClick={() => setExitOpen(true)} disabled={blocked || !data}><ChevronLeft size={13} />Quay lại thư viện</button>
     <div className="flashcard-title"><h1>{data?.deck?.title || 'Ôn tập từ vựng'}</h1><span className="pill-button navy">Flashcard</span></div>
     {error && <p className="form-error" role="alert">{error}</p>}
+    {pendingRating && <button type="button" className="pill-button navy" disabled={saving}
+      onClick={() => submitRating(pendingRating)}>Thử gửi lại đánh giá</button>}
+    {needsRefresh && <button type="button" className="pill-button navy" disabled={saving}
+      onClick={refreshRound}>Tải lại tiến độ</button>}
     {!data && !error && <LoadingSpinner text="Đang tải bộ thẻ..." />}
     {completed ? <div className="review-complete surface">
       <CheckCircle2 size={56} /><h2>Bạn đã hoàn thành lượt học!</h2>
       <p>{completedIds.length}/{data.cards.length} từ đã được hẹn ôn từ 1 ngày trở lên. Hoàn thành lượt học không đồng nghĩa đã thành thạo từ.</p>
       {lastSchedule && <p>Lịch ôn vừa cập nhật: {new Date(lastSchedule).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}</p>}
 
-      <button type="button" className="pill-button navy" onClick={restart}>Học lượt mới</button>
+      <button type="button" className="pill-button navy" onClick={restart} disabled={blocked}>Học lượt mới</button>
       <button type="button" className="pill-button navy" onClick={() => navigate('/vocabulary')}>Quay lại thư viện</button>
-    </div> : data && !card ? <div className="surface p-6" role="status">{data.cards.length ? <><h2>Đang chờ đến lịch học lại</h2><p>Các từ còn lại chưa đến hạn. Từ sẽ tự xuất hiện khi đến lịch ôn.</p><p>Lịch gần nhất: {new Date(Math.min(...roundIds.map(id => Date.parse(deferredUntil[id])).filter(Number.isFinite))).toLocaleString('vi-VN')}</p></> : <p>Bộ thẻ hiện chưa có từ vựng.</p>}<button className="pill-button navy" onClick={() => setExitOpen(true)}>Lưu tiến độ và thoát</button></div>
+    </div> : data && !card ? <div className="surface p-6" role="status">{data.cards.length ? <><h2>Đang chờ đến lịch học lại</h2><p>Các từ còn lại chưa đến hạn. Từ sẽ tự xuất hiện khi đến lịch ôn.</p><p>Lịch gần nhất: {new Date(Math.min(...roundIds.map(id => Date.parse(deferredUntil[id])).filter(Number.isFinite))).toLocaleString('vi-VN')}</p></> : <p>Bộ thẻ hiện chưa có từ vựng.</p>}<button className="pill-button navy" disabled={blocked} onClick={() => setExitOpen(true)}>Lưu tiến độ và thoát</button></div>
     : card && <div className="flashcard-columns review-columns">
       <aside className="flashcard-topics"><h2>DANH SÁCH TỪ VỰNG</h2>
         {data.cards.map((item, i) => <button key={item.id} type="button"
-          disabled={saving || !readyIds.includes(item.id)}
+          disabled={blocked || !readyIds.includes(item.id)}
           className={card.id === item.id ? 'selected' : ''}
-          onClick={() => { setCurrentId(item.id); setRevealed(false); saveReviewSession(deckId, { reviewedIds, completedIds, deferredUntil, roundIds, roundNumber, attempts, currentId: item.id }); }}>
+          onClick={() => {
+            const selected = { ...session, currentId: item.id };
+            setSession(selected);
+            setRevealed(false);
+            if (useMock) saveReviewSession(deckId, selected);
+          }}>
           <span className="topic-emoji">{completedSet.has(item.id) ? '✓' : '📘'}</span>
           <span><strong>{item.word}</strong><small>{item.partOfSpeech}</small></span>
           <span className="topic-dot">{i + 1}</span>
@@ -228,24 +254,24 @@ export default function VocabReviewPage() {
         <p className="flashcard-caption">{`Đã đánh giá ${reviewedIds.length}/${data.cards.length} · Hoàn thành ${completedIds.length} · Còn lại ${pendingCount} · ${attempts} lượt đánh giá`}</p>
         <p className="review-learning-hint">KHÓ, TỐT và DỄ hoàn thành từ trong lượt này khi lịch ôn tiếp từ 1 ngày trở lên. HỌC LẠI chờ đến hạn, không lặp ngay.</p>
         <div className="review-actions-area">
-          <div className="rating-buttons review-rating-buttons">{ratings.map(([value, title, interval]) => <button key={value} type="button" disabled={saving}
+          <div className="rating-buttons review-rating-buttons">{ratings.map(([value, title, interval]) => <button key={value} type="button" disabled={blocked}
           onClick={() => rate(value)} className={`rating-${['again', 'hard', 'good', 'easy'][value - 1]}`}>
           <strong>{title}</strong><small>{interval}</small>
         </button>)}</div>
-          <div className="review-exit-row"><button type="button" disabled={saving} className="pill-button navy review-exit-button" onClick={() => setExitOpen(true)}>Thoát</button></div>
+          <div className="review-exit-row"><button type="button" disabled={blocked} className="pill-button navy review-exit-button" onClick={() => setExitOpen(true)}>Thoát</button></div>
         </div>
       </section>
     </div>}
-    {exitOpen && <div className="review-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExitOpen(false); }}>
+    {exitOpen && <div className="review-modal-backdrop" role="presentation" onMouseDown={(event) => { if (!saving && event.target === event.currentTarget) setExitOpen(false); }}>
       <div className="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-exit-title">
         <h2 id="review-exit-title">Bạn muốn lưu tiến độ học không?</h2>
         <p>Bạn đã hoàn thành {completedIds.length}/{data?.cards.length ?? 0} từ trong lượt này. Tiến độ và thời điểm chờ học lại có thể được lưu để tiếp tục lần sau.</p>
         <p className="review-modal-note">Các đánh giá đã lưu vào lịch ôn vẫn được giữ nguyên, kể cả khi bạn không lưu lượt học.</p>
         {exitError && <p role="alert" style={{ color: "#b42318", fontSize: 14, marginTop: 10 }}>{exitError}</p>}
         <div className="review-modal-actions">
-          <button type="button" disabled={exiting} onClick={() => { setExitError(''); setExitOpen(false); }}>Tiếp tục học</button>
-          <button type="button" disabled={exiting} onClick={() => exit(false)}>{exiting ? 'Đang xử lý...' : 'Không lưu'}</button>
-          <button type="button" disabled={exiting} className="review-modal-primary" onClick={() => exit(true)}>{exiting ? 'Đang xử lý...' : 'Lưu và thoát'}</button>
+          <button type="button" disabled={blocked} onClick={() => { setExitError(''); setExitOpen(false); }}>Tiếp tục học</button>
+          <button type="button" disabled={blocked} onClick={() => exit(false)}>{saving ? 'Đang xử lý...' : 'Không lưu'}</button>
+          <button type="button" disabled={blocked} className="review-modal-primary" onClick={() => exit(true)}>{saving ? 'Đang xử lý...' : 'Lưu và thoát'}</button>
         </div>
       </div>
     </div>}

@@ -118,6 +118,17 @@ public class IdentitySecurityConfig {
                                 "/api/v1/users/me/bookmarks")
                         .hasAuthority("content:bookmark:self")
 
+                        // Personal vocabulary, SRS and learning profile.
+                        // Ownership is also checked by the vocabulary services.
+                        .requestMatchers(
+                                "/api/v1/vocabularies",
+                                "/api/v1/vocabularies/**",
+                                "/api/v1/vocabulary-decks",
+                                "/api/v1/vocabulary-decks/**",
+                                "/api/v1/vocabulary/**",
+                                "/api/v1/learning-profile/**")
+                        .hasAuthority("vocabulary:learn:self")
+
                         // Content learning history
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/contents/*/history")

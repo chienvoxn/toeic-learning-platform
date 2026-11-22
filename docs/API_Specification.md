@@ -236,6 +236,16 @@ version fork, TEST_VERSION runtime hoặc quy đổi TOEIC. Giữ nguyên năm r
 
 ### 3.5 Vocabulary & SRS
 
+**Authorization implemented:** all routes in this section, the personal
+vocabulary catalog routes, and `/learning-profile/**` require an authenticated
+session with `vocabulary:learn:self`. Historical vocabulary V38, or compatibility
+V43 for the completion lineage, grants that permission to the `LEARNER` system
+role only; existing grants/revocations are retained. The service layer additionally verifies that
+the requested deck/vocabulary belongs to the authenticated learner; a role or
+permission never grants access to another user's data.
+
+Bảng dưới là contract thiết kế. Các đường dẫn runtime được ghi trong các phần tiếp theo.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
@@ -256,6 +266,35 @@ version fork, TEST_VERSION runtime hoặc quy đổi TOEIC. Giữ nguyên năm r
 | `POST` | `/reviews` | Learner | ReviewVocabularyRequest | 201 ReviewReceipt | 409 REVIEW_CONFLICT |
 
 | `GET` | `/reviews/history` | Learner | page,size | 200 Page<ReviewHistory> | 400 |
+
+**Xóa từ và bộ từ trong runtime** (các đường dẫn dưới `/api/v1`)
+
+| Method | Path | Kết quả |
+|---|---|---|
+| `DELETE` | `/vocabularies/{id}` | 204. Ẩn từ và gỡ khỏi mọi bộ. Lịch sử vẫn tính vào tổng lượt ôn và streak. API theo ID của từ đã xóa trả 404. |
+| `DELETE` | `/vocabulary-decks/{deckId}/vocabularies/{vocabularyId}` | 204. Gỡ liên kết trong bộ chỉ định, giữ từ và lịch ôn của từ. |
+| `DELETE` | `/vocabulary-decks/{deckId}` | 204. Xóa bộ, liên kết, phiên học và enrollment của bộ. Sổ tay giữ các từ. Có thể bắt đầu lại từ catalog để tạo bộ mới. |
+
+Các thao tác yêu cầu phiên xác thực. Tài nguyên không tồn tại hoặc ngoài quyền sở hữu trả 404.
+
+**Phiên học flashcard trong runtime**
+
+Các route sau dùng tiền tố `/api/v1/vocabulary-decks/{deckId}/learning-session`, yêu cầu phiên đăng nhập và bộ thuộc người dùng.
+
+| Method | Path tương đối | Request và kết quả |
+|---|---|---|
+| `GET` | gốc | 200 snapshot `{data,revision,updatedAt}`. Chưa có phiên thì response rỗng và revision khởi đầu là 0. |
+| `PUT` | `?expectedRevision=<n>` | Body là snapshot dạng object. Trả 200 snapshot đã lưu với revision mới. |
+| `DELETE` | `?expectedRevision=<n>` | Reset về `data={}`, trả 200 snapshot với revision mới. |
+| `POST` | `/reviews` | Body `{expectedRevision,vocabularyId,rating}`, rating là số nguyên 1–4. Trả 200 `{session,review}` gồm snapshot mới và lịch ôn. |
+
+Ghi và reset của phiên yêu cầu revision hiện tại. Revision cũ trả 409,
+client tải lại phiên trước khi thao tác tiếp. Reset vẫn tăng revision để
+request cũ không khớp phiên mới. Rating theo phiên chỉ áp dụng cho thẻ
+còn trong bộ, chưa hoàn thành và đã đến thời điểm được ôn trong phiên.
+SRS state, history và snapshot được lưu nguyên tử. Khi mất phản hồi, client
+có thể gửi lại cùng revision để tránh ghi trùng rồi tải lại phiên nếu nhận
+409. Tiến độ cũ dùng `easyIds` vẫn được đọc và chuyển đổi khi đánh giá tiếp.
 
 ### 3.6 Listening practice
 
@@ -501,13 +540,18 @@ Mảng ví dụ rút gọn; runtime đủ totalQuestions theo order snapshot. Đ
 ### 4.6 SRS
 
 ```json
-// POST /reviews
-{"vocabularyId":"<uuid>","rating":"GOOD"}
-// 201 ReviewReceipt
-{"vocabularyId":"<uuid>","rating":"GOOD","reviewedAt":"2026-10-28T02:00:00Z","nextReviewAt":"2026-10-30T02:00:00Z","repetitionCount":2,"intervalDays":2,"easeFactor":2.5}
+// POST /api/v1/vocabularies/{id}/reviews
+{"rating":3}
+// 200 ReviewStateResponse
+{"reviewStateId":"<uuid>","vocabularyId":"<uuid>","repetitionCount":2,"intervalDays":6,"easeFactor":2.5,"lastReviewedAt":"2026-10-28T02:00:00Z","nextReviewAt":"2026-11-03T02:00:00Z"}
 ```
 
 `nextReviewAt` và các thông số chỉ là ví dụ response; công thức Again/Hard/Good/Easy vẫn cần chốt.
+
+Runtime hỗ trợ header tùy chọn `Idempotency-Key` dạng UUID cho
+`POST /api/v1/vocabularies/{id}/reviews`. Cùng người dùng và key với
+cùng từ và rating trả lại response đã lưu. Nếu thay từ hoặc rating,
+server trả 409. Request không có key giữ hành vi hiện tại.
 
 ### 4.7 AI Tutor
 

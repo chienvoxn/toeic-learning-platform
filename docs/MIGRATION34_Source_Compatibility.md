@@ -1,5 +1,7 @@
 # V34 — cơ chế tương thích trong source chính
 
+**Nối tiếp 22/11/2026:** [Tương thích V36–V38 và release43](MIGRATION36_38_Source_Compatibility.md). Giữ chính sách và SQL/checksum V34; bằng chứng phía dưới thuộc lượt bàn giao V34 cũ.
+
 Quyết định ngày18/11/2026: DB trống hoặc prefix hợp lệ tới V33 đi qua V34 RAG;
 DB đã có V34 giữ đúng Settings/RAG. Working tree source chính đã triển khai cơ
 chế dưới đây. Ngày19/11/2026 đã cho phép review/stage, hoàn tất merge và push;
