@@ -1,10 +1,12 @@
 
 package com.toeic.backend.assessment.api;
 
+import com.toeic.backend.assessment.application.FullTestCatalogService;
 import com.toeic.backend.assessment.application.FullTestSessionService;
 import com.toeic.backend.assessment.application.PracticeSessionDtos;
 import com.toeic.backend.identity.application.SessionPrincipal;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,10 +18,18 @@ import org.springframework.web.bind.annotation.*;
 public class FullTestAttemptController {
 
     private final FullTestSessionService service;
+    private final FullTestCatalogService catalog;
 
     public FullTestAttemptController(
-            FullTestSessionService service) {
+            FullTestSessionService service,
+            FullTestCatalogService catalog) {
         this.service = service;
+        this.catalog = catalog;
+    }
+
+    @GetMapping
+    public List<FullTestCatalogService.PublishedFullTest> listPublished() {
+        return catalog.listPublished();
     }
 
     @PostMapping("/{testVersionId}/attempts")

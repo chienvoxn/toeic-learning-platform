@@ -25,6 +25,21 @@ beforeEach(() => {
   globalThis.window = new EventTarget();
   globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return new Response(JSON.stringify(snapshot())); };
 });
+test('published full-test catalog and start use the selected version instead of a hard-coded ID', async () => {
+  const catalog = [{ testVersionId: 'published-version', title: 'Published test' }];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, ...options });
+    return new Response(JSON.stringify(url.endsWith('/full-tests') ? catalog : snapshot()));
+  };
+
+  const repo = new RemoteAssessmentRepository();
+  assert.deepEqual(await repo.listFullTests(), catalog);
+  await repo.startFullTest('published-version');
+
+  assert.equal(calls[0].url, '/api/v1/full-tests');
+  assert.equal(calls[1].url, '/api/v1/full-tests/published-version/attempts');
+  assert.equal(calls[1].method, 'POST');
+});
 test('runtime creation sends camelCase source-specific DTOs and no identity fields', async () => {
   const repo = new RemoteAssessmentRepository();
   await repo.startPractice({ partNumbers: [5], questionCount: 4, userId: 'ignored' });

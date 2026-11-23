@@ -12,6 +12,7 @@ export default function PracticeSetupPage() {
   const [count, setCount] = useState(30);
   const [minutes, setMinutes] = useState(20);
   const [practiceGoalMinutes, setPracticeGoalMinutes] = useState(30);
+  const [fullTestVersionId, setFullTestVersionId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,9 +20,11 @@ export default function PracticeSetupPage() {
     const params = new URLSearchParams(location.search);
     const requestedMode = params.get('mode');
     const requestedPart = Number(params.get('part'));
+    const requestedTestVersionId = params.get('testVersionId');
 
     if (requestedMode === 'FULL_TEST') {
       setMode('FULL_TEST');
+      setFullTestVersionId(requestedTestVersionId || '');
     } else if (
       requestedMode === 'PRACTICE' &&
       Number.isInteger(requestedPart) &&
@@ -44,13 +47,15 @@ export default function PracticeSetupPage() {
 
   async function start(event) {
     event.preventDefault();
+    if (mode === 'FULL_TEST' && !fullTestVersionId) {
+      setError('Vui lòng chọn một đề Full Test đã xuất bản từ thư viện đề thi.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
       const attempt = mode === 'FULL_TEST'
-        ? await remoteAssessmentRepo.startFullTest(
-            'fde5bb15-5a95-40fb-8b91-c4f4c95bb69c'
-          )
+        ? await remoteAssessmentRepo.startFullTest(fullTestVersionId)
         : mode === 'PRACTICE'
           ? await remoteAssessmentRepo.startPractice({
               partNumbers: parts,
@@ -141,11 +146,21 @@ export default function PracticeSetupPage() {
               </div>
             </fieldset>
           ) : mode === 'FULL_TEST' ? (
-            <p className="text-sm text-slate-600">
-              Full TOEIC Listening & Reading — 200 câu,
-              7 Part, thời gian 120 phút.
-              Không chọn riêng Part trong chế độ này.
-            </p>
+            <div className="space-y-3 text-sm text-slate-600">
+              <p>
+                Full TOEIC Listening & Reading — 200 câu,
+                7 Part, thời gian 120 phút.
+                Không chọn riêng Part trong chế độ này.
+              </p>
+              {!fullTestVersionId && (
+                <p>
+                  Chưa chọn đề đã xuất bản.{' '}
+                  <Link to="/tests" className="text-blue-600 underline">
+                    Mở thư viện đề thi
+                  </Link>
+                </p>
+              )}
+            </div>
           ) : mode === 'LISTENING_SECTION' ? (
             <p>Listening Section gồm đầy đủ Part 1, 2, 3, 4 kèm audio và hình minh họa. Demo có tổ hợp 6–8 câu; nhóm câu không bị cắt.</p>
           ) : (
@@ -220,7 +235,7 @@ export default function PracticeSetupPage() {
             </div>
           )}
           {error && <p className="form-error" role="alert">{error}</p>}
-          <Button type="submit" disabled={busy || (mode === 'PRACTICE' && !parts.length)}>
+          <Button type="submit" disabled={busy || (mode === 'PRACTICE' && !parts.length) || (mode === 'FULL_TEST' && !fullTestVersionId)}>
             {busy ? 'Đang tạo phiên...' : 'Bắt đầu làm bài thật'}
           </Button>
         </form>

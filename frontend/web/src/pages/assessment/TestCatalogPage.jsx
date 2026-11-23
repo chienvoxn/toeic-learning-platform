@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock3, Headphones, ArrowRight } from 'lucide-react';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
+import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
 
 const practiceSets = [
   { part: 1, title: 'Photographs', section: 'Listening', count: 6 },
@@ -31,6 +33,27 @@ const cardStyle = {
 };
 
 export default function TestCatalogPage() {
+  const [fullTests, setFullTests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    remoteAssessmentRepo.listFullTests()
+      .then(items => {
+        if (active) setFullTests(Array.isArray(items) ? items : []);
+      })
+      .catch(err => {
+        if (active) setError(err.message || 'Không thể tải thư viện đề thi.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, []);
+
   return (
     <AssessmentLayout variant="catalog">
       <div className="test-catalog-page">
@@ -53,27 +76,33 @@ export default function TestCatalogPage() {
           </p>
 
           <div style={gridStyle}>
-            <article className="surface" style={cardStyle}>
-              <div>
-                <span className="free-label">FULL TEST</span>
-                <h3 className="mt-3">
-                  ENGLINGO TOEIC Listening & Reading — Test 01
-                </h3>
-                <p className="mt-3 text-slate-500">
-                  7 Part · 200 câu hỏi
-                </p>
-                <p className="mt-2 text-sm">
-                  <Clock3 size={15} className="inline" />
-                  {' '}120 phút · Listening + Reading
-                </p>
-              </div>
-              <Link
-                className="pill-button"
-                to="/practice?mode=FULL_TEST"
-              >
-                CHI TIẾT <ArrowRight size={15} className="inline" />
-              </Link>
-            </article>
+            {loading && <p role="status">Đang tải đề thi đã xuất bản...</p>}
+            {!loading && error && <p role="alert" className="form-error">{error}</p>}
+            {!loading && !error && fullTests.length === 0 && (
+              <p>Chưa có Full Test hợp lệ đã xuất bản.</p>
+            )}
+            {!loading && !error && fullTests.map(test => (
+              <article className="surface" style={cardStyle} key={test.testVersionId}>
+                <div>
+                  <span className="free-label">FULL TEST</span>
+                  <h3 className="mt-3">{test.title}</h3>
+                  {test.description && <p className="mt-2 text-slate-500">{test.description}</p>}
+                  <p className="mt-3 text-slate-500">
+                    7 Part · {test.totalQuestions} câu hỏi
+                  </p>
+                  <p className="mt-2 text-sm">
+                    <Clock3 size={15} className="inline" />
+                    {' '}{Math.round(test.durationSeconds / 60)} phút · Listening + Reading
+                  </p>
+                </div>
+                <Link
+                  className="pill-button"
+                  to={`/practice?mode=FULL_TEST&testVersionId=${encodeURIComponent(test.testVersionId)}`}
+                >
+                  CHI TIẾT <ArrowRight size={15} className="inline" />
+                </Link>
+              </article>
+            ))}
           </div>
 
           <h2>Luyện tập theo Part</h2>
