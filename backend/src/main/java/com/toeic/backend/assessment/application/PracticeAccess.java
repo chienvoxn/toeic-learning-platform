@@ -15,10 +15,10 @@ public class PracticeAccess {
     }
     public void requireSource(UUID actorId,String sourceType) {
         var auth=SecurityContextHolder.getContext().getAuthentication();
-        String permission=switch(sourceType) {
-            case "PRACTICE_SNAPSHOT"->"practice:manage:self";
-            case "SECTION_SNAPSHOT"->"exam:manage:self";
-            default->throw PracticeException.missing();
+        String permission = switch (sourceType) {
+            case "PRACTICE_SNAPSHOT" -> "practice:manage:self";
+            case "SECTION_SNAPSHOT", "TEST_VERSION" -> "exam:manage:self";
+            default -> throw PracticeException.missing();
         };
         if(!isActor(actorId)||auth.getAuthorities().stream().noneMatch(a->a.getAuthority().equals(permission))) {
             throw new AccessDeniedException("Attempt permission required");
