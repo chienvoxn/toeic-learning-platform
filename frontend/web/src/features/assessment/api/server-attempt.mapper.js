@@ -17,7 +17,11 @@ export function toServerAttempt(dto) {
   }
   return { id: dto.attemptId, sourceType: dto.sourceType, status: dto.status, expiresAt,
     startedAt: dto.startedAt, expired: dto.expired, totalQuestions: dto.totalQuestions,
-    section: dto.section, testTitle: dto.sourceType === 'SECTION_SNAPSHOT' ? `Section ${dto.section?.type || ''}` : 'Luyện tập theo Part',
+    section: dto.section, testTitle: dto.sourceType === 'TEST_VERSION'
+      ? 'ENGLINGO — Full TOEIC Listening & Reading'
+      : dto.sourceType === 'SECTION_SNAPSHOT'
+        ? `Section ${dto.section?.type || ''}`
+        : 'Luyện tập theo Part',
     parts: [...parts.values()], remote: true };
 }
 

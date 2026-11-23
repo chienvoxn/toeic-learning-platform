@@ -2,6 +2,19 @@ import { apiRequest } from '../../../services/apiClient.js';
 import { toServerAttempt, toServerResult } from '../api/server-attempt.mapper.js';
 
 export class RemoteAssessmentRepository {
+  async startFullTest(testVersionId) {
+    if (!testVersionId) {
+      throw new Error('Thieu phien ban de thi.');
+    }
+
+    const dto = await apiRequest(
+      `/full-tests/${testVersionId}/attempts`,
+      { method: 'POST' }
+    );
+
+    return toServerAttempt(dto);
+  }
+
   async startPractice({ partNumbers, questionCount }) {
     return toServerAttempt(await apiRequest('/attempts', { method: 'POST',
       body: { sourceType: 'PRACTICE_SNAPSHOT', practice: { partNumbers, questionCount } } }));
