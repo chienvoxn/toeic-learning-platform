@@ -1,17 +1,39 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
 import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
 import { Button } from '@/components/ui/button';
 
 export default function PracticeSetupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState('PRACTICE');
   const [parts, setParts] = useState([5]);
-  const [count, setCount] = useState(4);
+  const [count, setCount] = useState(30);
   const [minutes, setMinutes] = useState(20);
+  const [practiceGoalMinutes, setPracticeGoalMinutes] = useState(30);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestedMode = params.get('mode');
+    const requestedPart = Number(params.get('part'));
+
+    if (requestedMode === 'FULL_TEST') {
+      setMode('FULL_TEST');
+    } else if (
+      requestedMode === 'PRACTICE' &&
+      Number.isInteger(requestedPart) &&
+      requestedPart >= 1 &&
+      requestedPart <= 7
+    ) {
+      setMode('PRACTICE');
+      setParts([requestedPart]);
+      setCount(requestedPart === 5 ? 30 : 4);
+      setPracticeGoalMinutes(30);
+    }
+  }, [location.search]);
 
   const isSectionMode = mode === 'SECTION' || mode === 'LISTENING_SECTION';
   const sectionType = mode === 'LISTENING_SECTION' ? 'LISTENING' : 'READING';
@@ -25,9 +47,26 @@ export default function PracticeSetupPage() {
     setBusy(true);
     setError('');
     try {
-      const attempt = mode === 'PRACTICE'
-        ? await remoteAssessmentRepo.startPractice({ partNumbers: parts, questionCount: Number(count) })
-        : await remoteAssessmentRepo.startSection({ type: sectionType, questionCount: Number(count), durationMinutes: Number(minutes) });
+      const attempt = mode === 'FULL_TEST'
+        ? await remoteAssessmentRepo.startFullTest(
+            'fde5bb15-5a95-40fb-8b91-c4f4c95bb69c'
+          )
+        : mode === 'PRACTICE'
+          ? await remoteAssessmentRepo.startPractice({
+              partNumbers: parts,
+              questionCount: Number(count)
+            })
+          : await remoteAssessmentRepo.startSection({
+              type: sectionType,
+              questionCount: Number(count),
+              durationMinutes: Number(minutes)
+            });
+      if (mode === 'PRACTICE') {
+        localStorage.setItem(
+          `englingo_practice_goal_${attempt.id}`,
+          String(practiceGoalMinutes)
+        );
+      }
       navigate(`/practice/attempts/${attempt.id}`);
     } catch (err) {
       setError(['PRACTICE_QUESTIONS_INSUFFICIENT', 'SECTION_QUESTIONS_INSUFFICIENT'].includes(err.code)
@@ -42,7 +81,7 @@ export default function PracticeSetupPage() {
     <AssessmentLayout>
       <div className="max-w-3xl mx-auto space-y-5">
         <div className="page-heading">
-          <h1>Luyện tập &amp; Section TOEIC (Listening / Reading)</h1>
+          <h1>Chi tiết &amp; cấu hình bài thi TOEIC</h1>
           <p>Bài làm được lưu trên tài khoản. Audio/hình ảnh lấy qua Pre-signed URL, điểm và transcript/lời giải do máy chủ trả sau khi nộp.</p>
         </div>
         <form className="surface p-6 space-y-5" onSubmit={start}>
@@ -55,10 +94,11 @@ export default function PracticeSetupPage() {
             onChange={event => {
               const nextMode = event.target.value;
               setMode(nextMode);
-              setCount(nextMode === 'SECTION' || nextMode === 'LISTENING_SECTION' ? 8 : 4);
+              setCount(nextMode === 'SECTION' || nextMode === 'LISTENING_SECTION' ? 8 : 30);
               setError('');
             }}
           >
+            <option value="FULL_TEST">Full Test — 200 câu / 120 phút</option>
             <option value="PRACTICE">Practice theo Part (Part 1–7)</option>
             <option value="LISTENING_SECTION">Listening Section (Part 1–4)</option>
             <option value="SECTION">Reading Section (Part 5–7)</option>
@@ -100,12 +140,20 @@ export default function PracticeSetupPage() {
                 </div>
               </div>
             </fieldset>
+          ) : mode === 'FULL_TEST' ? (
+            <p className="text-sm text-slate-600">
+              Full TOEIC Listening & Reading — 200 câu,
+              7 Part, thời gian 120 phút.
+              Không chọn riêng Part trong chế độ này.
+            </p>
           ) : mode === 'LISTENING_SECTION' ? (
             <p>Listening Section gồm đầy đủ Part 1, 2, 3, 4 kèm audio và hình minh họa. Demo có tổ hợp 6–8 câu; nhóm câu không bị cắt.</p>
           ) : (
             <p>Reading gồm đầy đủ Part 5, 6, 7. Demo có tổ hợp 8–11 câu; nhóm câu không bị cắt.</p>
           )}
 
+          {mode !== 'FULL_TEST' && (
+            <>
           <label className="block font-bold" htmlFor="practice-count">Số câu</label>
           <input
             id="practice-count"
@@ -118,6 +166,9 @@ export default function PracticeSetupPage() {
             disabled={busy}
             onChange={event => setCount(event.target.value)}
           />
+
+            </>
+          )}
 
           {isSectionMode && (
             <>
@@ -139,7 +190,35 @@ export default function PracticeSetupPage() {
             </>
           )}
 
-          {mode === 'PRACTICE' && <p className="text-sm text-slate-500">Phiên Practice có hạn 24 giờ theo máy chủ.</p>}
+          {mode === 'PRACTICE' && (
+            <div className="space-y-3">
+              <label
+                className="block font-bold"
+                htmlFor="practice-goal-minutes"
+              >
+                Mục tiêu thời gian luyện tập
+              </label>
+              <select
+                id="practice-goal-minutes"
+                className="border rounded-lg p-2 w-full"
+                value={practiceGoalMinutes}
+                disabled={busy}
+                onChange={e =>
+                  setPracticeGoalMinutes(Number(e.target.value))
+                }
+              >
+                <option value={15}>15 phút</option>
+                <option value={30}>30 phút</option>
+                <option value={45}>45 phút</option>
+                <option value={60}>60 phút</option>
+              </select>
+              <p className="text-sm text-slate-500">
+                Đồng hồ mục tiêu hiển thị trên giao diện.
+                Backend hiện vẫn cho phép làm Practice tối đa 24 giờ;
+                hết thời gian mục tiêu không tự động nộp bài.
+              </p>
+            </div>
+          )}
           {error && <p className="form-error" role="alert">{error}</p>}
           <Button type="submit" disabled={busy || (mode === 'PRACTICE' && !parts.length)}>
             {busy ? 'Đang tạo phiên...' : 'Bắt đầu làm bài thật'}

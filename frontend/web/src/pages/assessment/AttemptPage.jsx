@@ -1,3 +1,4 @@
+import { PracticeGoalTimer } from '@/features/assessment/ui/molecules/PracticeGoalTimer';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LogOut, Check } from 'lucide-react';
@@ -67,7 +68,27 @@ export default function AttemptPage({ remote = false }) {
               <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} />
             </div>
           </div>
-          <CountdownTimer expiresAt={attempt.expiresAt} onExpire={remote ? () => setTimedOutId(attemptId) : () => submit(true)} />
+          {attempt.sourceType === 'PRACTICE_SNAPSHOT' &&
+            localStorage.getItem(`englingo_practice_goal_${attemptId}`)
+              ? (
+                <PracticeGoalTimer
+                  startedAt={attempt.startedAt}
+                  minutes={Number(
+                    localStorage.getItem(
+                      `englingo_practice_goal_${attemptId}`
+                    )
+                  )}
+                />
+              ) : (
+                <CountdownTimer
+                  expiresAt={attempt.expiresAt}
+                  onExpire={
+                    remote
+                      ? () => setTimedOutId(attemptId)
+                      : () => submit(true)
+                  }
+                />
+              )}
           <div className="exam-toolbar-actions">
             {hasListeningMedia && (
               <label className="text-xs flex items-center gap-1.5 cursor-pointer select-none">
@@ -128,7 +149,15 @@ export default function AttemptPage({ remote = false }) {
                     {showGroupHeader && (
                       <div className="surface exam-passage" style={{ whiteSpace: 'pre-line' }}>
                         {question.passage.instruction && <strong>{question.passage.instruction}</strong>}
-                        {question.passage.text && <p>{question.passage.text}</p>}
+                        {part.partNumber >= 5 && question.passage.text && (
+                           <p>{question.passage.text}</p>
+                         )}
+                         {part.partNumber >= 3 && part.partNumber <= 4 && (
+                           <p className="text-sm text-slate-500">
+                             Nghe đoạn hội thoại hoặc bài nói để trả lời
+                             các câu hỏi bên dưới.
+                           </p>
+                         )}
                         <ListeningMediaPlayer
                           audioAssets={question.passage.audioAssets}
                           imageAssets={question.passage.imageAssets}
