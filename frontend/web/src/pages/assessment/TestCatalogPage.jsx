@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Clock3, Headphones, ArrowRight } from 'lucide-react';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
 import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
+import { readSession } from '@/features/auth/session';
 
 const practiceSets = [
   { part: 1, title: 'Photographs', section: 'Listening', count: 6 },
@@ -34,10 +35,19 @@ const cardStyle = {
 
 export default function TestCatalogPage() {
   const [fullTests, setFullTests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(readSession()));
   const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+  const isAuthenticated = Boolean(readSession());
+
+  function retryLoad() {
+    setLoading(true);
+    setError('');
+    setReloadKey(value => value + 1);
+  }
 
   useEffect(() => {
+    if (!isAuthenticated) return undefined;
     let active = true;
 
     remoteAssessmentRepo.listFullTests()
@@ -52,7 +62,7 @@ export default function TestCatalogPage() {
       });
 
     return () => { active = false; };
-  }, []);
+  }, [isAuthenticated, reloadKey]);
 
   return (
     <AssessmentLayout variant="catalog">
@@ -76,12 +86,55 @@ export default function TestCatalogPage() {
           </p>
 
           <div style={gridStyle}>
-            {loading && <p role="status">Đang tải đề thi đã xuất bản...</p>}
-            {!loading && error && <p role="alert" className="form-error">{error}</p>}
-            {!loading && !error && fullTests.length === 0 && (
-              <p>Chưa có Full Test hợp lệ đã xuất bản.</p>
+            {loading && [1, 2].map(index => (
+              <article aria-hidden="true" className="surface animate-pulse" style={cardStyle} key={index}>
+                <div className="space-y-3">
+                  <div className="h-5 w-24 rounded bg-slate-200" />
+                  <div className="h-6 w-4/5 rounded bg-slate-200" />
+                  <div className="h-4 w-full rounded bg-slate-100" />
+                  <div className="h-4 w-2/3 rounded bg-slate-100" />
+                </div>
+                <div className="h-10 w-28 rounded-full bg-slate-200" />
+              </article>
+            ))}
+            {!loading && !isAuthenticated && (
+              <article className="surface" style={cardStyle}>
+                <div>
+                  <span className="free-label">FULL TEST</span>
+                  <h3 className="mt-3">Đăng nhập để xem đề thi đã xuất bản</h3>
+                  <p className="mt-3 text-slate-500">
+                    Full Test được tạo thành phiên làm bài cá nhân và lưu đáp án trên tài khoản của bạn.
+                  </p>
+                </div>
+                <Link className="pill-button" to="/login" state={{ from: '/tests' }}>
+                  ĐĂNG NHẬP <ArrowRight size={15} className="inline" />
+                </Link>
+              </article>
             )}
-            {!loading && !error && fullTests.map(test => (
+            {!loading && isAuthenticated && error && (
+              <article className="surface" style={cardStyle} role="alert">
+                <div>
+                  <span className="free-label">KHÔNG TẢI ĐƯỢC</span>
+                  <h3 className="mt-3">Không thể tải thư viện Full Test</h3>
+                  <p className="mt-3 text-slate-500">{error}</p>
+                </div>
+                <button className="pill-button" type="button" onClick={retryLoad}>
+                  THỬ LẠI
+                </button>
+              </article>
+            )}
+            {!loading && isAuthenticated && !error && fullTests.length === 0 && (
+              <article className="surface" style={cardStyle}>
+                <div>
+                  <span className="free-label">FULL TEST</span>
+                  <h3 className="mt-3">Chưa có đề thi sẵn sàng</h3>
+                  <p className="mt-3 text-slate-500">
+                    Giáo viên chưa xuất bản Full Test hợp lệ hoặc đề chưa đủ câu hỏi cần thiết.
+                  </p>
+                </div>
+              </article>
+            )}
+            {!loading && isAuthenticated && !error && fullTests.map(test => (
               <article className="surface" style={cardStyle} key={test.testVersionId}>
                 <div>
                   <span className="free-label">FULL TEST</span>
@@ -94,12 +147,18 @@ export default function TestCatalogPage() {
                     <Clock3 size={15} className="inline" />
                     {' '}{Math.round(test.durationSeconds / 60)} phút · Listening + Reading
                   </p>
+                  {test.publishedAt && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Xuất bản: {new Date(test.publishedAt).toLocaleDateString('vi-VN')}
+                    </p>
+                  )}
                 </div>
                 <Link
                   className="pill-button"
                   to={`/practice?mode=FULL_TEST&testVersionId=${encodeURIComponent(test.testVersionId)}`}
+                  state={{ fullTestTitle: test.title }}
                 >
-                  CHI TIẾT <ArrowRight size={15} className="inline" />
+                  BẮT ĐẦU <ArrowRight size={15} className="inline" />
                 </Link>
               </article>
             ))}

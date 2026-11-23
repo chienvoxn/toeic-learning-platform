@@ -40,6 +40,7 @@ export default function PracticeSetupPage() {
 
   const isSectionMode = mode === 'SECTION' || mode === 'LISTENING_SECTION';
   const sectionType = mode === 'LISTENING_SECTION' ? 'LISTENING' : 'READING';
+  const fullTestTitle = location.state?.fullTestTitle || 'Full Test đã chọn';
 
   function togglePart(part) {
     setParts(value => (value.includes(part) ? value.filter(p => p !== part) : [...value, part].sort((a, b) => a - b)));
@@ -49,6 +50,9 @@ export default function PracticeSetupPage() {
     event.preventDefault();
     if (mode === 'FULL_TEST' && !fullTestVersionId) {
       setError('Vui lòng chọn một đề Full Test đã xuất bản từ thư viện đề thi.');
+      return;
+    }
+    if (mode === 'FULL_TEST' && !window.confirm(`Bắt đầu làm “${fullTestTitle}”? Thời gian sẽ tính theo máy chủ ngay sau khi tạo phiên.`)) {
       return;
     }
     setBusy(true);
@@ -152,7 +156,11 @@ export default function PracticeSetupPage() {
                 7 Part, thời gian 120 phút.
                 Không chọn riêng Part trong chế độ này.
               </p>
-              {!fullTestVersionId && (
+              {fullTestVersionId ? (
+                <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-blue-900">
+                  Đề đã chọn: <strong>{fullTestTitle}</strong>. Khi nhấn bắt đầu, hệ thống tạo một phiên làm bài riêng và thời gian tính theo máy chủ.
+                </p>
+              ) : (
                 <p>
                   Chưa chọn đề đã xuất bản.{' '}
                   <Link to="/tests" className="text-blue-600 underline">

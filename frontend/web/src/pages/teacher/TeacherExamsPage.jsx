@@ -325,8 +325,28 @@ export default function TeacherExamsPage() {
                       test.status}
                   </span>
 
+                  {test.status === 'DRAFT' && (
+                    <div className="teacher-exams-pending-actions">
+                      <button
+                        type="button"
+                        className="teacher-outline-button"
+                        disabled
+                        title="Chờ API validate đề thi từ backend"
+                      >
+                        Kiểm tra đề
+                      </button>
+                      <button
+                        type="button"
+                        className="teacher-primary-button"
+                        disabled
+                        title="Chờ API xuất bản đề thi từ backend"
+                      >
+                        Xuất bản
+                      </button>
+                    </div>
+                  )}
                   <span className="teacher-exams-awaiting">
-                    Chưa hỗ trợ biên soạn đề
+                    Biên soạn, kiểm tra và xuất bản cần API backend tương ứng.
                   </span>
                 </div>
               </article>
