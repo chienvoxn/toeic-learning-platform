@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -21,10 +21,12 @@ function Versions({ kind, detail }) {
           <ul>{version.choices.map(choice => <li key={choice.choiceId}>{choice.label}. {choice.content}{choice.isCorrect ? ' (Đáp án đúng)' : ''}</li>)}</ul><p className="whitespace-pre-wrap">Giải thích: {version.explanation}</p></>}
   </article>);
 }
-export default function AdminContentPage() {
+export default function AdminContentPage({ embedded = false }) {
+  const Layout = embedded ? Fragment : LearnerTemplate;
   const { user, restore } = useAuth();
   const location = useLocation();
-  const [query, setQuery] = useState({ kind: user?.adminCapabilities?.contentManagement ? 'contents' : 'questions', status: '', page: 0, size: 20 });
+  const requestedKind = new URLSearchParams(location.search).get('kind');
+  const [query, setQuery] = useState({ kind: Object.hasOwn(types, requestedKind) ? requestedKind : user?.adminCapabilities?.contentManagement ? 'contents' : 'questions', status: '', page: 0, size: 20 });
   const [revision, setRevision] = useState(0);
   const [detail, setDetail] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -59,8 +61,8 @@ export default function AdminContentPage() {
     finally { setBusy(false); }
   }
   function saved(value) { setEditor(null); setDetail(value); setError(''); setNotice('Đã lưu bản nháp. Bản đã publish được giữ nguyên.'); setRevision(previous => previous + 1); }
-  return <LearnerTemplate><div className="max-w-6xl mx-auto space-y-5">
-    <div className="page-heading"><h1>Quản lý học liệu và câu hỏi</h1><p>Tạo/sửa bản nháp, xem phiên bản và archive qua API thật. Nhóm và bộ đề chưa hỗ trợ publication.</p><Link className="pill-button" to="/moderation">Duyệt và xuất bản</Link></div>
+  return <Layout><div className="max-w-6xl mx-auto space-y-5">
+    <div className="page-heading"><h1>Quản lý học liệu và câu hỏi</h1><p>Tạo/sửa bản nháp, xem phiên bản và lưu trữ. Xuất bản nguyên nhóm cần thao tác G1 riêng; màn hình này chưa có nút batch.</p><Link className="pill-button" to="/moderation">Duyệt và xuất bản</Link><Link className="pill-button" to="/teacher/tests">Bộ đề và phiên bản</Link></div>
     <div className="flex flex-wrap gap-4"><label htmlFor="management-kind">Loại<select id="management-kind" disabled={busy || !!editor} value={query.kind} onChange={event => change({ kind: event.target.value, page: 0 })}>{Object.entries(types).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <label htmlFor="management-status">Trạng thái<select id="management-status" disabled={busy || !!editor || !allowed} value={query.status} onChange={event => change({ status: event.target.value, page: 0 })}><option value="">Tất cả</option>{['DRAFT','PUBLISHED','ARCHIVED'].map(value => <option key={value}>{value}</option>)}</select></label>
       <button className="pill-button" disabled={busy || !!editor || report.loading || !allowed} onClick={() => { setDetail(null); setError(''); setRevision(value => value + 1); }}>Làm mới danh sách</button>
@@ -77,5 +79,5 @@ export default function AdminContentPage() {
       </section>}
       {detail && <section className="surface p-5 space-y-3" aria-label="Phiên bản nội dung"><h2>Phiên bản nội dung</h2><Versions kind={query.kind} detail={detail} /><button className="pill-button" onClick={() => setDetail(null)}>Đóng phiên bản</button></section>}
     </>}
-  </div></LearnerTemplate>;
+  </div></Layout>;
 }

@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   BookOpen,
   Search,
@@ -112,15 +113,13 @@ export default function TeacherContentsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
+        <Link
+          to="/teacher/content?kind=contents"
           className="teacher-primary-button"
-          disabled
-          title="Sẽ triển khai ở bước tạo học liệu"
         >
           <Plus size={18} />
           Tạo học liệu
-        </button>
+        </Link>
       </div>
 
       <section className="teacher-content-panel">

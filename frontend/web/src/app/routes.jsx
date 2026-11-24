@@ -74,13 +74,13 @@ export const router = createBrowserRouter([
       { path: '/admin/overview', element: <AdminOverviewPage /> },
       { path: '/admin/settings', element: <AdminSettingsPage /> },
       { path: '/admin/content', element: <AdminContentPage /> },
-      { path: '/teacher/content', element: <AdminContentPage /> },
       { element: <RequireTeacher />, children: [
         { path: '/teacher', element: <TeacherLayout />, children: [
           { index: true, element: <TeacherDashboardPage /> },
           { path: 'exams', element: <TeacherExamsPage /> },
           { path: 'tests', element: <TeacherTestsPage embedded /> },
           { path: 'contents', element: <TeacherContentsPage /> },
+          { path: 'content', element: <AdminContentPage embedded /> },
           { path: 'questions', element: <TeacherQuestionsPage /> },
           { path: 'questions/new', element: <TeacherQuestionEditor /> },
         ] },

@@ -156,7 +156,8 @@ export default function TeacherQuestionsPage() {
         </Link>
       </div>
 
-      {/* QUESTION LIST */}
+        <Link className="teacher-outline-button" to="/teacher/content?kind=groups">Biên soạn câu hỏi và nhóm</Link>
+        {/* QUESTION LIST */}
       <section className="teacher-content-panel">
         {/* FILTER BAR */}
         <div className="teacher-filter-bar">

@@ -3,20 +3,20 @@ export default function TeacherDashboardPage() {
     {
       title: 'Kho học liệu',
       description: 'Quản lý bài học, tài liệu và nội dung đã biên soạn.',
-      status: 'Sẵn sàng tích hợp API',
+      status: 'Đọc và biên soạn qua máy chủ',
       available: true,
     },
     {
       title: 'Ngân hàng câu hỏi',
       description: 'Biên soạn câu hỏi TOEIC Listening & Reading.',
-      status: 'Sẵn sàng tích hợp API',
+      status: 'Câu hỏi / nhóm và phiên bản',
       available: true,
     },
     {
-      title: 'Đề thi & Bài nộp',
-      description: 'Theo dõi đề thi và kết quả làm bài của học viên.',
-      status: 'Đang hoàn thiện tích hợp',
-      available: false,
+      title: 'Bộ đề và phiên bản',
+      description: 'Biên soạn DRAFT, đọc phiên bản và thao tác theo quyền.',
+      status: 'DRAFT đã nối; Full Mock chờ blueprint / media',
+      available: true,
     },
     {
       title: 'Lớp học & Học viên',

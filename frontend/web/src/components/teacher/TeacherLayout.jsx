@@ -33,7 +33,7 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    label: 'Đề thi & Bài nộp',
+    label: 'Bộ đề và phiên bản',
     path: '/teacher/exams',
     icon: ClipboardList,
   },
@@ -43,18 +43,21 @@ const navigation = [
     icon: BookOpen,
   },
   {
-    label: 'Ngân hàng đề thi',
+    label: 'Ngân hàng câu hỏi',
     path: '/teacher/questions',
     icon: ListChecks,
   },
+  { label: 'Biên soạn học liệu / nhóm', path: '/teacher/content', icon: BookOpen },
   {
     label: 'Lớp học & Học viên',
     path: '/teacher/classes',
+    available: false,
     icon: Users,
   },
   {
     label: 'Báo cáo kết quả',
     path: '/teacher/reports',
+    available: false,
     icon: BarChart3,
   },
 ];
@@ -212,6 +215,7 @@ export default function TeacherLayout() {
           >
             {navigation.map(item => {
               const Icon = item.icon;
+              if (item.available === false) return <span key={item.path} className="teacher-nav-item opacity-50" aria-disabled="true" title="Chưa có trong bản tích hợp hiện tại"><Icon size={19} aria-hidden="true" /><span className="teacher-nav-label">{item.label} · Chưa có</span></span>;
 
               return (
                 <NavLink
