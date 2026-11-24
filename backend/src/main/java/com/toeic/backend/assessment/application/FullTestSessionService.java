@@ -84,6 +84,8 @@ public class FullTestSessionService {
             throw PracticeException.invalid();
         }
 
+        attempts.lockExamActor(actorId);
+
         OffsetDateTime started = OffsetDateTime.now(clock)
                 .truncatedTo(ChronoUnit.MICROS);
 

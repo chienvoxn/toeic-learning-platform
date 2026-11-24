@@ -178,3 +178,25 @@ không được suy từ test mock. Bộ test backend phải chạy trên DB ri�
   Ảnh trong ignored `frontend/web/test-results/chat-desktop.png` và `chat-mobile.png`.
 - Chưa gọi Gemini thật, chưa dùng API key thật để ingest corpus của người dùng.
   Chưa kiểm tải lớn hoặc streaming; corpus và quyền cần được kiểm tra khi vận hành thật.
+
+## AI-RAG-03 - Exam Guard
+
+- Exam state is verified using server-side attempt records.
+- Active SECTION and FULL_TEST attempts restrict AI Tutor access.
+- PRACTICE attempts do not restrict AI Tutor.
+- Expired or graded attempts do not restrict AI Tutor.
+- Restricted requests return HTTP 403 with code AI_EXAM_RESTRICTED.
+- Chat history and cached answer replay are restricted during exams.
+- Exam state is checked before provider execution and before
+  persisting a generated answer.
+- Database failures must not silently bypass the guard.
+- Concurrent exam-start and AI-response operations require
+  additional synchronization verification.
+
+### Transaction synchronization
+
+- Section and Full Test creation acquire a per-user database row lock.
+- AI answer persistence acquires the same user row lock.
+- The exam guard is rechecked before storing generated answers.
+- Remote AI provider calls remain outside database transactions.
+- Frontend clients must also enforce the active exam UI state.

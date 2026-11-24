@@ -14,6 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class PracticeAttemptRepository {
     private final EntityManager entityManager;
     public PracticeAttemptRepository(EntityManager entityManager) { this.entityManager = entityManager; }
+    public void lockExamActor(UUID actorId) {
+        entityManager.createNativeQuery(
+                "SELECT user_id FROM users WHERE user_id = :actor FOR UPDATE")
+                .setParameter("actor", actorId)
+                .getResultList();
+    }
+
     public void persist(PracticeAttempt attempt) { entityManager.persist(attempt); entityManager.flush(); }
     /** Khóa parent trước khi đọc status/expiry và trước mọi ghi đáp án hoặc submit. */
     public Optional<PracticeAttempt> lockOwn(UUID actorId, UUID attemptId) {

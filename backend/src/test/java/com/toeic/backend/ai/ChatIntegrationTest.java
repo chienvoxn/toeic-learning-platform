@@ -55,6 +55,7 @@ class ChatIntegrationTest {
         jdbc.update("update learning_contents set current_published_version_id=null where content_id=?",content);
         jdbc.update("delete from learning_content_versions where content_version_id=?",version);
         jdbc.update("delete from learning_contents where content_id=?",content);
+        jdbc.update("delete from attempts where user_id in (?,?)",actor,other);
         jdbc.update("delete from users where user_id in (?,?)",actor,other);
     }
     @Test void savesPinnedSourcesAndReplaysWithoutCallingProviderAgain() {
@@ -142,4 +143,205 @@ class ChatIntegrationTest {
     @Test void anonymousHttpRequestRejected() throws Exception {
         SecurityContextHolder.clearContext();mvc.perform(post("/api/v1/ai/conversations")).andExpect(status().isUnauthorized());
     }
+
+    // AI-RAG-03: Exam Guard integration tests.
+
+    UUID createGuardAttempt(UUID user, String type,
+                            String status, boolean expired) {
+        UUID id = UUID.randomUUID();
+        var start = java.time.OffsetDateTime.now()
+                .minusMinutes(expired ? 61 : 1);
+        var expiry = start.plusMinutes(60);
+
+        boolean section = "SECTION".equals(type);
+
+        jdbc.update("""
+            INSERT INTO attempts (
+                attempt_id, user_id, attempt_type,
+                attempt_source_type, status,
+                started_at, expires_at, created_at,
+                total_questions, section_type,
+                configured_duration_seconds
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            id, user, type,
+            section ? "SECTION_SNAPSHOT" : "PRACTICE_SNAPSHOT",
+            status, start, expiry, start,
+            10, section ? "READING" : null,
+            section ? 3600 : null
+        );
+
+        return id;
+    }
+
+    @Test
+    void activeSectionShouldBlockAi() {
+        var conversation = chat.create();
+        createGuardAttempt(actor, "SECTION", "IN_PROGRESS", false);
+
+        var failure = assertThrows(ChatFailure.class,
+            () -> chat.ask(conversation.id(), UUID.randomUUID(), "Explain"));
+
+        assertEquals(403, failure.status);
+        assertEquals("AI_EXAM_RESTRICTED", failure.code);
+        verifyNoInteractions(rag);
+    }
+
+    @Test
+    void practiceShouldNotBlockAi() {
+        createGuardAttempt(actor, "PRACTICE", "IN_PROGRESS", false);
+
+        assertNotNull(chat.ask(
+            chat.create().id(), UUID.randomUUID(), "Hello"));
+    }
+
+    @Test
+    void expiredSectionShouldNotBlockAi() {
+        createGuardAttempt(actor, "SECTION", "IN_PROGRESS", true);
+
+        assertNotNull(chat.ask(
+            chat.create().id(), UUID.randomUUID(), "Hello"));
+    }
+
+    @Test
+    void gradedSectionShouldNotBlockAi() {
+        createGuardAttempt(actor, "SECTION", "GRADED", false);
+
+        assertNotNull(chat.ask(
+            chat.create().id(), UUID.randomUUID(), "Hello"));
+    }
+
+    @Test
+    void anotherUsersExamShouldNotBlockAi() {
+        createGuardAttempt(other, "SECTION", "IN_PROGRESS", false);
+
+        assertNotNull(chat.ask(
+            chat.create().id(), UUID.randomUUID(), "Hello"));
+    }
+
+    @Test
+    void activeExamShouldBlockHistoryAndReplay() {
+        var conversation = chat.create();
+        var request = UUID.randomUUID();
+
+        chat.ask(conversation.id(), request, "Hello");
+        createGuardAttempt(actor, "SECTION", "IN_PROGRESS", false);
+
+        assertEquals(403, assertThrows(ChatFailure.class,
+            () -> chat.messages(conversation.id(), 0)).status);
+
+        assertEquals(403, assertThrows(ChatFailure.class,
+            () -> chat.ask(conversation.id(), request, "Hello")).status);
+    }
+
+    @Test
+    void examStartedDuringProviderCallShouldRejectAnswer() {
+        index();
+
+        var conversation = chat.create();
+        var request = UUID.randomUUID();
+
+        when(rag.ask(anyString(), anyList(), anyList(), any()))
+            .thenAnswer(invocation -> {
+                createGuardAttempt(actor, "SECTION", "IN_PROGRESS", false);
+                return answer(version);
+            });
+
+        assertEquals(403, assertThrows(ChatFailure.class,
+            () -> chat.ask(conversation.id(), request, "Explain")).status);
+
+        assertEquals(0, jdbc.queryForObject(
+            "select count(*) from ai_messages where conversation_id=?",
+            Integer.class, conversation.id()));
+
+        assertEquals("FAILED", jdbc.queryForObject(
+            "select status from ai_chat_requests where request_id=?",
+            String.class, request));
+    }
+
+    @Test
+    void finishingExamShouldRestoreAiAccess() {
+        var conversation = chat.create();
+        UUID attempt = createGuardAttempt(
+            actor, "SECTION", "IN_PROGRESS", false);
+
+        assertThrows(ChatFailure.class,
+            () -> chat.ask(conversation.id(), UUID.randomUUID(), "Hello"));
+
+        jdbc.update(
+            "update attempts set status='GRADED' where attempt_id=?",
+            attempt);
+
+        assertNotNull(chat.ask(
+            conversation.id(), UUID.randomUUID(), "Hello"));
+    }
+
+
+    @Test
+    void activeFullTestShouldBlockAi() {
+        UUID testId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        UUID attemptId = UUID.randomUUID();
+
+        try {
+            jdbc.update("""
+                INSERT INTO tests (
+                    test_id, created_by, title, description,
+                    test_type, status, created_at, updated_at
+                ) VALUES (?, ?, 'Guard test', 'AI guard fixture',
+                          'FULL_TEST', 'PUBLISHED', now(), now())
+                """, testId, actor);
+
+            jdbc.update("""
+                INSERT INTO test_versions (
+                    test_version_id, test_id, version_number,
+                    duration_seconds, total_questions,
+                    status, published_at, created_at
+                ) VALUES (?, ?, 1, 7200, 200,
+                          'PUBLISHED', now(), now())
+                """, versionId, testId);
+
+            jdbc.update("""
+                INSERT INTO attempts (
+                    attempt_id, user_id, test_version_id,
+                    attempt_type, attempt_source_type,
+                    status, started_at, expires_at,
+                    created_at, total_questions
+                ) VALUES (?, ?, ?, 'FULL_TEST',
+                          'TEST_VERSION', 'IN_PROGRESS',
+                          now(), now()+interval '120 minutes',
+                          now(), 200)
+                """, attemptId, actor, versionId);
+
+            var conversation = chat.create();
+
+            var failure = assertThrows(ChatFailure.class,
+                () -> chat.ask(conversation.id(),
+                    UUID.randomUUID(), "Explain the answer"));
+
+            assertEquals(403, failure.status);
+            assertEquals("AI_EXAM_RESTRICTED", failure.code);
+            verifyNoInteractions(rag);
+
+            jdbc.update("""
+                UPDATE attempts
+                SET expires_at = now()-interval '1 minute',
+                    started_at = now()-interval '121 minutes'
+                WHERE attempt_id = ?
+                """, attemptId);
+
+            assertNotNull(chat.ask(
+                conversation.id(), UUID.randomUUID(), "Hello"));
+
+        } finally {
+            jdbc.update(
+                "DELETE FROM attempts WHERE attempt_id=?", attemptId);
+            jdbc.update(
+                "DELETE FROM test_versions WHERE test_version_id=?",
+                versionId);
+            jdbc.update(
+                "DELETE FROM tests WHERE test_id=?", testId);
+        }
+    }
+
 }
