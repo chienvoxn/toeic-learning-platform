@@ -12,8 +12,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
-@RestControllerAdvice(assignableTypes = {TeacherMediaController.class, AttemptListeningMediaController.class})
+@RestControllerAdvice(assignableTypes = {TeacherMediaController.class, AttemptListeningMediaController.class, MediaReuseGrantController.class})
 public class ListeningMediaExceptionHandler {
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<Error> unavailable(org.springframework.dao.DataAccessException ex) {
+        return business(new ListeningMediaException(503, "MEDIA_OPERATION_UNAVAILABLE", "Thao tác media tạm thời không khả dụng."));
+    }
     @ExceptionHandler(ListeningMediaException.class)
     public ResponseEntity<Error> business(ListeningMediaException ex) {
         return ResponseEntity.status(ex.getStatus())

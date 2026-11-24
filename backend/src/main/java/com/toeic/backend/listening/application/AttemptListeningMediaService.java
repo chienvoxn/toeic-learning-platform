@@ -116,13 +116,9 @@ public class AttemptListeningMediaService {
             throw ListeningMediaException.mediaNotFound();
         }
 
-        byte[] bytes = storageClient.loadObjectOrDemoFallback(
-                matched.resourceId(),
-                matched.storageUrl(),
-                matched.resourceType(),
-                matched.durationSeconds(),
-                Instant.now(clock)
-        );
+        byte[] bytes;
+        try { bytes = storageClient.loadObject(matched.resourceId(), matched.storageUrl(), Instant.now(clock)); }
+        catch (IllegalStateException ex) { throw ListeningMediaException.storageUnavailable(); }
         String mimeType = detectEffectiveMimeType(matched.mimeType(), bytes);
         return new ListeningMediaDtos.StreamedContent(mimeType, bytes);
     }

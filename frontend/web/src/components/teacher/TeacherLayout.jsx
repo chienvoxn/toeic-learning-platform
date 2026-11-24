@@ -48,6 +48,7 @@ const navigation = [
     icon: ListChecks,
   },
   { label: 'Biên soạn học liệu / nhóm', path: '/teacher/content', icon: BookOpen },
+  { label: 'Quyền dùng media', path: '/teacher/media', icon: BookOpen },
   {
     label: 'Lớp học & Học viên',
     path: '/teacher/classes',

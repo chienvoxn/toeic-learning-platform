@@ -175,8 +175,8 @@ public class S3CompatibleMediaStorageClient {
         }
     }
 
-    /** Tải nội dung media từ MinIO/S3, hoặc sinh WAV/SVG mẫu cho dữ liệu seed/demo khi chạy local chưa bật MinIO. */
-    public byte[] loadObjectOrDemoFallback(UUID resourceId, String rawStorageUrl, String resourceType, Integer durationSeconds, Instant now) {
+    /** Chỉ tải object thật; lỗi storage không được biến thành audio/ảnh giả. */
+    public byte[] loadObject(UUID resourceId, String rawStorageUrl, Instant now) {
         String objectKey = resolveObjectKey(resourceId, rawStorageUrl);
         try {
             PresignedObject presigned = presignGetObjectOnEndpoint(properties.getEndpoint(), objectKey, now);
@@ -191,15 +191,11 @@ public class S3CompatibleMediaStorageClient {
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-        } catch (Exception ignored) {
-            // Fallback to deterministic demo WAV/SVG so local demo works even if MinIO Docker container is stopped.
+            throw new IllegalStateException("Storage read interrupted", ex);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Storage read unavailable", ex);
         }
-        if ("IMAGE".equalsIgnoreCase(resourceType)) {
-            return MediaObjectSpec.generateDemoSvg("TOEIC Listening Visual - " + objectKey);
-        }
-        int duration = durationSeconds != null && durationSeconds > 0 ? durationSeconds : 4;
-        int freq = 320 + Math.abs(resourceId.hashCode() % 220);
-        return MediaObjectSpec.generateDemoWav(duration, freq);
+        throw new IllegalStateException("Storage object unavailable");
     }
 
     private PresignedObject presignGetObjectOnEndpoint(String baseEndpoint, String objectKey, Instant now) {

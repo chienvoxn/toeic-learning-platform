@@ -43,6 +43,7 @@ import TeacherExamsPage from '../pages/teacher/TeacherExamsPage';
 import TeacherContentsPage from '../pages/teacher/TeacherContentsPage';
 import TeacherQuestionsPage from '../pages/teacher/TeacherQuestionsPage';
 import TeacherQuestionEditor from '../pages/teacher/TeacherQuestionEditor';
+import TeacherMediaGrantsPage from '../pages/teacher/TeacherMediaGrantsPage';
 
 function RootLayout() {
   return (
@@ -83,6 +84,7 @@ export const router = createBrowserRouter([
           { path: 'content', element: <AdminContentPage embedded /> },
           { path: 'questions', element: <TeacherQuestionsPage /> },
           { path: 'questions/new', element: <TeacherQuestionEditor /> },
+          { path: 'media', element: <TeacherMediaGrantsPage /> },
         ] },
       ] },
       { path: '/moderation', element: <ModerationPage /> },

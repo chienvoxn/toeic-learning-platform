@@ -742,3 +742,40 @@ ACTIVE ADMIN + question:publish, contributor cycle, current source, media M1 và
 đều bắt buộc. Authoring question thêm optional `groupQuestionOrder` qua cột V23 đã có;
 không sửa order approved/published khi publish. Không tạo media grant API hoặc UI batch.
 [Contract, payload, lỗi và manifest hỗ trợ TV1](G1_TV2_Support_20261124.md).
+# Media reuse grant runtime — quyết định xác nhận 2026-11-24
+
+Phần này thay trạng thái lịch sử “chưa có API grant” ở CONTENT-03/Q-03/M1.
+Schema V20 được tái sử dụng, không thêm migration hoặc `expiresAt`.
+
+| Method/path dưới `/api/v1` | Contract |
+|---|---|
+| `GET /teacher/media?page=0&size=20` | Chỉ media do chính actor sở hữu; metadata, không storage key/URL/transcript |
+| `GET /teacher/media/{mediaId}/reuse-grants?page=0&size=20` | Owner đọc các grant của asset; userId, active, grantedAt, revokedAt |
+| `PUT /teacher/media/{mediaId}/reuse-grants/{userId}` | Owner cấp/cấp lại reuse, không body/query; 200 Grant |
+| `DELETE /teacher/media/{mediaId}/reuse-grants/{userId}` | Owner thu hồi reuse, không body/query; 200 Grant |
+
+Actor phải là session ACTIVE, có một permission quản lý media hiện có:
+`question:manage:self/any` hoặc `content:manage:self/any`, và **đúng owner_id**.
+`manage:any`, ADMIN hay một reuse grant nhận từ người khác không cho quản lý grant
+của asset không sở hữu. Người nhận phải tồn tại và khác actor; grant không cấp
+role/permission/publish, không đổi owner, visibility hay session/trạng thái user.
+Quyền vẫn active theo `revoked_at IS NULL`. Recipient không cần role mới; việc dùng
+grant vẫn chịu permission và trạng thái actor tại từng endpoint hiện hành.
+
+Request lặp đúng trạng thái trả `changed:false`, giữ timestamp và không thêm audit.
+DELETE khi chưa có grant cũng là no-op. Cấp lại giữ PK media/user, mở kỳ cấp mới,
+xóa revoked_at/by; lịch sử transition giữ trong audit. List size1–100, page0–10000;
+unknown/duplicate query, self-grant, body hoặc UUID sai400. Guest401, thiếu permission403,
+media ngoài ownership404, recipient không tồn tại404 `MEDIA_GRANTEE_NOT_FOUND`.
+Lỗi DB/audit503 `MEDIA_OPERATION_UNAVAILABLE`, không trả SQL hoặc secret.
+
+Transaction mutation khóa shared RBAC → user FKs theo UUID (`FOR KEY SHARE`) →
+media (`FOR UPDATE`) → grant; state và audit commit/rollback cùng nhau.
+M1/G1 publish vẫn khóa/check media+grant trong transaction. Revoke trước publish
+làm publish fail; publish trước revoke giữ publication. Revoke không tự sửa/xóa
+version/pointer, attempt snapshot hoặc kết quả; không đổi Learner read policy.
+
+Owner UI: `/teacher/media`. Không có UI batch publication G1 trong phần này.
+Stream media qua attempt chỉ đọc object storage thật; storage lỗi trả503
+`MEDIA_STORAGE_UNAVAILABLE`, không sinh WAV/SVG giả. `fallbackUrl` hiện có là
+proxy authenticated tới cùng object, không phải dữ liệu mock.

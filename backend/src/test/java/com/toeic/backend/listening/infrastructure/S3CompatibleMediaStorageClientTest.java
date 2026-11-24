@@ -97,7 +97,7 @@ class S3CompatibleMediaStorageClientTest {
             assertTrue(lastPutAuth.get().startsWith("AWS4-HMAC-SHA256 Credential=testkey/20261121/us-east-1/s3/aws4_request"));
 
             UUID resourceId = UUID.randomUUID();
-            byte[] downloaded = client.loadObjectOrDemoFallback(resourceId, "audio/part1-test.wav", "AUDIO", 2, FIXED_NOW);
+            byte[] downloaded = client.loadObject(resourceId, "audio/part1-test.wav", FIXED_NOW);
             assertArrayEquals(wavPayload, downloaded);
         } finally {
             server.stop(0);
@@ -105,19 +105,13 @@ class S3CompatibleMediaStorageClientTest {
     }
 
     @Test
-    void loadObjectFallsBackToValidDemoWavAndSvgWhenMinioIsOffline() {
+    void storageOutageFailsClosedInsteadOfGeneratingSyntheticMedia() {
         S3StorageProperties props = new S3StorageProperties();
         props.setEndpoint("http://127.0.0.1:1"); // unreachable port
         S3CompatibleMediaStorageClient client = new S3CompatibleMediaStorageClient(props);
 
         UUID id = UUID.randomUUID();
-        byte[] wav = client.loadObjectOrDemoFallback(id, "audio/demo-part1-q1.wav", "AUDIO", 3, FIXED_NOW);
-        assertTrue(wav.length > 44);
-        assertEquals("RIFF", new String(wav, 0, 4, StandardCharsets.US_ASCII));
-
-        byte[] svg = client.loadObjectOrDemoFallback(id, "image/demo-part1-q1.svg", "IMAGE", null, FIXED_NOW);
-        String svgText = new String(svg, StandardCharsets.UTF_8);
-        assertTrue(svgText.contains("<svg"));
-        assertTrue(svgText.contains("TOEIC Listening Visual"));
+        assertThrows(IllegalStateException.class, () -> client.loadObject(id, "audio/demo-part1-q1.wav", FIXED_NOW));
+        assertThrows(IllegalStateException.class, () -> client.loadObject(id, "image/demo-part1-q1.svg", FIXED_NOW));
     }
 }
