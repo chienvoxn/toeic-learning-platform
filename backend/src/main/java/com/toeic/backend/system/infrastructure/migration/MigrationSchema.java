@@ -9,6 +9,9 @@ public final class MigrationSchema {
     private MigrationSchema() {}
     private static final Set<String> RAG = Set.of("ai_indexed_versions", "ai_chat_requests", "ai_citation_snapshots");
     private static final Set<String> MODERATION = Set.of("moderation_versions", "moderation_contributors", "moderation_decisions");
+    private static final Set<String> PASSWORD_RESET_GRANT = Set.of(
+            "column|password_reset_otps|reset_token_hash|character varying(255)|false|||",
+            "column|password_reset_otps|reset_token_expires_at|timestamp with time zone|false|||");
 
     public static void verifyEmpty(Connection connection) throws SQLException {
         if (!signature(connection).equals("extension|plpgsql|1.0|pg_catalog\n"))
@@ -40,7 +43,7 @@ public final class MigrationSchema {
     }
 
     public static void verify(Connection connection, boolean settings, boolean rag, boolean moderation, boolean softDelete, boolean examDrafts, boolean fullMock, boolean expiryWorker,
-            boolean vocabularyArchive,boolean vocabularyReviews,boolean vocabularyPermission) throws SQLException {
+            boolean vocabularyArchive,boolean vocabularyReviews,boolean vocabularyPermission, boolean passwordResetGrant) throws SQLException {
         String expected;
         try (var input = MigrationSchema.class.getResourceAsStream("/db/compatibility/"+(expiryWorker?"schema-v42.txt":fullMock?"schema-v41.txt":examDrafts?"schema-v40.txt":"schema-v39.txt"))) {
             if (input == null) throw new IllegalStateException("Missing release schema evidence");
@@ -56,6 +59,12 @@ public final class MigrationSchema {
             if (!softDelete && (line.startsWith("column|ai_conversations|deleted_at|")
                     || line.startsWith("index|ai_conversations|idx_ai_conversations_active_user|"))) continue;
             filtered.append(line).append('\n');
+        }
+        if (passwordResetGrant) {
+            // V44 adds two nullable columns without changing any earlier migration evidence.
+            var lines = new TreeSet<>(Arrays.asList(filtered.toString().split("\n")));
+            lines.addAll(PASSWORD_RESET_GRANT);
+            filtered = new StringBuilder(String.join("\n", lines)).append('\n');
         }
         if (!filtered.toString().equals(normalizedSignature(connection,fullMock))) throw new IllegalStateException("Schema differs from release migration evidence");
         // An existing feature's grants can have been revoked; never restore them.

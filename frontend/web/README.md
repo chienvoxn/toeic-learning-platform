@@ -20,7 +20,7 @@ The real backend is enabled by default (`VITE_USE_MOCK=false`). API requests use
 Set `VITE_USE_MOCK=true` only to preview demo data, and restart Vite after changing
 environment variables. There is no automatic fallback to mock on API failure.
 Registration creates an ACTIVE account without OTP and returns to `/login`.
-OTP is used only at `/forgot-password` for recovery. See
+OTP is used only for password recovery through `/forgot-password` → `/verify-reset-otp` → `/reset-password`. See
 [password recovery policy](../../docs/Password_Recovery.md).
 Private pages redirect unauthenticated visitors to `/login` and return them to
 their requested page after login. `/health` checks backend and database publicly.

@@ -106,4 +106,16 @@ class PasswordResetOtpTest {
                 5
         ));
     }
+
+    @Test
+    void verifiedGrantIsTimeLimitedAndConsumedOnce() {
+        PasswordResetOtp otp = createOtp();
+        OffsetDateTime verifiedAt = issuedAt.plusMinutes(1);
+        otp.verifyForReset("hash-of-grant", verifiedAt, 5);
+        assertFalse(otp.canUse(verifiedAt, 5));
+        assertTrue(otp.canReset(verifiedAt.plusMinutes(9)));
+        assertFalse(otp.canReset(verifiedAt.plusMinutes(10)));
+        otp.consumeResetToken();
+        assertFalse(otp.canReset(verifiedAt.plusMinutes(2)));
+    }
 }

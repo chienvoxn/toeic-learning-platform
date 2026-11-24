@@ -230,6 +230,7 @@ test('OTP reset qua Mailpit và UI thật trên tài khoản demo mới, không 
   const requested = page.waitForResponse(item => item.url().endsWith('/auth/forgot-password') && item.request().method() === 'POST');
   await page.getByRole('button', { name: 'Gửi mã đặt lại mật khẩu', exact: true }).click();
   expect((await requested).status()).toBe(200);
+  await page.waitForURL(/\/verify-reset-otp$/);
   let message;
   await expect.poll(async () => {
     const response = await request.get('http://127.0.0.1:8025/api/v1/messages?limit=100');
@@ -239,6 +240,8 @@ test('OTP reset qua Mailpit và UI thật trên tài khoản demo mới, không 
   const mail = await request.get('http://127.0.0.1:8025/api/v1/message/' + message.ID);
   const otp = (await mail.json()).Text.match(/\b[0-9]{6}\b/)[0];
   await secretInput(page, '#recovery-otp', otp);
+  await page.getByRole('button', { name: 'Xác minh OTP', exact: true }).click();
+  await page.waitForURL(/\/reset-password$/);
   await secretInput(page, '#recovery-password', nextPassword); await secretInput(page, '#recovery-confirm', nextPassword);
   await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).click(); await page.waitForURL(/\/login$/);
   await page.locator('#login-email').fill(email); await secretInput(page, '#login-password', nextPassword);

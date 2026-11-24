@@ -55,6 +55,7 @@ export class FakeAuthRepository {
 
   async changePassword() { throw new Error('Đổi mật khẩu cần VITE_AUTH_MODE=remote.'); }
   async forgotPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
+  async verifyResetOtp() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
   async resetPassword() { throw new Error('Khôi phục mật khẩu cần VITE_AUTH_MODE=remote.'); }
 
   async loginWithGoogle() {

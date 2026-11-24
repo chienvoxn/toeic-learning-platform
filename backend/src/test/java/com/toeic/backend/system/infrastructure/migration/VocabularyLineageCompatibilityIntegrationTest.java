@@ -54,7 +54,7 @@ class VocabularyLineageCompatibilityIntegrationTest {
         boolean permission=Float.parseFloat(target)>=38;
         if(permission)sql(db,"DELETE FROM role_permissions WHERE permission_id=(SELECT permission_id FROM permissions WHERE code='vocabulary:learn:self')");
         String oldHistory=history(db),oldRows=retained(db);long oldSequence=sequence(db);
-        var flyway=run(db,new MockEnvironment());flyway.validate();assertEquals("43",flyway.info().current().getVersion().toString());
+        var flyway=run(db,new MockEnvironment());flyway.validate();assertEquals("44",flyway.info().current().getVersion().toString());
         assertTrue(history(db).startsWith(oldHistory));assertEquals(oldRows,retained(db));assertTrue(sequence(db)>=oldSequence);
         try(var c=source(db).getConnection();var s=c.createStatement()) {
             assertEquals(canonical,MigrationSchema.normalizedSignature(c));

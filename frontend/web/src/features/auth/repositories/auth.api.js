@@ -16,8 +16,12 @@ export class RemoteAuthRepository {
     return apiRequest('/auth/forgot-password', { method: 'POST', auth: false, body: { email } });
   }
 
-  resetPassword(email, otp, newPassword) {
-    return apiRequest('/auth/reset-password', { method: 'POST', auth: false, body: { email, otp, newPassword } });
+  verifyResetOtp(email, otp) {
+    return apiRequest('/auth/verify-reset-otp', { method: 'POST', auth: false, body: { email, otp } });
+  }
+
+  resetPassword(email, resetToken, newPassword) {
+    return apiRequest('/auth/reset-password', { method: 'POST', auth: false, body: { email, resetToken, newPassword } });
   }
 
   googleChallenge() {

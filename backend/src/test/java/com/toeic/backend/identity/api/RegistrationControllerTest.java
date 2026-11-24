@@ -89,17 +89,32 @@ class RegistrationControllerTest {
 
     @Test
     void rejectsInvalidOtpFormat() throws Exception {
-        mvc.perform(post("/api/v1/auth/reset-password")
+        mvc.perform(post("/api/v1/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "email": "learner@example.com",
-                                  "otp": "12ab", "newPassword": "ValidPassword123"
+                                  "otp": "12ab"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
+        verifyNoInteractions(verification);
+    }
+
+    @Test
+    void resetRequiresVerifiedGrant() throws Exception {
+        mvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "learner@example.com",
+                                  "otp": "123456", "newPassword": "ValidPassword123"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         verifyNoInteractions(verification);
     }
 

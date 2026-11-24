@@ -81,18 +81,22 @@ class RegistrationFlowIntegrationTest {
         var code = requestCode();
         String stored = jdbc.queryForObject("select otp_hash from password_reset_otps where user_id=?", String.class, user.getUserId());
         assertNotEquals(code, stored); assertTrue(encoder.matches(code, stored));
-        var next = UUID.randomUUID().toString(); reset.reset(email, code, next);
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, UUID.randomUUID().toString()));
+        var grant = reset.verify(email, code);
+        assertNotEquals(code, grant);
+        assertThrows(OtpRejectedException.class, () -> reset.verify(email, code));
+        var next = UUID.randomUUID().toString(); reset.reset(email, grant, next);
         assertThrows(AuthException.class, () -> auth.login(email, password)); assertNotNull(auth.login(email, next).accessToken());
         assertThrows(AuthException.class, () -> sessions.authenticate(first.accessToken()));
         assertThrows(AuthException.class, () -> sessions.authenticate(second.accessToken()));
-        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, UUID.randomUUID().toString()));
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, grant, UUID.randomUUID().toString()));
         assertNotNull(users.findByEmail(email).orElseThrow().getEmailVerifiedAt());
     }
     @Test void failedAttemptCountersCommitAndStopBruteForce() {
         var user = register(); var code = requestCode(); var wrong = code.equals("000000") ? "999999" : "000000";
-        for (int attempt = 0; attempt < 5; attempt++) assertEquals("PASSWORD_RESET_INVALID", assertThrows(OtpRejectedException.class, () -> reset.reset(email, wrong, password)).getCode());
+        for (int attempt = 0; attempt < 5; attempt++) assertEquals("PASSWORD_RESET_INVALID", assertThrows(OtpRejectedException.class, () -> reset.verify(email, wrong)).getCode());
         assertEquals(5, jdbc.queryForObject("select failed_attempts from password_reset_otps where user_id=?", Integer.class, user.getUserId()));
-        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, password));
+        assertThrows(OtpRejectedException.class, () -> reset.verify(email, code));
         assertNotNull(auth.login(email, password).accessToken());
     }
     @Test void resendEnforcesCooldownAndInvalidatesPreviousCode() {
@@ -101,24 +105,36 @@ class RegistrationFlowIntegrationTest {
         allowResend(user); var second = requestCode();
         if (first.equals(second)) { allowResend(user); second = requestCode(); }
         var newest = second;
-        assertThrows(OtpRejectedException.class, () -> reset.reset(email, first, password));
-        reset.reset(email, newest, UUID.randomUUID().toString());
+        assertThrows(OtpRejectedException.class, () -> reset.verify(email, first));
+        reset.reset(email, reset.verify(email, newest), UUID.randomUUID().toString());
     }
     @Test void expiredCodeDoesNotChangePassword() {
         var user = register(); var code = requestCode();
         jdbc.update("update password_reset_otps set created_at=now()-interval '10 minutes',expires_at=now()-interval '5 minutes' where user_id=?", user.getUserId());
-        assertThrows(OtpRejectedException.class, () -> reset.reset(email, code, UUID.randomUUID().toString()));
+        assertThrows(OtpRejectedException.class, () -> reset.verify(email, code));
         assertNotNull(auth.login(email, password).accessToken());
     }
     @Test void legacyRegistrationOtpCannotResetPassword() {
         var user = register();
         jdbc.update("insert into email_verification_otps(otp_id,user_id,otp_hash,created_at,expires_at) values (?,?,?,now(),now()+interval '5 minutes')", UUID.randomUUID(), user.getUserId(), encoder.encode("123456"));
-        assertThrows(OtpRejectedException.class, () -> reset.reset(email, "123456", UUID.randomUUID().toString()));
+        assertThrows(OtpRejectedException.class, () -> reset.verify(email, "123456"));
     }
     @Test void invalidPasswordDoesNotConsumeValidCode() {
-        register(); var code = requestCode();
-        assertThrows(RegistrationException.class, () -> reset.reset(email, code, "ậ".repeat(30)));
-        reset.reset(email, code, UUID.randomUUID().toString());
+        register(); var code = requestCode(); var grant = reset.verify(email, code);
+        assertThrows(RegistrationException.class, () -> reset.reset(email, grant, "ậ".repeat(30)));
+        reset.reset(email, grant, UUID.randomUUID().toString());
+    }
+    @Test void verifiedGrantExpiresAndCannotResetPassword() {
+        var user = register(); var code = requestCode(); var grant = reset.verify(email, code);
+        jdbc.update("update password_reset_otps set reset_token_expires_at=now()-interval '1 second' where user_id=?", user.getUserId());
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, grant, UUID.randomUUID().toString()));
+        assertNotNull(auth.login(email, password).accessToken());
+    }
+    @Test void requestingNewCodeInvalidatesPreviousVerifiedGrant() {
+        var user = register(); var first = requestCode(); var grant = reset.verify(email, first);
+        allowResend(user); var newest = requestCode();
+        assertThrows(OtpRejectedException.class, () -> reset.reset(email, grant, UUID.randomUUID().toString()));
+        reset.reset(email, reset.verify(email, newest), UUID.randomUUID().toString());
     }
     @Test void unknownBlockedAndGoogleOnlyAccountsDoNotSendResetMail() {
         reset.request(email); verifyNoInteractions(mail);

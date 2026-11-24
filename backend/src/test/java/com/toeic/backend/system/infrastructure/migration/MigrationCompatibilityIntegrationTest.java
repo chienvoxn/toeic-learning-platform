@@ -79,7 +79,7 @@ class MigrationCompatibilityIntegrationTest {
             oldHistory=history(db);
         }
         var flyway=run(db,new MockEnvironment());flyway.validate();
-        assertEquals("43",flyway.info().current().getVersion().toString());
+        assertEquals("44",flyway.info().current().getVersion().toString());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("34")).count());
         assertEquals(1,Arrays.stream(flyway.info().all()).filter(m->m.getVersion().toString().equals("35")).count());
         if(!kind.equals("empty")) {

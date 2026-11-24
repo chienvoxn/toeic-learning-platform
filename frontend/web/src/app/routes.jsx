@@ -5,6 +5,8 @@ import HomeEntry from '../pages/HomeEntry';
 import HealthPage from '../pages/HealthPage';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+import VerifyResetOtpPage from '../pages/auth/VerifyResetOtpPage';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 import ProfilePage from '../pages/profile/ProfilePage';
 import SettingsPage from '../pages/profile/SettingsPage';
 import TestCatalogPage from '../pages/assessment/TestCatalogPage';
@@ -60,6 +62,8 @@ export const router = createBrowserRouter([
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/verify-reset-otp', element: <VerifyResetOtpPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
       { path: '/verify-email', element: <Navigate to="/login" replace /> },
       { path: '/health', element: <HealthPage /> },
       // Thi thử công khai, không nằm trong RequireAuth.

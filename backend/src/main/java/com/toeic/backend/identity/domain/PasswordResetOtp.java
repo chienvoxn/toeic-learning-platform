@@ -32,6 +32,12 @@ public class PasswordResetOtp {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "reset_token_hash", length = 255)
+    private String resetTokenHash;
+
+    @Column(name = "reset_token_expires_at")
+    private OffsetDateTime resetTokenExpiresAt;
+
     protected PasswordResetOtp() {
     }
 
@@ -87,6 +93,26 @@ public class PasswordResetOtp {
     public void markUsed(OffsetDateTime now, int maxAttempts) {
         requireUsable(now, maxAttempts);
         this.usedAt = now;
+    }
+
+    public void verifyForReset(String tokenHash, OffsetDateTime now, int maxAttempts) {
+        markUsed(now, maxAttempts);
+        this.resetTokenHash = Objects.requireNonNull(tokenHash);
+        this.resetTokenExpiresAt = now.plusMinutes(10);
+    }
+
+    public boolean canReset(OffsetDateTime now) {
+        return usedAt != null && resetTokenHash != null
+                && resetTokenExpiresAt != null && now.isBefore(resetTokenExpiresAt);
+    }
+
+    public void consumeResetToken() {
+        resetTokenHash = null;
+        resetTokenExpiresAt = null;
+    }
+
+    public String getResetTokenHash() {
+        return resetTokenHash;
     }
 
     private void requireUsable(
