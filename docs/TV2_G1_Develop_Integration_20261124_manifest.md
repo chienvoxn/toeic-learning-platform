@@ -1,5 +1,9 @@
 # Manifest TV2/G1 + develop — working tree 2026-11-24
 
+> Lượt hoàn tất được phép stage/commit: bảng 56 path và 8 U dưới đây là snapshot
+> trước commit A `9042dda`. Danh sách delta commit B ở cuối; không đưa file nền
+> vào hai commit. Tree/parents/SHA thực tế trong Git và evidence `commit-A/B.json`.
+
 HEAD `04876d3`, MERGE_HEAD `6ff5f74`, merge base `314f138`.
 **Chưa stage tay, commit, push hoặc PR.** Manifest mô tả nguồn working tree đã kiểm;
 không coi index hiện tại là nguồn staged đã đạt kiểm chứng.
@@ -152,3 +156,27 @@ Chưa nhập 4 path delta PR72; MERGE_HEAD vẫn 6ff5f74, không merge chồng h
 
 Không thêm bốn path pending thành bốn path đã tích hợp; bảng 56 path trên chỉ
 cho cây 04876d3 + 6ff5f74. Không gán test/browser hiện tại cho develop20c63e7.
+
+## Delta commit B — tích hợp riêng PR72 20c63e7
+
+Parents: `9042dda` và `20c63e7`. BE, historical SQL/coordinator, dependency
+package/lock và blueprint không đổi so với A; không nhập develop sau mốc này.
+
+| File | Hunk tích hợp |
+|---|---|
+| `frontend/web/src/features/ai/ChatBubble.jsx` | UI guard PR72, actor-scoped hint, server-denied history/ask, guarded read retry/poll, lỗi mạng/404 không tự unlock; không hiển thị cached messages khi khóa |
+| `frontend/web/src/features/ai/exam-tutor-state.js` | Helper hint theo actor/attempt/source/deadline; không chặn Practice; logout actor khác không kế thừa; backend là nguồn quyết định |
+| `frontend/web/src/pages/ConnectedDashboard.jsx` | Link due review từ PR72 |
+| `frontend/web/src/pages/assessment/AttemptPage.jsx` | Hint từ snapshot server của exam; không xóa khi unmount; submit thành công bỏ đúng hint; giữ worker/queue/timer/pin |
+| `frontend/web/src/pages/assessment/TeacherTestsPage.jsx` | Loại response read cũ bằng generation, bảo toàn nội dung editor/revision |
+| `frontend/web/src/pages/vocabulary/VocabDeckListPage.jsx` | Due modal/query/loading và link Dashboard của PR72, giữ API/SRS/progress |
+| `frontend/web/tests/exam-tutor-state.test.mjs` | Practice/Guest, expiry, nhiều attempt/tab, actor, denial và storage |
+| `frontend/web/tests/exam-tutor.live.spec.js` | Browser/API/DB thật: Practice/Section, hint bypass, offline, đóng tab/restart/expiry, pin và replay |
+| `frontend/web/tests/chat.widget.spec.js` | Case HTTP fixture cho probe conversation bị xóa, không nhận là E2E BE |
+| `frontend/web/tests/develop.integration.spec.js` | Assert payload mô tả DRAFT được lưu đúng, giữ toàn bộ luồng real Teacher/Learner/moderation |
+| `docs/TV2_G1_Develop_Integration_20261124.md` | Kết quả hai commit/index proof, nguồn kiểm chứng và giới hạn |
+| `docs/TV2_G1_Develop_Integration_20261124_manifest.md` | Delta/phạm vi B; giữ riêng baseline 6 tracked +35 untracked |
+
+Index B phải khớp nguồn FE cuối đã test/lint/build và browser; không dựa vào
+code ngoài index. BE tree khớp A nên tái sử dụng package/82 test A; không chạy
+backend rộng/migration lại. Giữ 1.247/1 skipped là bằng chứng working tree cũ.

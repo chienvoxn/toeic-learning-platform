@@ -1,5 +1,29 @@
 import { test, expect } from '@playwright/test';
 
+test('deleted guard conversation stays locked until a new owned server check succeeds (HTTP fixtures)', async ({ page }) => {
+  const user = { userId: 'guard-browser-user', email: 'guard@example.test', fullName: 'Guard Learner', status: 'ACTIVE', roles: ['LEARNER'] };
+  let deleted = false;
+  await page.addInitScript(() => {
+    localStorage.setItem('toeic.remote.session', JSON.stringify({ accessToken: 'browser-fixture-token', tokenType: 'Bearer', expiresAt: Date.now() + 3600000 }));
+    localStorage.setItem('toeic.active.exam', JSON.stringify({ version: 1, attempts: [], restrictions: [{ userId: 'guard-browser-user', conversationId: 'deleted' }] }));
+  });
+  await page.route('**/api/v1/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/v1/users/me') return route.fulfill({ json: user });
+    if (path === '/api/v1/ai/conversations/deleted/messages') { deleted = true;return route.fulfill({ status: 404, json: { code: 'NOT_FOUND' } }); }
+    if (path === '/api/v1/ai/conversations') return route.fulfill({ json: route.request().method() === 'POST' ? { id: 'fresh', title: 'Owned conversation' } : [] });
+    if (path === '/api/v1/ai/conversations/fresh/messages') return route.fulfill({ json: [] });
+    return route.fulfill({ json: {} });
+  });
+  await page.goto('/settings');await page.getByRole('button', { name: 'Mở trợ lý TOEIC', exact: true }).click();
+  await expect(page.getByLabel('Câu hỏi TOEIC', { exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Kiểm tra lại trạng thái thi', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Hội thoại kiểm tra');expect(deleted).toBe(true);
+  await expect(page.getByLabel('Câu hỏi TOEIC', { exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Kiểm tra lại trạng thái thi', exact: true }).click();
+  await expect(page.getByLabel('Câu hỏi TOEIC', { exact: true })).toBeEnabled();
+});
+
 // This suite verifies browser behavior using explicit HTTP fixtures, not live Gemini.
 test('chat bubble sends, shows sources, reopens history and fits mobile', async ({ page }) => {
   const user = { userId: 'chat-browser-user', email: 'chat@example.test', fullName: 'Chat Learner', status: 'ACTIVE', roles: ['LEARNER'] };

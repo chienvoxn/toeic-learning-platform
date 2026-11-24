@@ -1,5 +1,10 @@
 # TV2/G1 — tích hợp develop, working tree 2026-11-24
 
+> Cập nhật lượt được phép stage/commit: merge đầu đã thành `9042dda` (parents
+> `04876d3`, `6ff5f74`); tiếp đó tích hợp riêng mốc PR72 `20c63e7`. Các mục
+> “chưa stage/commit”, 8 U và “PR72 chưa nhập” bên dưới là checkpoint lịch sử,
+> không phải trạng thái sau lượt hoàn tất. Xem phần cuối và manifest cập nhật.
+
 HEAD trước merge `04876d32408bdb325fbe695404948ea0edc3c1af`;
 chain `24839e0 → 79898e6` (TV2, pthanh137) `→ 04876d3` (G1, chienvoxn).
 Fetch đầu lượt: `origin/develop=6ff5f74083b56e42f66e3a97622f2f934b99040c`;
@@ -199,3 +204,68 @@ thêm/chưa commit merge** vẫn giữ. Cần lượt được phép review/stag
 hiện tại rồi tích hợp PR72 theo lịch sử Git, hoặc một chỉ dẫn rõ để điều chỉnh
 merge đang dang dở. Không reset/stash/abort hay tự chỉnh file MERGE_HEAD để vượt
 chặn. Bằng chứng 1.248/101/browser ở trên không gán cho 20c63e7.
+
+## Lượt được phép hoàn tất hai merge
+
+Commit A `9042ddac6e16d3076e0cb6bb71525867bf59e6d9` có đúng parents
+`04876d32408bdb325fbe695404948ea0edc3c1af` và
+`6ff5f74083b56e42f66e3a97622f2f934b99040c`. Author/committer đều
+`pthanh137 <sleapf137@gmail.com>`. Không amend/rebase hay sửa tác giả commit cũ.
+Stage đúng 56 path manifest, loại toàn bộ nền; 0 entry unmerged. Tree đã kiểm:
+`24583b7d0099417d99e5cfebde23d55fea0db9f2`.
+
+Kiểm nguồn index A không tạo source copy: xác minh Git blob của mọi runtime,
+build và resource input bằng index; Maven Wrapper dùng POM chỉ chuyển output,
+source directory và danh sách test/resource include. Năm test Problems còn
+modified ngoài index và hai test data-driven untracked không được compile.
+Test input còn lại khớp index, không phụ thuộc file nền. Fresh package và
+**82 test/8 class đạt, 0 skipped/failure/error**, gồm AuthFlow, Chat/ExamGuard,
+adapter/catalog/legacy, G1 và expiry cạnh tranh/retry. Không chạy hai bộ
+migration nhiều DB. DB JUnit cũ được tái sử dụng. Log/proof:
+`index-A-maven-result.json`, `index-A-source-proof.json`, `commit-A.json`.
+
+Sau A, `20c63e7` vẫn tồn tại và là descendant của `6ff5f74`; không thể fast-forward
+feature vì hai phía đã phân kỳ. Merge riêng PR72 có parents A và `20c63e7`.
+Không nhập develop sau mốc đó. PR72 không thay BE/SQL/coordinator; source BE và
+JAR package của A được tái sử dụng theo blob identity, không chạy backend rộng lại.
+SHA commit thứ hai và tree/index proof lưu trong `commit-B.json` và
+`index-B.json` thuộc thư mục evidence ignored; cũng đọc được trực tiếp từ Git.
+
+Kết hợp PR72 giữ Dashboard→due review và modal vocabulary mới, Teacher/Learner
+router và cùng runtime `/attempts`. AI marker là hint theo user/source/deadline:
+Practice/Guest không tạo khóa; Section và TEST_VERSION còn hạn giữ hint sau
+unmount/đóng tab. Submit thành công chỉ bỏ hint của chính attempt. Hint không
+thay backend guard, không chứa token/password và không áp một timing Full Test
+mới. Server vẫn chặn ask/history/replay khi bất kỳ exam hợp lệ nào đang hoạt động,
+kể cả client xóa marker hoặc đang đứng trên trang Practice.
+
+Sau `AI_EXAM_RESTRICTED`, UI giữ khóa; nút kiểm lại và polling dùng API messages
+đã có, chỉ gỡ khóa khi read được server guard cho phép. Lỗi mạng không mở khóa.
+Hội thoại probe bị xóa trả 404 cũng không mở khóa: lần kiểm tiếp dùng hội thoại
+owned còn lại hoặc tạo một hội thoại rỗng rồi đọc; không gọi AI provider để probe.
+Không thêm BE route, permission, schema hoặc chính sách nghiệp vụ.
+
+Browser phát hiện race DRAFT read cũ ghi đè nội dung đang sửa; editor thêm
+generation để loại response cũ và cleanup khi đổi test/unmount. Test xác nhận
+payload update đúng nội dung người dùng nhập, revision DB và reload, không chỉ
+dựa vào thông báo “đã lưu”. Lỗi harness restart do pipe của process con giữ mở
+được sửa bằng stdio ignore; không bỏ kiểm restart hay hạ assertion.
+
+Bằng chứng FE cuối trong `PR72-final-unit/lint/build.log`: **107/107**, lint và
+build exit 0 (còn warning có sẵn/chunk size). `PR72-browser-recheck.log` có 4/4
+case browser–API–DB thật: Teacher DRAFT/revision, Practice/Reading/history/result,
+moderation evidence và AI guard. Sau delta phục hồi probe 404, ca AI được kiểm
+lại trên source cuối trong `PR72-final-ai-live.log`; case 404 riêng trong
+`PR72-deleted-probe-fixture.log` là **HTTP fixture**, không gọi là BE E2E.
+Live AI dùng lời chào trả tại server, không Gemini thật, không fixture response:
+Practice cho phép; Section chặn 403 kể cả xóa hint; mất mạng giữ khóa; đóng tab,
+restart BE thật và đọc lại pin/answer; hết hạn đọc guard thành công mới mở;
+submit/replay/result giữ nguyên. G1 batch vẫn chưa có UI; 7 test API atomic của
+index A và bằng chứng HTTP G1 chỉ được tái sử dụng theo BE identity không đổi.
+
+Nhãn 1.247 test thực thi/1 skipped của lượt working tree rộng cũ giữ nguyên,
+không gán thành full pass của staged commit A/B. FULL-LR/v1, số câu và chuyển
+Section A/B còn OPEN, chưa seed/thi hành. Chưa demo Full Mock/media toàn nhóm,
+chưa Sprint 4, chưa push/PR. Demo cần thiết giữ FE5173/BE8080 trên DB review
+55469, profile local-demo với datasource override và validate-only; DB demo
+nguồn 55459, credentials/settings/background/backup được bảo toàn.

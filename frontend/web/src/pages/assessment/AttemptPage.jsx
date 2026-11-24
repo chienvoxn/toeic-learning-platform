@@ -14,16 +14,25 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { GuestPracticeNotice } from '@/components/molecules/GuestPracticeNotice';
 import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { rememberExam, forgetExam } from '@/features/ai/exam-tutor-state';
 
 export default function AttemptPage({ remote = false }) {
   const { attemptId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userId = user?.id || user?.userId;
   const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, expiryError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
   const [error, setError] = useState('');
   const [timedOutId, setTimedOutId] = useState(null);
   const [strictAudioOverride, setStrictAudioOverride] = useState(null);
   const attemptBase = remote ? '/practice/attempts' : '/attempts';
   const catalogPath = remote && attempt?.sourceType !== 'TEST_VERSION' ? '/practice' : '/tests';
+  const examSource = attempt?.sourceType, examStatus = attempt?.status, examDeadline = attempt?.expiresAt, examExpired = attempt?.expired;
+
+  useEffect(() => {
+    if (remote && examStatus) rememberExam({ id: attemptId, remote, sourceType: examSource, status: examStatus, expiresAt: examDeadline, expired: examExpired }, userId);
+  }, [remote, attemptId, examSource, examStatus, examDeadline, examExpired, userId]);
 
   useEffect(() => {
     if (attempt?.status === 'GRADED') navigate(`${attemptBase}/${attemptId}/result`, { replace: true });
@@ -45,6 +54,7 @@ export default function AttemptPage({ remote = false }) {
     if (!byTimer && !window.confirm(`Bạn còn ${questions.length - answered} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`)) return;
     try {
       const result = await submitExam();
+      if (remote) forgetExam(attemptId, userId);
       navigate(`${attemptBase}/${attemptId}/result`, { state: { result } });
     } catch (err) {
       setError(err.message || 'Không thể nộp bài. Vui lòng thử lại.');

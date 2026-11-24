@@ -57,7 +57,9 @@ test('New Teacher shell creates and edits the canonical draft; server revision a
   await expect(page.getByRole('heading', { name: 'Biên soạn bộ đề' })).toBeVisible();
   await expect(page.getByLabel('Tên bộ đề', { exact: true })).toHaveValue(title);
   await page.getByRole('textbox', { name: /^Mô tả/ }).fill('Edited via shared editor');
+  const update = page.waitForResponse(r => r.url().includes(`/teacher/tests/${draft.testId}/versions/`) && r.request().method() === 'PUT');
   await page.getByRole('button', { name: 'Lưu bản nháp', exact: true }).click();
+  expect((await update).request().postDataJSON().document.description).toBe('Edited via shared editor');
   await expect(page.getByRole('status')).toContainText('Đã lưu bản nháp');
   await page.reload();await expect(page.getByRole('textbox', { name: /^Mô tả/ })).toHaveValue('Edited via shared editor');
   const value = await api(page, 'GET', '/teacher/tests/' + draft.testId);expect(value.status).toBe(200);expect(value.data.revision).toBe(1);

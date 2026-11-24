@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { useAdminReport } from '@/features/admin/useAdminReport';
@@ -9,6 +9,7 @@ export default function TeacherTestsPage({ embedded = false }) {
   const [searchParams] = useSearchParams();
   const requestedTest = searchParams.get("testId");
   const Layout = embedded ? Fragment : LearnerTemplate;
+  const readGeneration = useRef(0);
   const [page, setPage] = useState(0), [revision, setRevision] = useState(0);
   const [query, setQuery] = useState({ partNumber: 1, page: 0 });
   const [draft, setDraft] = useState(null), [editor, setEditor] = useState(empty), [selected, setSelected] = useState([]);
@@ -22,14 +23,18 @@ export default function TeacherTestsPage({ embedded = false }) {
   const editable = draft ? (draft.capabilities?.edit ?? (draft.status === 'DRAFT' && draft.document)) : (caps.data?.manage ?? true);
   function reset() { setDraft(null); setEditor(empty()); setSelected([]); setError(''); setNotice(''); setStale(false); }
   const read = useCallback(async (id, version) => {
+    const generation = ++readGeneration.current;
     setBusy(true); setError(''); setNotice('');
     try {
-      const value = await (version ? api.readVersion(id, version) : api.read(id)); setDraft(value); setStale(false);
+      const value = await (version ? api.readVersion(id, version) : api.read(id));
+      if (generation !== readGeneration.current) return;
+      setDraft(value); setStale(false);
       setEditor(value.document ? { ...value.document, description: value.document.description ?? '', durationSeconds: value.document.durationSeconds ?? '' } : empty());
       setSelected(value.document ? documentUnits(value.document) : []);
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
+    } catch (e) { if (generation === readGeneration.current) setError(e.message); }
+    finally { if (generation === readGeneration.current) setBusy(false); }
   }, []);
-  useEffect(() => { if (requestedTest) void read(requestedTest); }, [requestedTest, read]);
+  useEffect(() => { if (requestedTest) void read(requestedTest); return () => { readGeneration.current++; }; }, [requestedTest, read]);
   async function save(event) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
