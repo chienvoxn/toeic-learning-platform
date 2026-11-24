@@ -33,6 +33,8 @@ export const SCREEN_IDS = Object.freeze([
   "wordMatch",
   "onboarding",
   "login",
+  "contentDetail",
+  "aiChat",
 ]);
 
 export function navigationReducer(stack, action) {

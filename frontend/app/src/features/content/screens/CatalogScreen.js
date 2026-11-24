@@ -6,7 +6,7 @@ import AppButton from "../../../components/atoms/AppButton";
 import useContentCatalog from "../hooks/useContentCatalog";
 import { colors } from "../../../theme/tokens";
 
-export default function CatalogScreen() {
+export default function CatalogScreen({ navigate }) {
   const {
     selectedCat,
     setSelectedCat,
@@ -103,10 +103,12 @@ export default function CatalogScreen() {
                     <View key={item.id} style={s.card}>
                       <AppButton
                         onPress={() =>
-                          Alert.alert(
-                            item.title,
-                            "Bài học này chưa có nội dung phát. Hãy chọn bài học khác.",
-                          )
+                          navigate
+                            ? navigate("contentDetail", {
+                                contentId: item.id,
+                                content: item,
+                              })
+                            : Alert.alert(item.title, item.description || "")
                         }
                         accessibilityLabel={`Mở ${item.title}`}
                       >

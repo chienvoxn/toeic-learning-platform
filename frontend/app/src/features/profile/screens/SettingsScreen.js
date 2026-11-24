@@ -11,8 +11,9 @@ export default function SettingsScreen({ navigate }) {
     Alert.alert(title, "Nội dung này sẽ có trong phiên bản tiếp theo.");
   const groups = [
     [
+      ["star", "Trợ lý Parroto AI", () => navigate("aiChat")],
       ["note", "Ghi chú của tôi", () => navigate("vocab")],
-      ["review", "Ôn tập", () => navigate("flashcardReview")],
+      ["review", "Ôn tập Flashcard", () => navigate("flashcardReview")],
       ["progress", "Tiến độ bài học", () => navigate("home")],
       ["trophy", "Bảng xếp hạng", () => info("Bảng xếp hạng")],
     ],
