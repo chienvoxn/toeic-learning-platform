@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Clock3, Headphones, ArrowRight } from 'lucide-react';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
 import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
-import { readSession } from '@/features/auth/session';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { assessmentRepo } from '@/features/assessment/repositories/assessment.repo';
+import { GuestPracticeNotice } from '@/components/molecules/GuestPracticeNotice';
+import { TestMetadata } from '@/components/molecules/TestMetadata';
 
 const practiceSets = [
   { part: 1, title: 'Photographs', section: 'Listening', count: 6 },
@@ -34,12 +37,15 @@ const cardStyle = {
 };
 
 export default function TestCatalogPage() {
+  const { user } = useAuth();
+  const [guestTests, setGuestTests] = useState([]);
   const [fullTests, setFullTests] = useState([]);
-  const [loading, setLoading] = useState(() => Boolean(readSession()));
+  const [loading, setLoading] = useState(() => Boolean(user));
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
-  const isAuthenticated = Boolean(readSession());
+  const isAuthenticated = Boolean(user);
 
+  useEffect(() => { let active = true; assessmentRepo.getCatalog().then(items => { if (active) setGuestTests(items); }).catch(() => {}); return () => { active = false; }; }, []);
   function retryLoad() {
     setLoading(true);
     setError('');
@@ -188,8 +194,8 @@ export default function TestCatalogPage() {
 
                   <p className="mt-3 text-slate-500">
                     <BookOpen size={15} className="inline" />
-                    {' '}Part {item.part} · {item.count} câu
-                    trong cấu trúc Full Test
+                    {' '}Part {item.part} · {item.count} câu là gợi ý luyện tập,
+                    không phải blueprint Full Test đã duyệt
                   </p>
 
                   <p className="mt-2 text-sm">
@@ -208,6 +214,12 @@ export default function TestCatalogPage() {
             ))}
           </div>
         </div>
+        <section className="surface p-5" aria-label="Bài mẫu Guest">
+          <GuestPracticeNotice /><h2>Bộ câu hỏi mẫu trên trình duyệt</h2>
+          <div className="test-catalog-grid">{guestTests.map(test => <article className="test-list-card surface" key={test.id}>
+            <h3>{test.title}</h3><TestMetadata test={test} /><Link className="pill-button" to={`/tests/${test.id}/overview`}>XEM CHI TIẾT</Link>
+          </article>)}</div>
+        </section>
       </div>
     </AssessmentLayout>
   );

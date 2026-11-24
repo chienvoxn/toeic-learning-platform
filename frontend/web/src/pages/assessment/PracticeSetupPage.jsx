@@ -8,8 +8,9 @@ export default function PracticeSetupPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState('PRACTICE');
+  const [sectionType, setSectionType] = useState('READING');
   const [parts, setParts] = useState([5]);
-  const [count, setCount] = useState(30);
+  const [count, setCount] = useState(4);
   const [minutes, setMinutes] = useState(20);
   const [practiceGoalMinutes, setPracticeGoalMinutes] = useState(30);
   const [fullTestVersionId, setFullTestVersionId] = useState('');
@@ -18,29 +19,17 @@ export default function PracticeSetupPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const requestedMode = params.get('mode');
-    const requestedPart = Number(params.get('part'));
-    const requestedTestVersionId = params.get('testVersionId');
-
-    if (requestedMode === 'FULL_TEST') {
-      setMode('FULL_TEST');
-      setFullTestVersionId(requestedTestVersionId || '');
-    } else if (
-      requestedMode === 'PRACTICE' &&
-      Number.isInteger(requestedPart) &&
-      requestedPart >= 1 &&
-      requestedPart <= 7
-    ) {
-      setMode('PRACTICE');
-      setParts([requestedPart]);
-      setCount(requestedPart === 5 ? 30 : 4);
-      setPracticeGoalMinutes(30);
+    if (params.get('mode') === 'FULL_TEST') { setMode('FULL_TEST'); setFullTestVersionId(params.get('testVersionId') || ''); }
+    else if (['SECTION', 'LISTENING_SECTION'].includes(params.get('mode'))) {
+      setMode('SECTION'); setSectionType(params.get('mode') === 'LISTENING_SECTION' ? 'LISTENING' : 'READING'); setCount(8);
+    } else if (params.get('mode') === 'PRACTICE') {
+      const part = Number(params.get('part'));
+      if (Number.isInteger(part) && part >= 1 && part <= 7) { setMode('PRACTICE'); setParts([part]); setCount(part === 5 ? 30 : 4); }
     }
   }, [location.search]);
-
-  const isSectionMode = mode === 'SECTION' || mode === 'LISTENING_SECTION';
-  const sectionType = mode === 'LISTENING_SECTION' ? 'LISTENING' : 'READING';
+  const isSectionMode = mode === 'SECTION';
   const fullTestTitle = location.state?.fullTestTitle || 'Full Test đã chọn';
+
 
   function togglePart(part) {
     setParts(value => (value.includes(part) ? value.filter(p => p !== part) : [...value, part].sort((a, b) => a - b)));
@@ -103,14 +92,13 @@ export default function PracticeSetupPage() {
             onChange={event => {
               const nextMode = event.target.value;
               setMode(nextMode);
-              setCount(nextMode === 'SECTION' || nextMode === 'LISTENING_SECTION' ? 8 : 30);
+              setCount(nextMode === 'SECTION' ? 8 : 4);
               setError('');
             }}
           >
-            <option value="FULL_TEST">Full Test — 200 câu / 120 phút</option>
+            <option value="FULL_TEST">Full Test — theo phiên bản/blueprint đã xuất bản</option>
             <option value="PRACTICE">Practice theo Part (Part 1–7)</option>
-            <option value="LISTENING_SECTION">Listening Section (Part 1–4)</option>
-            <option value="SECTION">Reading Section (Part 5–7)</option>
+            <option value="SECTION">Thi Section (Listening / Reading)</option>
           </select>
 
           {mode === 'PRACTICE' ? (
@@ -149,31 +137,16 @@ export default function PracticeSetupPage() {
                 </div>
               </div>
             </fieldset>
-          ) : mode === 'FULL_TEST' ? (
-            <div className="space-y-3 text-sm text-slate-600">
-              <p>
-                Full TOEIC Listening & Reading — 200 câu,
-                7 Part, thời gian 120 phút.
-                Không chọn riêng Part trong chế độ này.
-              </p>
-              {fullTestVersionId ? (
-                <p className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-blue-900">
-                  Đề đã chọn: <strong>{fullTestTitle}</strong>. Khi nhấn bắt đầu, hệ thống tạo một phiên làm bài riêng và thời gian tính theo máy chủ.
-                </p>
-              ) : (
-                <p>
-                  Chưa chọn đề đã xuất bản.{' '}
-                  <Link to="/tests" className="text-blue-600 underline">
-                    Mở thư viện đề thi
-                  </Link>
-                </p>
-              )}
-            </div>
-          ) : mode === 'LISTENING_SECTION' ? (
-            <p>Listening Section gồm đầy đủ Part 1, 2, 3, 4 kèm audio và hình minh họa. Demo có tổ hợp 6–8 câu; nhóm câu không bị cắt.</p>
-          ) : (
-            <p>Reading gồm đầy đủ Part 5, 6, 7. Demo có tổ hợp 8–11 câu; nhóm câu không bị cắt.</p>
-          )}
+          ) : isSectionMode ? (
+            <>
+              <label className="block font-bold" htmlFor="section-type">Kỹ năng Section</label>
+              <select id="section-type" className="border rounded-lg p-2 w-full" value={sectionType} disabled={busy} onChange={event => setSectionType(event.target.value)}>
+                <option value="READING">Reading · Part 5–7</option>
+                <option value="LISTENING">Listening · Part 1–4</option>
+              </select>
+              <p>{sectionType === 'LISTENING' ? 'Listening gồm đầy đủ Part 1, 2, 3, 4.' : 'Reading gồm đầy đủ Part 5, 6, 7.'} Mỗi Part có ít nhất một câu; nhóm câu không bị cắt. Cần đủ nguồn đã xuất bản cho tổng số câu đã chọn.</p>
+            </>
+          ) : <p>Full Test dùng thứ tự, số câu và thời hạn từ phiên bản/blueprint trên máy chủ. Không chọn cấu hình Section tại đây.</p>}
 
           {mode !== 'FULL_TEST' && (
             <>
@@ -208,7 +181,7 @@ export default function PracticeSetupPage() {
                 onChange={event => setMinutes(event.target.value)}
               />
               <p className="text-sm text-slate-500">
-                Đây là cấu hình luyện tập Section ({sectionType}), hạn bài tính theo giờ máy chủ; ở chế độ Section có tùy chọn khóa tua/nghe 1 lần giống phòng thi thật.
+                Đây là cấu hình luyện tập Section ({sectionType}), không phải thời lượng/cấu trúc TOEIC chính thức. Hạn bài tính theo giờ máy chủ; chưa tự chốt khi không có request. Khóa tua/nghe một lần là tùy chọn luyện tập trên giao diện.
               </p>
             </>
           )}

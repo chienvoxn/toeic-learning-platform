@@ -3,6 +3,8 @@ package com.toeic.backend.content.application;
 import com.toeic.backend.content.domain.LearningContent;
 import com.toeic.backend.content.domain.LearningContentVersion;
 import com.toeic.backend.content.infrastructure.*;
+import com.toeic.backend.system.application.ContentManagementAudit;
+import com.toeic.backend.system.application.ModerationEvidence;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,10 +26,12 @@ public class ContentManagementService {
     private final ContentMediaReuseService reuse;
     private final ContentAccessPolicy access;
     private final Clock clock;
+    private final ContentManagementAudit audit;
+    private final ModerationEvidence evidence;
 
     public ContentManagementService(ContentRepository contents, ContentVersionRepository versions,
             ContentCategoryRepository categories, ContentMediaRepository media, ContentAssetRepository assets,
-            ContentMediaReuseService reuse, ContentAccessPolicy access, Clock clock) {
+            ContentMediaReuseService reuse, ContentAccessPolicy access, Clock clock, ContentManagementAudit audit, ModerationEvidence evidence) {
         this.contents = contents;
         this.versions = versions;
         this.categories = categories;
@@ -36,6 +40,8 @@ public class ContentManagementService {
         this.reuse = reuse;
         this.access = access;
         this.clock = clock;
+        this.audit = audit;
+        this.evidence = evidence;
     }
 
     @Transactional
@@ -51,6 +57,8 @@ public class ContentManagementService {
         var version = versions.saveAndFlush(new LearningContentVersion(content.getContentId(),1,actorId,edit.title(),
                 edit.summary(),edit.body(),now));
         if (!links.isEmpty()) { assets.replace(version.getContentVersionId(),links); }
+        evidence.record("contents",content.getContentId(),version.getContentVersionId(),null,actorId,true);
+        audit.created(actorId,ContentManagementAudit.Resource.CONTENT,content.getContentId(),version.getContentVersionId(),edit.fields(),now);
         return detail(content,List.of(version));
     }
 
@@ -79,6 +87,7 @@ public class ContentManagementService {
         var category = edit.has("categoryCode")
                 ? categories.findByCode(edit.categoryCode()).orElseThrow(ContentException::invalidPayload) : content.getCategory();
         var all = versions.lockAllForContent(id);
+        if(all.stream().anyMatch(v -> List.of("IN_REVIEW","APPROVED").contains(v.getStatus())))throw ContentException.stateConflict();
         var pointer = content.getCurrentPublishedVersion();
         if ("PUBLISHED".equals(content.getStatus())) {
             if (pointer == null || !id.equals(pointer.getContentId()) || !"PUBLISHED".equals(pointer.getStatus())
@@ -89,6 +98,7 @@ public class ContentManagementService {
         var draft = workingDraft(all);
         boolean cloning = draft == null;
         if (cloning && pointer == null) { throw ContentException.stateConflict(); }
+        var beforeVersion = cloning ? pointer.getContentVersionId() : draft.getContentVersionId();
         var source = assets.findAll(cloning ? pointer.getContentVersionId() : draft.getContentVersionId());
         var target = edit.has("assets") ? requestedLinks(edit) : source;
         reuse.validate(actorId,target.stream().map(ContentAssetRepository.Link::mediaId).toList(),
@@ -109,13 +119,19 @@ public class ContentManagementService {
                 edit.has("body") ? edit.body() : draft.getBody(),now);
         content.touch(now);
         if (cloning || edit.has("assets")) { assets.replace(draft.getContentVersionId(),target); }
+        versions.saveAndFlush(draft);
+        evidence.record("contents",id,draft.getContentVersionId(),pointer==null?null:pointer.getContentVersionId(),actorId,cloning);
+        audit.updated(actorId,ContentManagementAudit.Resource.CONTENT,id,content.getStatus(),beforeVersion,draft.getContentVersionId(),edit.fields(),now);
         return detail(content,all);
     }
 
     @Transactional
     public void archive(UUID actorId, UUID id) {
         var content = contents.lockManaged(id,actorId,access.canManageAny()).orElseThrow(ContentException::notFound);
-        content.archive(OffsetDateTime.now(clock));
+        var before = content.getStatus();
+        var now = OffsetDateTime.now(clock);
+        content.archive(now);
+        audit.changed(actorId,ContentManagementAudit.Resource.CONTENT,id,before,now);
     }
 
     private static List<ContentAssetRepository.Link> requestedLinks(ContentEdit edit) {

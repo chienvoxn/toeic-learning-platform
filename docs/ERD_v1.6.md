@@ -2,6 +2,8 @@
 
 # TOEIC Learning Platform — ERD v1.6 (tài liệu Markdown)
 
+> **ADMIN-03 V35 — quyết định xác nhận2026-11-15:** moderation_versions lưu kind/version_id/parent_id/source_version_id/cycle_key/revision/approved_revision/evidence_complete; PK(kind,version_id), không backfill legacy. moderation_contributors lưu actor/action/time của create/edit/submit, moderation_decisions lưu version/revision/actor/action/reason/time trong scope review. Hai bảng con FK metadata với ON DELETE CASCADE chỉ cho liên kết metadata; actor FK users, không cascade user/version/audit. Parent/source polymorphic được service validate, không tuyên bố là FK vật lý. Published pointer/status vẫn ở bảng hiện hữu; không sửa SQL V1–V34. [Contract và giới hạn G1/media](ADMIN03_Content_Moderation.md).
+
 > **EXAM-01 V27 runtime — sản phẩm chốt 2026-11-11:** attempts thêm section_type VARCHAR(20) và configured_duration_seconds INTEGER nullable cho rows cũ; SECTION_SNAPSHOT bắt buộc attempt_type=SECTION, test_version_id NULL, section_type LISTENING/READING, duration 60–7200 giây/bội 60, total_questions 1–100, expires_at = started_at + configured_duration_seconds. Source khác giữ hai cột NULL. questionCount pin bằng total_questions, Part bắt buộc suy từ section_type, tập/order version pin bằng snapshots V10. Không backfill/sửa V1–V26. V27 seed exam:manage:self chỉ mặc định LEARNER. Membership đủ mọi Part và feasibility nguyên nhóm được application enforce; chấm/answer/part results dùng V5/V26. [Contract/schema/kiểm thử](EXAM01_Section_Attempts.md).
 
 > **PRAC-02 V26 runtime — quyết định sản phẩm 2026-11-11:** giữ bảng V5/V10, thêm attempt_answers.correct_choice_id UUID nullable với composite FK `(question_version_id,correct_choice_id)` → question_choices, explanation_snapshot TEXT nullable và part_number_snapshot INTEGER nullable/check 1–7. Không backfill key/kết quả cũ, không sửa V1–V23. Trước submit is_correct/key/part snapshot NULL; submit tạo cả row bỏ trống, lưu bool/key/explanation/Part và attempt_part_results cùng header GRADED trong một transaction. Khóa parent/ownership/source, kiểm membership ở application và composite FK choice DB; không global FK answers→practice snapshot vì còn source TEST_VERSION DESIGN. rawScore/count/accuracy suy từ kết quả đúng/sai đã persisted, không từ đáp án current published. [API, quyết định và kiểm thử](PRAC02_Answers_Submission_Grading.md).
@@ -470,6 +472,10 @@ và cập nhật khóa ngoại enrollment để xóa bản sao bộ catalog. V37
 `vocabulary_review_requests` lưu key theo user, từ, rating và response để
 phát lại kết quả khi client retry. Các định nghĩa bên dưới giữ bản ERD v1.6.
 
+V36/V37 trong ghi chú này là lineage vocabulary lịch sử. Lineage completion
+nhận cùng schema qua V43, giữ SQL/history đã áp dụng; xem
+[compatibility V36–V38](MIGRATION36_38_Source_Compatibility.md).
+
 Table review_states {
   review_state_id uuid [pk]
   user_id uuid [not null]
@@ -734,6 +740,7 @@ Table audit_logs {
 Table system_settings {
   setting_key varchar(100) [pk]
   setting_value jsonb [not null]
+  revision bigint [not null, default: 0, note: 'V34, >=0; CAS expectedRevision; hai key ADMIN06 allowlist trong code']
   updated_by uuid
   updated_at timestamptz [not null]
 }

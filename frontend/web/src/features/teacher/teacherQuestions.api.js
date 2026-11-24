@@ -20,6 +20,9 @@ function listParams(filters = {}) {
 }
 
 export const teacherQuestionsApi = {
+  options() {
+    return apiRequest('/teacher/question-options');
+  },
   list(filters = {}) {
     return apiRequest(
       `/teacher/questions?${listParams(filters)}`

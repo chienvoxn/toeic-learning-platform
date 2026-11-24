@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.*;
 @Transactional(propagation = Propagation.MANDATORY)
 class AttemptGrading {
     private final PracticeAnswerRepository answers;
-    private final PracticeQuestionCatalog catalog;
-    AttemptGrading(PracticeAnswerRepository answers, PracticeQuestionCatalog catalog) {
+    private final com.toeic.backend.questionbank.application.PinnedQuestionGrading catalog;
+    AttemptGrading(PracticeAnswerRepository answers, com.toeic.backend.questionbank.application.PinnedQuestionGrading catalog) {
         this.answers = answers; this.catalog = catalog;
     }
     PracticeResultDtos.Result grade(UUID actorId, PracticeAttempt attempt, OffsetDateTime now) {
@@ -26,11 +26,15 @@ class AttemptGrading {
                 || !pins.stream().map(q -> q.getQuestionVersionId()).collect(java.util.stream.Collectors.toSet()).containsAll(saved.keySet())) {
             throw new PracticeQuestionCatalog.Unavailable(false);
         }
+        // Invalid late persisted data is quarantined, never silently counted or overwritten.
+        if(attempt.isTestVersion() && saved.values().stream().anyMatch(a->!a.updatedAt().isBefore(attempt.getExpiresAt()))) {
+            throw new PracticeQuestionCatalog.Unavailable(false);
+        }
         int correct = 0, listening = 0, reading = 0;
         var parts = new TreeMap<Integer,int[]>();
         for (var pin : pins) {
             var versionId = pin.getQuestionVersionId();
-            var key = catalog.markingKey(actorId,versionId,pin.getGroupVersionId());
+            var key = catalog.key(versionId,pin.getGroupVersionId());
             if(attempt.isSection()&&!SectionDtos.configuration(attempt).partNumbers().contains(key.partNumber())) {
                 throw new PracticeQuestionCatalog.Unavailable(false);
             }
@@ -50,6 +54,7 @@ class AttemptGrading {
             answers.partResult(attemptId,part.getKey(),count[0],count[1],accuracy(count[1],count[0]));
         }
         attempt.completeGrading(now,correct,listening,reading);
+        if(attempt.isTestVersion())answers.clearExpiryRetry(attemptId);
         return storedResult(attempt);
     }
     PracticeResultDtos.Result storedResult(PracticeAttempt attempt) {
@@ -75,11 +80,13 @@ class AttemptGrading {
         return new PracticeResultDtos.Result(attempt.getAttemptId(),attempt.getStatus(),attempt.getSubmittedAt(),attempt.getTotalQuestions(),
                 correct,incorrect,unanswered,correct,accuracy(correct,attempt.getTotalQuestions()),attempt.getListeningCorrectCount(),
                 attempt.getReadingCorrectCount(),questions,SectionDtos.configuration(attempt),
-                attempt.isSection()?partResults(attempt,questions):null);
+                partResults(attempt,questions),attempt.getTestSnapshot());
     }
     private List<SectionDtos.PartResult> partResults(PracticeAttempt attempt,List<PracticeResultDtos.QuestionResult> questions) {
         var persisted=answers.partResults(attempt.getAttemptId());
-        var required=SectionDtos.configuration(attempt).partNumbers();
+        var required=attempt.isSection()?SectionDtos.configuration(attempt).partNumbers():attempt.isTestVersion()
+                ?attempt.getTestSnapshot().blueprint().parts().stream().map(p->p.partNumber()).toList()
+                :questions.stream().map(PracticeResultDtos.QuestionResult::partNumber).distinct().sorted().toList();
         if(!persisted.stream().map(p->p.partNumber()).toList().equals(required))throw new PracticeQuestionCatalog.Unavailable(false);
         return persisted.stream().map(p->{
             var rows=questions.stream().filter(q->q.partNumber()==p.partNumber()).toList();

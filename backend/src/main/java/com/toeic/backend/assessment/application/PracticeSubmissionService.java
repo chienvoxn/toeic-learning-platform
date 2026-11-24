@@ -43,7 +43,7 @@ public class PracticeSubmissionService {
         if ("GRADED".equals(attempt.getStatus())) return grading.storedResult(attempt);
         var now = now();
         if(!"IN_PROGRESS".equals(attempt.getStatus()))throw PracticeException.notEditable();
-        if(!attempt.isSection()&&!now.isBefore(attempt.getExpiresAt()))throw PracticeException.expired();
+        if(!attempt.isTimed()&&!now.isBefore(attempt.getExpiresAt()))throw PracticeException.expired();
         return grading.grade(actorId,attempt,now);
     }
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)

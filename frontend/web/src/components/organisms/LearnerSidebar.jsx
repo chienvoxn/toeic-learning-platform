@@ -12,6 +12,9 @@ const items = [
   ['Luyện thi TOEIC', '/tests', 'imgSvg7'], ['Trò Chơi', '/games', 'imgSvg8'], ['Ôn tập', '/vocabulary?view=review', 'imgSvg9'],
 ];
 
+import ModerationNavigation from '@/features/admin/ModerationNavigation';
+import ExamDraftNavigation from '@/features/assessment/ExamDraftNavigation';
+
 export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onCollapse }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -37,9 +40,14 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
       <div className="sidebar-scroll">
         <nav aria-label="Điều hướng chính" className="sidebar-nav">{items.map(navItem)}</nav>
         <div className="sidebar-personal">
+          {user && <ModerationNavigation />}
+          {user && <ExamDraftNavigation />}
+          {user && navItem(['Lịch sử bài làm', '/practice/history', 'imgSvg7'])}
           {user?.adminCapabilities?.userManagement && navItem(['Quản lý người dùng', '/admin/users', 'imgSvg11'])}
           {user?.adminCapabilities?.rbacManagement && navItem(['Vai trò và quyền', '/admin/roles', 'imgSvg11'])}
           {user?.adminCapabilities?.auditRead && navItem(['Audit quản trị', '/admin/audit', 'imgSvg11'])}
+          {user?.adminCapabilities?.settingsManagement && navItem(['Cấu hình hệ thống', '/admin/settings', 'imgSvg11'])}
+          {(user?.adminCapabilities?.contentManagement || user?.adminCapabilities?.questionManagement) && navItem(['Học liệu và câu hỏi', '/admin/content', 'imgSvg11'])}
           {(user?.adminCapabilities?.healthRead || user?.adminCapabilities?.usageRead) && navItem(['Tổng quan hệ thống', '/admin/overview', 'imgSvg11'])}
           {navItem(['Ghi chú của tôi', null, 'imgSvg11'])}
           {navItem(['Từ vựng của tôi', '/vocabulary?view=personal', 'imgSvg5'])}

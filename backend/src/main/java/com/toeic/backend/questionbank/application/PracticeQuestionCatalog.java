@@ -28,9 +28,10 @@ public class PracticeQuestionCatalog {
     private final QuestionVersionRepository versions;
     private final QuestionAssetRepository assets;
     private final PracticeQuestionViewMapper mapper;
+    private final PinnedQuestionGrading grading;
     public PracticeQuestionCatalog(PracticePublicationRepository data,QuestionVersionRepository versions,
-            QuestionAssetRepository assets,PracticeQuestionViewMapper mapper) {
-        this.data=data;this.versions=versions;this.assets=assets;this.mapper=mapper;
+            QuestionAssetRepository assets,PracticeQuestionViewMapper mapper,PinnedQuestionGrading grading) {
+        this.data=data;this.versions=versions;this.assets=assets;this.mapper=mapper;this.grading=grading;
     }
     private String key(Pin p) { return p.groupVersionId()==null?"q:"+p.questionVersionId():"g:"+p.groupVersionId(); }
     private List<Unit> units(List<PracticePublicationRepository.PoolMember> pool,Criteria criteria) {
@@ -79,15 +80,9 @@ public class PracticeQuestionCatalog {
     }
     /** Chỉ dùng nội bộ cho chấm bài; controller trước submit tiếp tục dùng safe read(). */
     public MarkingKey markingKey(UUID actorId,UUID questionVersionId,UUID groupVersionId) {
-        var version=versions.findById(questionVersionId).orElseThrow(()->new Unavailable(false));
-        var group=version.getGroupVersion();
-        if(!Objects.equals(groupVersionId,group==null?null:group.getGroupVersionId()))throw new Unavailable(false);
-        var key=version.answerKey();
-        if(key.correctChoiceIds().size()!=1)throw new Unavailable(false);
-        var part=version.getQuestion().getPart();
-        return new MarkingKey(version.getQuestion().getQuestionId(),questionVersionId,part.getPartId(),part.getPartNumber(),
-                key.correctChoiceIds().iterator().next(),key.explanation());
+        return grading.key(questionVersionId,groupVersionId);
     }
+
     public record MarkingKey(UUID questionId,UUID questionVersionId,int partId,int partNumber,UUID correctChoiceId,String explanation) {
         @Override public String toString() { return "MarkingKey[redacted]"; }
     }

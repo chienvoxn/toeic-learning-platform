@@ -40,7 +40,8 @@ public final class AdminReadQuery {
             if(page<0 || size<1 || size>100 || !Set.of("createdAt,asc","createdAt,desc","action,asc","action,desc").contains(sort))throw AdminReadException.invalid();
             String type=code(params,"entityType"),id=value(params,"entityId",null);
             if(id!=null) {
-                if("ROLE".equals(type) && id.matches("[1-9][0-9]{0,9}")) { if(Long.parseLong(id)>Integer.MAX_VALUE)throw AdminReadException.invalid(); }
+                if("SYSTEM_SETTING".equals(type)){if(SettingDefinition.find(id).isEmpty())throw AdminReadException.invalid();}
+                else if("ROLE".equals(type) && id.matches("[1-9][0-9]{0,9}")) { if(Long.parseLong(id)>Integer.MAX_VALUE)throw AdminReadException.invalid(); }
                 else id=uuid(id).toString();
             }
             return new Audit(params.containsKey("actor")?uuid(value(params,"actor",null)):null,code(params,"action"),type,id,

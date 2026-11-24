@@ -3,20 +3,12 @@ import { toServerAttempt, toServerResult } from '../api/server-attempt.mapper.js
 
 export class RemoteAssessmentRepository {
   async listFullTests() {
-    return apiRequest('/full-tests');
+    const items = await this.getCatalog();
+    return items.map(item => ({ ...item, testVersionId: item.versionId }));
   }
-
   async startFullTest(testVersionId) {
-    if (!testVersionId) {
-      throw new Error('Thieu phien ban de thi.');
-    }
-
-    const dto = await apiRequest(
-      `/full-tests/${testVersionId}/attempts`,
-      { method: 'POST' }
-    );
-
-    return toServerAttempt(dto);
+    if (!testVersionId) throw new Error('Thiếu phiên bản đề thi.');
+    return this.startFullMock(testVersionId);
   }
 
   async startPractice({ partNumbers, questionCount }) {
@@ -29,9 +21,19 @@ export class RemoteAssessmentRepository {
       body: { sourceType: 'SECTION_SNAPSHOT', section: { type, questionCount, durationMinutes } } }));
   }
 
+  async getCatalog() { return apiRequest('/tests'); }
+
+  async startFullMock(testVersionId) {
+    return toServerAttempt(await apiRequest('/attempts', { method: 'POST', body: { sourceType: 'TEST_VERSION', testVersionId } }));
+  }
+
   async getAttempt(attemptId) {
     const data = await apiRequest(`/attempts/${attemptId}`);
     return toServerAttempt(data);
+  }
+
+  async listAttempts({ page = 0, size = 20 } = {}) {
+    return apiRequest(`/attempts?${new URLSearchParams({ page: String(page), size: String(size) })}`);
   }
 
   async getAttemptMedia(attemptId) {

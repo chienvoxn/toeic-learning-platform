@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -9,8 +9,6 @@ import {
 } from 'lucide-react';
 
 import { teacherQuestionsApi } from '../../features/teacher/teacherQuestions.api';
-
-const PART_5_ID = 14; // ID thực tế trong toeic_db hiện tại
 
 const initialChoices = [
   { label: 'A', content: '' },
@@ -33,6 +31,17 @@ export default function TeacherQuestionEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [partId, setPartId] = useState(null);
+  useEffect(() => {
+    let active = true;
+    teacherQuestionsApi.options().then(options => {
+      if (!active) return;
+      const part = options.parts?.find(item => item.partNumber === 5);
+      if (!part) throw new Error('Danh mục máy chủ chưa có Part 5.');
+      setPartId(part.partId);
+    }).catch(err => { if (active) setError(err.message); });
+    return () => { active = false; };
+  }, []);
 
   function updateChoice(index, content) {
     setChoices(current =>
@@ -57,7 +66,7 @@ export default function TeacherQuestionEditor() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (saving) return;
+    if (saving || partId == null) return;
 
     const validationError = validate();
 
@@ -71,7 +80,7 @@ export default function TeacherQuestionEditor() {
     setSuccess('');
 
     const payload = {
-      partId: PART_5_ID,
+      partId,
       questionText: questionText.trim(),
       explanation: explanation.trim() || null,
       difficulty,
@@ -243,7 +252,7 @@ export default function TeacherQuestionEditor() {
             type="button"
             className="teacher-outline-button"
             onClick={() => navigate('/teacher/questions')}
-            disabled={saving}
+            disabled={saving || partId == null}
           >
             Hủy
           </button>

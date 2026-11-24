@@ -15,6 +15,10 @@ public class TeacherQuestionController {
     public TeacherQuestionController(QuestionAuthoringService service) { this.service=service; }
     private static boolean group(String kind) { return kind.equals("question-groups"); }
     private static void noParams(MultiValueMap<String,String> params) { if(!params.isEmpty())throw QuestionAuthoringException.invalid(); }
+    @GetMapping("/question-options")
+    public Object options(@AuthenticationPrincipal SessionPrincipal actor,@RequestParam MultiValueMap<String,String> params) {
+        noParams(params);return service.options(actor.userId());
+    }
 
     @GetMapping("/{kind:questions|question-groups}")
     public Object list(@PathVariable String kind,@AuthenticationPrincipal SessionPrincipal actor,@RequestParam MultiValueMap<String,String> params) {

@@ -2,6 +2,11 @@
 
 # TOEIC Learning Platform — Low-Level Design (LLD) v1.0
 
+> **Flyway compatibility runtime:** MigrationConfiguration kiểm config và khóa
+> startup; MigrationHistory kiểm prefix/checksum, MigrationSchema đối chiếu
+> metadata cố định; MigrationCli dùng cùng coordinator. Không sửa history/SQL
+> đã áp dụng. [Chi tiết](MIGRATION34_Source_Compatibility.md).
+
 > **Policy mới:** register ACTIVE ngay; reset OTP riêng có TTL, cooldown, attempts,
 > consume và revoke sessions cùng transaction. [Thiết kế V25](Password_Recovery.md).
 
@@ -244,7 +249,33 @@ metadata và thay đổi allowlist, không serialize raw JSON. Writer/audit nguy
 ADMIN01/02 giữ nguyên. AdminHealthService probe DB SELECT1 và AI HTTP tùy cấu hình,
 deadline/worker hữu hạn, output chỉ status/time. V33 chỉ seed ba quyền đọc và grant
 ADMIN; method/filter kiểm ADMIN + permission, UI dùng capability server.
-SettingsService/OutboxPublisher dưới đây vẫn DESIGN, không thuộc ADMIN07.
+**ADMIN-06 runtime:** SystemSettingsController → SystemSettingsService →
+SystemSettingsRepository tái sử dụng bảng V9; V34 thêm revision, hai mặc định và
+permission `system:settings:manage`. SystemSettingDefaults ánh xạ đúng tham số
+`limit`/`days`, chỉ đọc DB khi bị bỏ qua, không cache. Writer khóa advisory RBAC
+trước row Settings, kiểm lại ACTIVE/ADMIN/permission, so expectedRevision, update
+và audit nguyên tử; stale409, no-op không tạo audit/revision. AdminReadRepository
+chỉ expose key allowlist và giá trị số/revision của audit Settings. Không nhận
+arbitrary key/SQL/secret. [Contract và kiểm chứng](ADMIN06_System_Configuration_Data_Management.md).
+OutboxPublisher và các mẫu interface dưới đây vẫn DESIGN.
+
+**ADMIN-03 phần authoring/đọc/archive:** ContentManagementService/QuestionAuthoringService
+giữ khóa và ownership hiện hữu, gọi ContentManagementAudit MANDATORY → writer audit
+hiện có trong cùng transaction. Create/update chỉ lưu status, UUID phiên bản và
+tên field được yêu cầu; không lưu giá trị nội dung. Ba action archive chỉ lưu
+before/after status, no-op không thêm event, fail audit rollback mutation.
+AdminReadRepository lọc projection allowlist cho CONTENT/QUESTION/QUESTION_GROUP.
+GET /teacher/question-options cung cấp Part/topic từ DB cho editor theo quyền
+authoring hiện hữu, không suy Part ID từ số Part.
+**Workflow xác nhận2026-11-15:** V35 thêm metadata moderation_versions,
+moderation_contributors, moderation_decisions và bốn permission review/publish.
+ModerationEvidence chạy MANDATORY sau authoring flush trong cùng parent lock;
+create/clone có evidence, legacy edit đánh dấu thiếu evidence, không suy tác giả.
+ModerationService dùng RBAC shared advisory→parent→version→media/grant; kiểm lại
+actor và expectedRevision, state/approval/contributor trước mutation/audit.
+MediaPublicationPolicy dùng lại MediaReuseRepository, tách permission publish khỏi
+authoring manage. Group publication bị chặn; không có workflow TestVersion mới.
+[Contract/dependency](ADMIN03_Content_Moderation.md).
 
 **Tables:** `audit_logs`, `system_settings`, `outbox_events`.
 
@@ -611,7 +642,7 @@ Ngoài ra phải kiểm tra FK cho `learning_contents.current_published_version_
 
 | `audit_logs` | `audit_id`, `actor_user_id`, `action`, `entity_type`, `entity_id`, `details`, `created_at` |
 
-| `system_settings` | `setting_key`, `setting_value`, `updated_by`, `updated_at` |
+| `system_settings` | `setting_key`, `setting_value`, `updated_by`, `updated_at`, `revision` (V34, bigint >=0, default0) |
 
 | `learning_content_versions` | `content_version_id`, `content_id`, `version_number`, `title`, `summary`, `body`, `status`, `published_at`, `archived_at`, `created_by`, `created_at`, `updated_at` |
 

@@ -82,11 +82,21 @@ public class IdentitySecurityConfig {
 
                         // Teacher question management
                         .requestMatchers(
+                                "/api/v1/teacher/question-options",
                                 "/api/v1/teacher/questions",
                                 "/api/v1/teacher/questions/**",
                                 "/api/v1/teacher/question-groups",
                                 "/api/v1/teacher/question-groups/**")
                         .hasAnyAuthority("question:manage:self", "question:manage:any")
+
+                        // Teacher test drafts: ownership is also checked by ExamDraftService.
+                        .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**", "/api/v1/teacher/blueprints", "/api/v1/teacher/blueprints/**")
+                        .hasAnyAuthority("test:manage:self", "test:manage:any", "test:review", "test:publish")
+
+                        .requestMatchers("/api/v1/full-tests","/api/v1/full-tests/**")
+                        .hasAuthority("exam:manage:self")
+                        .requestMatchers(HttpMethod.GET,"/api/v1/tests","/api/v1/tests/**")
+                        .hasAuthority("exam:manage:self")
 
                         // Teacher media storage (MinIO/S3 upload & presign)
                         .requestMatchers(
@@ -151,6 +161,12 @@ public class IdentitySecurityConfig {
                         .access(AuthorizationManagers.allOf(
                                 AuthorityAuthorizationManager.hasAuthority("question:read"),
                                 AuthorityAuthorizationManager.hasAnyRole("TEACHER", "ADMIN")))
+
+                        // Managed Settings: retain ADMIN plus explicit permission.
+                        .requestMatchers("/api/v1/admin/system-settings", "/api/v1/admin/system-settings/**")
+                        .access(AuthorizationManagers.allOf(
+                                AuthorityAuthorizationManager.hasRole("ADMIN"),
+                                AuthorityAuthorizationManager.hasAuthority("system:settings:manage")))
 
                         // Admin audit logs
                         .requestMatchers(

@@ -1,6 +1,13 @@
 
 package com.toeic.backend.vocabulary.api;
 
+import com.toeic.backend.identity.application.SessionPrincipal;
+import com.toeic.backend.vocabulary.application.LearningProfileService;
+import com.toeic.backend.vocabulary.application.LearningStatisticsService;
+import com.toeic.backend.system.application.SettingDefinition;
+import com.toeic.backend.system.application.SystemSettingDefaults;
+import org.springframework.util.MultiValueMap;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,22 +16,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.toeic.backend.identity.application.SessionPrincipal;
-import com.toeic.backend.vocabulary.application.LearningProfileService;
-import com.toeic.backend.vocabulary.application.LearningStatisticsService;
 @RestController
 @RequestMapping("/api/v1/learning-profile")
 public class LearningProfileController {
 
     private final LearningProfileService learningProfileService;
     private final LearningStatisticsService learningStatisticsService;
+    private final SystemSettingDefaults defaults;
 
     public LearningProfileController(
             LearningProfileService learningProfileService,
-            LearningStatisticsService learningStatisticsService
+            LearningStatisticsService learningStatisticsService,
+            SystemSettingDefaults defaults
     ) {
         this.learningProfileService = learningProfileService;
         this.learningStatisticsService = learningStatisticsService;
+        this.defaults = defaults;
     }
 
     // TV3-04 (LP-01): Learning Profile Overview
@@ -49,9 +56,16 @@ public class LearningProfileController {
 
     // TV3-05 (LP-02): Daily Learning Progress
     @GetMapping("/progress")
-    public LearningProgressResponse getProgress(
+    public LearningProgressResponse getProgressHttp(
             @AuthenticationPrincipal SessionPrincipal principal,
-            @RequestParam(defaultValue = "7") int days
+            @RequestParam MultiValueMap<String,String> query
+    ) {
+        return getProgress(principal,defaults.resolve(SettingDefinition.PROGRESS_DAYS,query.get("days")));
+    }
+
+    public LearningProgressResponse getProgress(
+            SessionPrincipal principal,
+            int days
     ) {
         if (days < 1 || days > 90) {
             throw new ResponseStatusException(

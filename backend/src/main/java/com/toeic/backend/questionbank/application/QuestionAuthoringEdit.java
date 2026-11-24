@@ -5,7 +5,12 @@ import java.util.*;
 
 public record QuestionAuthoringEdit(Set<String> fields,Integer partId,Integer topicId,Integer questionTypeId,
         UUID groupVersionId,String questionText,String explanation,String difficulty,String groupType,
-        String instruction,String passageText,List<QuestionChoiceDraft> choices,List<Asset> assets) {
+        String instruction,String passageText,List<QuestionChoiceDraft> choices,List<Asset> assets,Integer groupQuestionOrder) {
+    public QuestionAuthoringEdit(Set<String> fields,Integer partId,Integer topicId,Integer questionTypeId,
+            UUID groupVersionId,String questionText,String explanation,String difficulty,String groupType,
+            String instruction,String passageText,List<QuestionChoiceDraft> choices,List<Asset> assets) {
+        this(fields,partId,topicId,questionTypeId,groupVersionId,questionText,explanation,difficulty,groupType,instruction,passageText,choices,assets,null);
+    }
     public QuestionAuthoringEdit {
         fields=Set.copyOf(fields);
         choices=choices==null?null:List.copyOf(choices);

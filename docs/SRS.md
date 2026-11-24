@@ -23,6 +23,16 @@
 - Learner: học nội dung, luyện Part, Section/Full Mock, Dictation, Shadowing, vocabulary SRS, analytics, AI Tutor.
 - Teacher: quản lý học liệu, ngân hàng câu hỏi, phiên bản, blueprint và bộ đề.
 - Admin: quản lý user/role, cấu hình, score conversion, AI quota/log và notification.
+
+**ADMIN-06 — quyết định sản phẩm vừa chốt 2026-11-13:** chỉ quản trị hai mặc định
+integer `vocabulary.recommendations.defaultLimit` (10, 1–100) và
+`learning.progress.defaultDays` (7, 1–90). Request bỏ `limit`/`days` đọc giá trị đã
+lưu ở request kế tiếp, không restart; tham số hợp lệ tường minh luôn ưu tiên.
+Không thay snapshot/lịch sử/attempt, auth/session/grading hoặc giới hạn bảo mật.
+ACTIVE + ADMIN + `system:settings:manage`, validation nghiêm ngặt, revision chống
+ghi đè và audit nguyên tử; không tạo/xóa key tùy ý. Backup/restore qua công cụ vận
+hành, DB đích mới riêng, không có endpoint shell/SQL/xóa DB.
+[AC, API/UI và bằng chứng](ADMIN06_System_Configuration_Data_Management.md).
 - Ngoài phạm vi MVP: chấm điểm ETS chính thức, giám sát thi từ xa, thanh toán, push/email đa kênh, microservices phức tạp.
 
 ### 1.3 Thuật ngữ
@@ -226,6 +236,18 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 
 ### UC-13 — Quản lý ngân hàng câu hỏi
 
+**ADMIN-03 runtime hiện tại:** UI quản trị tạo/sửa DRAFT, list/detail/version/archive
+học liệu, câu hỏi và nhóm tái sử dụng CONTENT03/Q03; create/update/archive có audit
+nguyên tử, archive idempotent, giữ version/snapshot/kết quả.
+**Quyết định xác nhận2026-11-15:** DRAFT→IN_REVIEW→APPROVED→PUBLISHED; approval
+pin version/revision, trả sửa/thu hồi về DRAFT có lý do, khóa sửa khi chờ/đã duyệt.
+Review/publish ACTIVE ADMIN với quyền riêng; cấm contributor của vòng publication
+hiện tại, không kế thừa tập cấm từ source published cũ. Publisher kiểm media M1,
+học liệu chọn visibility tường minh. G1 triển khai riêng: lượt này chặn publication
+nhóm/câu thuộc nhóm, giữ authoring/read/archive/pin. Chưa unpublish/restore;
+bộ đề bị chặn EXAM04 chưa tích hợp. Không đánh dấu toàn bộ ADMIN03/WEB06 Done.
+[Đối chiếu AC, contract và phần còn thiếu](ADMIN03_Content_Moderation.md).
+
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 
 **Luồng chính:**
@@ -238,6 +260,12 @@ server; không tự suy bỏ auth cho API dữ liệu cá nhân.
 **Hậu điều kiện:** nghiệp vụ thành công được lưu với timestamp/audit thích hợp; thất bại không làm thay đổi trạng thái trái phép.
 
 ### UC-14 — Quản lý bộ đề
+
+**EXAM-04 DRAFT runtime 2026-11-20–21:** [Phạm vi đã triển khai, API và kiểm chứng](EXAM04_Draft_Authoring_20261120.md).
+Teacher tạo/đọc/sửa bản nháp với quyền own/any, version refs đúng Part/nguyên nhóm/thứ tự,
+expected revision và audit nguyên tử. Bản được attempt pin không được sửa. Blueprint mandatory,
+review/publish/unpublish, version fork và conversion chưa thành contract runtime trong lượt này;
+luồng DESIGN bên dưới không tự mở các chức năng đó. DRAFT rỗng hoặc chưa có thời lượng được lưu.
 
 **Actor chính:** Teacher/Admin. **Tiền điều kiện:** đã xác thực và được cấp quyền tương ứng.
 

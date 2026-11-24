@@ -45,7 +45,8 @@ thử, cooldown gửi lại 60 giây; thay đổi bằng `app.password-reset.*`.
 mã cũ. Bộ đếm thử sai vẫn commit dù API trả lỗi. Reset khóa user cùng thứ tự với
 password login/change để không tạo session bằng mật khẩu cũ sau khi đổi.
 
-V39 thêm `reset_token_hash` và `reset_token_expires_at`. Verify OTP tiêu thụ OTP
+V44 thêm `reset_token_hash` và `reset_token_expires_at` sau các migration V39–V43
+của nhánh develop. Verify OTP tiêu thụ OTP
 và cấp resetToken một lần trong transaction. Lúc đổi mật khẩu, backend xác minh
 resetToken lưu hash/expiry, tiêu thụ grant, hash mật khẩu mới, ghi email proof và
 revoke session cùng transaction. Nộp OTP đồng thời chỉ một lần thành công.

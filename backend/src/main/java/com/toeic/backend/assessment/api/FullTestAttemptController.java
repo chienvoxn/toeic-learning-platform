@@ -4,6 +4,7 @@ package com.toeic.backend.assessment.api;
 import com.toeic.backend.assessment.application.FullTestCatalogService;
 import com.toeic.backend.assessment.application.FullTestSessionService;
 import com.toeic.backend.assessment.application.PracticeSessionDtos;
+import com.toeic.backend.assessment.application.PracticeException;
 import com.toeic.backend.identity.application.SessionPrincipal;
 
 import java.util.List;
@@ -28,15 +29,20 @@ public class FullTestAttemptController {
     }
 
     @GetMapping
-    public List<FullTestCatalogService.PublishedFullTest> listPublished() {
-        return catalog.listPublished();
+    public List<FullTestCatalogService.PublishedFullTest> listPublished(@AuthenticationPrincipal SessionPrincipal actor,
+            @RequestParam org.springframework.util.MultiValueMap<String,String> params) {
+        if(!params.isEmpty())throw PracticeException.invalid();
+        return catalog.listPublished(actor.userId());
     }
 
     @PostMapping("/{testVersionId}/attempts")
     @ResponseStatus(HttpStatus.CREATED)
     public PracticeSessionDtos.Session start(
             @AuthenticationPrincipal SessionPrincipal actor,
-            @PathVariable UUID testVersionId) {
+            @PathVariable UUID testVersionId,
+            @RequestParam org.springframework.util.MultiValueMap<String,String> params,
+            @RequestBody(required=false) byte[] body) {
+        if(!params.isEmpty()||body!=null&&body.length>0)throw PracticeException.invalid();
 
         return service.start(actor.userId(), testVersionId);
     }

@@ -20,7 +20,7 @@ public class ExamGuardService {
                     SELECT 1
                     FROM attempts
                     WHERE user_id = ?
-                      AND attempt_type IN ('SECTION', 'FULL_TEST')
+                      AND attempt_type IN ('SECTION', 'FULL_TEST', 'FULL_MOCK')
                       AND status = 'IN_PROGRESS'
                       AND expires_at > clock_timestamp()
                 )
