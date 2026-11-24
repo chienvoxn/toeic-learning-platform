@@ -131,3 +131,50 @@ test('Full Test hết giờ khóa đáp án và nút nộp bài', async ({ page 
   await expect(page.locator('.question-panel .answer-option').first()).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Nộp bài', exact: true }).first()).toBeDisabled();
 });
+
+test('Full Test tải lại học liệu sau lỗi mạng mà vẫn giữ phiên làm bài', async ({ page }) => {
+  let mediaRequests = 0;
+  const mediaAttempt = {
+    ...attempt,
+    questions: [{
+      ...attempt.questions[0],
+      assets: [{ resourceId: 'audio-fixture', resourceType: 'AUDIO' }],
+    }],
+  };
+  await page.addInitScript(({ key }) => {
+    localStorage.setItem(key, JSON.stringify({ accessToken: 'browser-fixture-token', tokenType: 'Bearer', expiresAt: Date.now() + 60_000 }));
+  }, { key: sessionKey });
+  await page.route('**/api/v1/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const json = body => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+    if (path.endsWith('/users/me')) {
+      return json({ userId: 'learner-fixture', email: 'learner@example.test', fullName: 'Learner Fixture', roles: ['LEARNER'], status: 'ACTIVE' });
+    }
+    if (path.endsWith(`/attempts/${attemptId}/media`)) {
+      mediaRequests += 1;
+      // React StrictMode mounts the page twice in development. Both initial
+      // requests fail, while the explicit retry below succeeds.
+      if (mediaRequests <= 2) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ code: 'MEDIA_UNAVAILABLE' }) });
+      return json({
+        attemptId,
+        sourceType: 'TEST_VERSION',
+        status: 'IN_PROGRESS',
+        questions: [{
+          questionVersionId: attempt.questions[0].questionVersionId,
+          assets: [{ resourceId: 'audio-fixture', resourceType: 'AUDIO', mimeType: 'audio/mpeg', url: 'https://media.example.test/audio.mp3' }],
+          passageAssets: [],
+        }],
+      });
+    }
+    if (path.endsWith(`/attempts/${attemptId}`)) return json(mediaAttempt);
+    return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: 'UNEXPECTED_REQUEST', message: path }) });
+  });
+
+  await page.goto(`/practice/attempts/${attemptId}`);
+  await expect(page.getByRole('status')).toContainText('Không tải được audio hoặc hình minh họa.');
+  await page.getByRole('button', { name: 'Tải lại học liệu', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Tải lại học liệu', exact: true })).toHaveCount(0);
+  await expect(page.locator('.question-panel')).toBeVisible();
+  expect(mediaRequests).toBe(3);
+});
