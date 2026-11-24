@@ -1,4 +1,4 @@
-# Đăng ký không OTP và khôi phục mật khẩu
+# Đăng ký không OTP và khôi phục mật khẩu qua xác minh OTP riêng
 
 ## Chính sách hiện hành
 
@@ -18,7 +18,8 @@ Theo yêu cầu người dùng ngày 2026-11-11, thay thế chính sách xác mi
 | POST `/api/v1/auth/register` | Giữ payload email/password/fullName, trả 201 userId/email/status=ACTIVE |
 | POST `/api/v1/auth/login` | Giữ opaque session contract, ACTIVE login ngay |
 | POST `/api/v1/auth/forgot-password` | `{email}`; public, 200 thông điệp chung |
-| POST `/api/v1/auth/reset-password` | `{email,otp,newPassword}`; public, 204 khi đổi thành công |
+| POST `/api/v1/auth/verify-reset-otp` | `{email,otp}`; public, 200 `{resetToken}` sau khi OTP hợp lệ |
+| POST `/api/v1/auth/reset-password` | `{email,resetToken,newPassword}`; public, 204 khi đổi thành công |
 | POST `/api/v1/auth/verify-email`, `/resend-otp` | Đã gỡ, không còn nghiệp vụ xác minh đăng ký |
 
 Forgot-password luôn trả thông điệp chung cho email không tồn tại, account bị khóa,
@@ -26,9 +27,12 @@ Google-only không có password, còn cooldown hoặc SMTP không gửi được
 hoặc trạng thái tồn tại account trong response. SMTP lỗi rollback OTP mới, không
 làm mất hiệu lực mã cũ còn dùng được. OTP mới chỉ gửi cho ACTIVE có local password.
 
-Reset sai email/mã, hết hạn, quá số lần thử hoặc dùng lại đều trả
+Verify sai email/mã, hết hạn, quá số lần thử hoặc dùng lại đều trả
 `400 PASSWORD_RESET_INVALID`. Request sai định dạng/mật khẩu mới trái policy trả
 400 VALIDATION_ERROR. Mật khẩu 8–72 ký tự và tối đa 72 byte UTF-8.
+Reset yêu cầu `resetToken` do server cấp sau verify thành công. Token ngẫu nhiên
+256 bit, chỉ lưu hash BCrypt trong DB, hết hạn sau 10 phút và chỉ dùng một lần.
+Reset sai token, đã hết hạn hoặc dùng lại trả `400 PASSWORD_RESET_INVALID`.
 
 Reset không phát session mới; frontend quay về login. Các phiên đang dùng của
 account được reset đều bị thu hồi, kể cả phiên tạo bằng Google nếu account đã link.
@@ -41,9 +45,11 @@ thử, cooldown gửi lại 60 giây; thay đổi bằng `app.password-reset.*`.
 mã cũ. Bộ đếm thử sai vẫn commit dù API trả lỗi. Reset khóa user cùng thứ tự với
 password login/change để không tạo session bằng mật khẩu cũ sau khi đổi.
 
-OTP consume, hash mật khẩu mới, email proof và revoke session nằm cùng transaction.
-Nộp mã đồng thời chỉ một lần thành công; không có API verify mã riêng rồi bỏ qua
-mã ở bước đổi mật khẩu. Reset không mở khóa hoặc kích hoạt account bị khóa.
+V39 thêm `reset_token_hash` và `reset_token_expires_at`. Verify OTP tiêu thụ OTP
+và cấp resetToken một lần trong transaction. Lúc đổi mật khẩu, backend xác minh
+resetToken lưu hash/expiry, tiêu thụ grant, hash mật khẩu mới, ghi email proof và
+revoke session cùng transaction. Nộp OTP đồng thời chỉ một lần thành công.
+Reset không mở khóa hoặc kích hoạt account bị khóa.
 
 V25 chỉ chuyển tài khoản PENDING cũ có password sang ACTIVE. Không đổi trạng thái
 LOCKED/BLOCKED/DISABLED, không đặt emailVerifiedAt cho tài khoản chưa có proof.
@@ -54,8 +60,9 @@ Không sửa migration V1–V24. ORM/service OTP xác minh cũ được thay b�
 
 - `RegistrationService`: chuẩn hóa email, chống trùng, hash password, cấp LEARNER,
   kích hoạt account và lưu user. Không phụ thuộc SMTP hoặc OTP.
-- `PasswordResetService`: phát OTP có giới hạn, kiểm hash/expiry/attempts và đổi
-  mật khẩu; thu hồi session, không tự cấp quyền hoặc mở khóa user.
+- `PasswordResetService`: phát OTP có giới hạn, kiểm hash/expiry/attempts, tạo
+  resetToken sau verify, xác minh grant và đổi mật khẩu, thu hồi session.
+  Không tự cấp quyền hoặc mở khóa user.
 - `OtpMailService`: chỉ gửi email đặt lại mật khẩu, không gửi thư xác minh đăng ký.
 - `AuthService`/`SessionIssuer`: cấp session khi login email hoặc Google.
 - `GoogleAuthService`: giữ policy explicit password linking và subject identity;
@@ -66,7 +73,10 @@ Không sửa migration V1–V24. ORM/service OTP xác minh cũ được thay b�
 
 - `/register`: thông báo không cần OTP, thành công về `/login`.
 - `/login`: có nút Google và liên kết Quên mật khẩu; không có link xác minh email.
-- `/forgot-password`: nhập email → gửi mã → nhập OTP + password mới + xác nhận → login.
+- `/forgot-password`: nhập email, gọi API gửi mã rồi chuyển trang xác minh OTP.
+- `/verify-reset-otp`: chỉ nhập OTP; khi API xác minh thành công mới sang trang đặt lại.
+- `/reset-password`: chỉ nhập mật khẩu mới và xác nhận, gửi `resetToken` do backend cấp.
+  Thiếu grant khi mở trực tiếp thì quay về bước nhập email. Đổi thành công về login.
 - `/verify-email` cũ chuyển hướng về login; không còn trang yêu cầu mã đăng ký.
 - Cài đặt giữ đổi mật khẩu bằng mật khẩu hiện tại; không nhầm với khôi phục bằng OTP.
 - Hộp thư local `npm run dev:mail`, mở `http://localhost:8025`; chỉ cần khi thử recovery.
@@ -82,7 +92,8 @@ npm run dev:mail
 ```
 
 Đăng ký và login ngay. Chọn Quên mật khẩu, nhập email vừa đăng ký, mở hộp thư local
-và lấy OTP. Đặt mật khẩu mới; thử login mật khẩu cũ phải thất bại, mật khẩu mới
+và lấy OTP. Xác minh OTP ở trang riêng rồi đặt mật khẩu mới ở trang tiếp theo.
+Thử login mật khẩu cũ phải thất bại, mật khẩu mới
 thành công. Token cũ phải bị từ chối. Thử mã sai 5 lần, mã hết hạn, gửi lại và dùng
 lại mã để kiểm tra giới hạn. Trong production, cấu hình SMTP thật từ môi trường.
 

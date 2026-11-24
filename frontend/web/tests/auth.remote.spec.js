@@ -178,13 +178,14 @@ test('Khôi phục qua SMTP/OTP thật, cooldown, OTP hết hạn và thu hồi 
   await page.goto('/forgot-password');
   await page.locator('#recovery-email').fill(email);
   await page.getByRole('button', { name: 'Gửi mã đặt lại mật khẩu', exact: true }).click();
+  await expect(page).toHaveURL(/\/verify-reset-otp$/);
+  await expect(page.locator('#recovery-password')).toHaveCount(0);
   const initial = await latestMail(request, email);
   await expect(page.getByRole('button', { name: /Gửi lại sau/ })).toBeDisabled();
   const nextPassword = randomUUID() + 'nN9!';
   await secretInput(page, '#recovery-otp', initial.otp === '000000' ? '000001' : '000000');
-  await secretInput(page, '#recovery-password', nextPassword);
-  await secretInput(page, '#recovery-confirm', nextPassword);
-  await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).click();
+  await page.getByRole('button', { name: 'Xác minh OTP', exact: true }).click();
+  await expect(page).toHaveURL(/\/verify-reset-otp$/);
   await expect(page.getByRole('alert')).toContainText('Email hoặc mã OTP');
   const database = process.env.WEB_AUTH_FIXTURE_DB;
   if (database !== 'toeic_web_auth_sync_http_test' || !process.env.WEB_AUTH_PSQL) {
@@ -194,7 +195,7 @@ test('Khôi phục qua SMTP/OTP thật, cooldown, OTP hết hạn và thu hồi 
     '-c', "UPDATE password_reset_otps SET created_at=now()-interval '10 minutes',expires_at=now()-interval '1 second' WHERE user_id=(SELECT user_id FROM users WHERE email='" + email + "');"], { stdio: 'pipe' }); }
   catch { throw new Error('Could not expire isolated reset fixture without exposing row data.'); }
   await secretInput(page, '#recovery-otp', initial.otp);
-  await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).click();
+  await page.getByRole('button', { name: 'Xác minh OTP', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('hết hạn');
   // Wait for the browser's real cooldown. No response interception or production DB changes.
   const resend = page.getByRole('button', { name: 'Gửi lại mã OTP', exact: true });
@@ -203,6 +204,9 @@ test('Khôi phục qua SMTP/OTP thật, cooldown, OTP hết hạn và thu hồi 
   let resent;
   await expect.poll(async () => { resent = await latestMail(request, email); return resent.id !== initial.id; }).toBe(true);
   await secretInput(page, '#recovery-otp', resent.otp);
+  await page.getByRole('button', { name: 'Xác minh OTP', exact: true }).click();
+  await expect(page).toHaveURL(/\/reset-password$/);
+  await expect(page.locator('#recovery-otp')).toHaveCount(0);
   await secretInput(page, '#recovery-password', nextPassword);
   await secretInput(page, '#recovery-confirm', nextPassword);
   await page.getByRole('button', { name: 'Đặt lại mật khẩu', exact: true }).click();

@@ -5,6 +5,7 @@ import com.toeic.backend.identity.infrastructure.*;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,8 +47,7 @@ public class PasswordResetService {
     }
 
     @Transactional(noRollbackFor = OtpRejectedException.class)
-    public void reset(String email, String code, String newPassword) {
-        if (!PasswordPolicy.validNewPassword(newPassword)) throw new RegistrationException("VALIDATION_ERROR", "Mật khẩu phải có 8–72 ký tự và tối đa 72 byte UTF-8.", HttpStatus.BAD_REQUEST);
+    public String verify(String email, String code) {
         var optional = users.findForLogin(EmailAddress.normalize(email));
         if (optional.isEmpty() || !eligible(optional.get())) { encoder.matches(code, dummyHash); throw invalid(); }
         var user = optional.get(); var now = OffsetDateTime.now(clock);
@@ -58,7 +58,24 @@ public class PasswordResetService {
             otp.recordFailedAttempt(now, properties.maxAttempts()); otps.saveAndFlush(otp);
             throw invalid();
         }
-        otp.markUsed(now, properties.maxAttempts());
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        var resetToken = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        otp.verifyForReset(encoder.encode(resetToken), now, properties.maxAttempts());
+        return resetToken;
+    }
+
+    @Transactional
+    public void reset(String email, String resetToken, String newPassword) {
+        if (!PasswordPolicy.validNewPassword(newPassword)) throw new RegistrationException("VALIDATION_ERROR", "Mật khẩu phải có 8–72 ký tự và tối đa 72 byte UTF-8.", HttpStatus.BAD_REQUEST);
+        var optional = users.findForLogin(EmailAddress.normalize(email));
+        if (optional.isEmpty() || !eligible(optional.get())) throw invalid();
+        var user = optional.get(); var now = OffsetDateTime.now(clock);
+        var latest = otps.findFirstByUser_UserIdOrderByCreatedAtDescOtpIdDesc(user.getUserId());
+        if (latest.isEmpty() || !latest.get().canReset(now)
+                || !encoder.matches(resetToken, latest.get().getResetTokenHash())) throw invalid();
+        var otp = latest.get();
+        otp.consumeResetToken();
         user.changePasswordHash(encoder.encode(newPassword), now);
         user.recordEmailProof(now);
         otps.invalidateUnused(user.getUserId(), now);

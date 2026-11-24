@@ -99,9 +99,13 @@ test('password validation enforces UTF-8 byte limit without stripping', () => {
 test('password recovery endpoints are anonymous; cooldown remains distinguishable', async () => {
   saveSession({ accessToken: 'session', tokenType: 'Bearer', expiresIn: 900 });
   respond({ message: 'ok' });
-  await repo.resetPassword(user.email, '123456', 'fixture-only');
-  assert.deepEqual(JSON.parse(calls[0].body), { email: user.email, otp: '123456', newPassword: 'fixture-only' });
+  await repo.verifyResetOtp(user.email, '123456');
+  assert.deepEqual(JSON.parse(calls[0].body), { email: user.email, otp: '123456' });
   assert.equal(calls[0].headers.Authorization, undefined);
+  respond(null, 204);
+  await repo.resetPassword(user.email, 'verified-grant', 'fixture-only');
+  assert.deepEqual(JSON.parse(calls[1].body), { email: user.email, resetToken: 'verified-grant', newPassword: 'fixture-only' });
+  assert.equal(calls[1].headers.Authorization, undefined);
   respond({ code: 'OTP_RESEND_TOO_SOON' }, 429);
   await assert.rejects(repo.forgotPassword(user.email), { status: 429, code: 'OTP_RESEND_TOO_SOON' });
 });

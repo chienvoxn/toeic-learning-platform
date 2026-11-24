@@ -86,8 +86,8 @@ export function AuthProvider({ children }) {
     if (!isRemoteAuth && current === generation.current) setUser(result.user);
     return result;
   };
-  const resetPassword = async (email, otp, newPassword) => {
-    await authRepo.resetPassword(email, otp, newPassword);
+  const resetPassword = async (email, resetToken, newPassword) => {
+    await authRepo.resetPassword(email, resetToken, newPassword);
     // Reset revokes server sessions for this account, including this browser's.
     if (user?.email?.toLowerCase() === email.trim().toLowerCase()) {
       generation.current++;
@@ -97,7 +97,8 @@ export function AuthProvider({ children }) {
   };
 
   return <AuthContext.Provider value={{ user, loading, sessionError, restore, login, logout, updateProfile, changePassword,
-    register, loginWithGoogle, resetPassword, forgotPassword: email => authRepo.forgotPassword(email) }}>
+    register, loginWithGoogle, resetPassword, verifyResetOtp: (email, otp) => authRepo.verifyResetOtp(email, otp),
+    forgotPassword: email => authRepo.forgotPassword(email) }}>
     {children}
   </AuthContext.Provider>;
 }

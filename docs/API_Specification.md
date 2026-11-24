@@ -66,7 +66,9 @@ Columns: `R` = response shape; all IDs in path are UUID unless otherwise noted.
 
 | `POST` | `/auth/forgot-password` | Guest | email | 200 generic Message | 400 VALIDATION_ERROR |
 
-| `POST` | `/auth/reset-password` | Guest | email, otp, newPassword | 204, thu hồi phiên, không tự login | 400 VALIDATION_ERROR / PASSWORD_RESET_INVALID |
+| `POST` | `/auth/verify-reset-otp` | Guest | email, otp (6 chữ số) | 200 `{resetToken}` khi OTP hợp lệ, token dùng một lần và có hạn 10 phút | 400 VALIDATION_ERROR / PASSWORD_RESET_INVALID |
+
+| `POST` | `/auth/reset-password` | Guest | email, resetToken, newPassword | 204, thu hồi phiên, không tự login | 400 VALIDATION_ERROR / PASSWORD_RESET_INVALID |
 
 | `POST` | `/auth/google/challenge` | Guest | — | 200 challenge + HttpOnly binding cookie | 503 GOOGLE_NOT_CONFIGURED |
 
@@ -379,7 +381,7 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 ### 4.1 Authentication
 
 **Policy mới:** register trả ACTIVE ngay, không gửi OTP. Gỡ verify-email/resend-otp;
-thay bằng public POST `/auth/forgot-password` và `/auth/reset-password`, OTP chỉ
+thay bằng public POST `/auth/forgot-password`, `/auth/verify-reset-otp` và `/auth/reset-password`, OTP chỉ
 khôi phục mật khẩu. [Payload, lỗi và transaction](Password_Recovery.md) ưu tiên
 hơn các ví dụ OTP đăng ký lịch sử.
 

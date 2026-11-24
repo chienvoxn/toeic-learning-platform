@@ -18,6 +18,8 @@ import UnavailablePage from '../pages/UnavailablePage';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import VerifyResetOtpPage from '../pages/auth/VerifyResetOtpPage';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 
 import RequireAuth from '../features/auth/RequireAuth';
 import RequireTeacher from '../features/auth/RequireTeacher';
@@ -102,6 +104,14 @@ export const router = createBrowserRouter([
       {
         path: '/forgot-password',
         element: <ForgotPasswordPage />,
+      },
+      {
+        path: '/verify-reset-otp',
+        element: <VerifyResetOtpPage />,
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
       },
       {
         path: '/verify-email',

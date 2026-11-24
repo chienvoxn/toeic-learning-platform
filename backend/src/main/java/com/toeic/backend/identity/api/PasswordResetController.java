@@ -23,14 +23,24 @@ public class PasswordResetController {
     }
     @PostMapping("/reset-password")
     public ResponseEntity<Void> reset(@Valid @RequestBody ResetPasswordRequest body) {
-        reset.reset(body.email(), body.otp(), body.newPassword());
+        reset.reset(body.email(), body.resetToken(), body.newPassword());
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
     }
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<ResetGrant> verify(@Valid @RequestBody VerifyResetOtpRequest body) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(new ResetGrant(reset.verify(body.email(), body.otp())));
+    }
     public record ForgotPasswordRequest(@NotBlank @Email @Size(max = 255) String email) { }
+    public record VerifyResetOtpRequest(@NotBlank @Email @Size(max = 255) String email,
+            @NotBlank @Pattern(regexp = "[0-9]{6}") String otp) {
+        @Override public String toString() { return "VerifyResetOtpRequest[redacted]"; }
+    }
     public record ResetPasswordRequest(@NotBlank @Email @Size(max = 255) String email,
-            @NotBlank @Pattern(regexp = "[0-9]{6}") String otp,
+            @NotBlank String resetToken,
             @NotBlank @Size(min = 8, max = 72) String newPassword) {
         @Override public String toString() { return "ResetPasswordRequest[redacted]"; }
     }
+    public record ResetGrant(String resetToken) { }
     public record Message(String message) { }
 }

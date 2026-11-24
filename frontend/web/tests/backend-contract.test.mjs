@@ -47,16 +47,20 @@ test('registration creates an active account and login works without OTP', async
   assert.equal(storage.size, 0); assert.equal(await repo.getCurrentUser(), null);
   assert.equal(requests.length, 5, 'no verification or resend request during registration/login');
 });
-test('forgot-password and reset-password are public and do not send old bearer tokens', async () => {
+test('password reset requires OTP verification and a separate short-lived grant, all endpoints are public', async () => {
   saveSession({ accessToken: randomUUID(), tokenType: 'Bearer', expiresIn: 900 });
   const repo = new RemoteAuthRepository(), newPassword = randomUUID();
   reply({ message: 'If the account exists, a code will be sent.' });
   await repo.forgotPassword(user.email);
   assert.equal(requests[0].url, '/api/v1/auth/forgot-password');
   assert.deepEqual(bodyAt(0), { email: user.email });
-  reply(null, 204); await repo.resetPassword(user.email, '123456', newPassword);
-  assert.equal(requests[1].url, '/api/v1/auth/reset-password');
-  assert.deepEqual(bodyAt(1), { email: user.email, otp: '123456', newPassword });
+  const resetToken = 'verified-one-use-grant';
+  reply({ resetToken }); assert.deepEqual(await repo.verifyResetOtp(user.email, '123456'), { resetToken });
+  assert.equal(requests[1].url, '/api/v1/auth/verify-reset-otp');
+  assert.deepEqual(bodyAt(1), { email: user.email, otp: '123456' });
+  reply(null, 204); await repo.resetPassword(user.email, resetToken, newPassword);
+  assert.equal(requests[2].url, '/api/v1/auth/reset-password');
+  assert.deepEqual(bodyAt(2), { email: user.email, resetToken, newPassword });
   assert.ok(requests.every(request => !request.headers.Authorization));
 });
 test('401 clears the expired session; 403 keeps it', async () => {
