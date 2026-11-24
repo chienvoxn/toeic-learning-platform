@@ -1,5 +1,5 @@
 import ExamScoreSummary from '@/components/organisms/ExamScoreSummary';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, BookOpen, Headphones } from 'lucide-react';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
@@ -14,6 +14,7 @@ export default function ResultPage({ remote = false }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mediaError, setMediaError] = useState('');
   const [filter, setFilter] = useState('ALL');
   const [review, setReview] = useState(false);
 
@@ -28,7 +29,8 @@ export default function ResultPage({ remote = false }) {
             const mediaDto = await repo.getAttemptMedia(attemptId);
             enriched = attachResultMedia(data, mediaDto);
           } catch {
-            // Keep graded result even if media endpoint is unavailable
+            // The graded result remains useful without optional media.
+            if (active) setMediaError('Không tải được audio, hình hoặc transcript đính kèm.');
           }
         }
         if (active) setResult(enriched);
@@ -36,6 +38,17 @@ export default function ResultPage({ remote = false }) {
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
+  }, [attemptId, remote]);
+
+  const retryMedia = useCallback(async () => {
+    if (!remote || typeof remoteAssessmentRepo.getAttemptMedia !== 'function') return;
+    setMediaError('');
+    try {
+      const mediaDto = await remoteAssessmentRepo.getAttemptMedia(attemptId);
+      setResult(current => attachResultMedia(current, mediaDto));
+    } catch {
+      setMediaError('Không tải được audio, hình hoặc transcript đính kèm. Vui lòng thử lại khi kết nối ổn định.');
+    }
   }, [attemptId, remote]);
 
   const questions = result?.questions || [];
@@ -50,6 +63,7 @@ export default function ResultPage({ remote = false }) {
         <div className="page-heading"><h1>Kết quả bài thi</h1></div>
         {loading && <LoadingSpinner text="Đang tải kết quả..." />}
         {error && <p className="form-error" role="alert">{error}</p>}
+        {mediaError && <p className="integration-notice" role="status">{mediaError} <button type="button" className="text-button" onClick={retryMedia}>Tải lại học liệu</button></p>}
         {result && (
           <>
             <ExamScoreSummary result={result} />

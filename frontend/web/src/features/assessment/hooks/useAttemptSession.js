@@ -10,13 +10,14 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
   const [loadError, setLoadError] = useState('');
   const [saveStatus, setSaveStatus] = useState('saved');
   const [saveError, setSaveError] = useState('');
+  const [mediaError, setMediaError] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const sequence = useRef(0);
   const queue = useRef(null);
   const submitting = useRef(false);
   useEffect(() => {
     let active = true;
-    setIsLoading(true); setLoadError(''); setAttempt(null);
+    setIsLoading(true); setLoadError(''); setAttempt(null); setMediaError('');
     sequence.current = 0;
     const saves = new AnswerSaveQueue(payload => repository.saveAnswer(payload), state => {
       if (active) { setSaveStatus(state.status); setSaveError(state.error?.message || ''); }
@@ -31,7 +32,8 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
           const mediaDto = await repository.getAttemptMedia(attemptId);
           enriched = attachAttemptMedia(data, mediaDto);
         } catch {
-          // Keep safe session even if media presign endpoint fails
+          // The question/answer session remains usable without optional media.
+          if (active) setMediaError('Không tải được audio hoặc hình minh họa. Bạn vẫn có thể làm các câu hỏi hiện có.');
         }
       }
       if (active) { sequence.current = enriched.clientSequence || 0; setAttempt(enriched); }
@@ -65,6 +67,16 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
       return await repository.submitAttempt(attemptId);
     } finally { submitting.current = false; setIsSubmitting(false); }
   }, [attemptId, repository]);
+  const retryMedia = useCallback(async () => {
+    if (typeof repository.getAttemptMedia !== 'function') return;
+    setMediaError('');
+    try {
+      const mediaDto = await repository.getAttemptMedia(attemptId);
+      setAttempt(current => attachAttemptMedia(current, mediaDto));
+    } catch {
+      setMediaError('Không tải được audio hoặc hình minh họa. Vui lòng thử lại khi kết nối ổn định.');
+    }
+  }, [attemptId, repository]);
   return { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam,
-    retryLastSave: () => queue.current?.retry() };
+    retryLastSave: () => queue.current?.retry(), mediaError, retryMedia };
 }
