@@ -17,10 +17,17 @@ export default function ChatBubble() {
   const [older, setOlder] = useState(false);
   const [listPage, setListPage] = useState(0);
   const [moreConversations, setMoreConversations] = useState(false);
+  const [examActive, setExamActive] = useState(() => Boolean(localStorage.getItem('toeic.active.exam')));
   const panel = useRef(null), trigger = useRef(null), input = useRef(null), end = useRef(null);
   const operation = useRef(0), mounted = useRef(true), sending = useRef(false);
   const pendingRequest = useRef(null);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    const sync = () => setExamActive(Boolean(localStorage.getItem('toeic.active.exam')));
+    window.addEventListener('storage', sync);
+    const timer = window.setInterval(sync, 1000);
+    return () => { window.removeEventListener('storage', sync); window.clearInterval(timer); };
+  }, []);
   async function loadList(append = false) {
     const current = ++operation.current;
     setLoading(true); setError('');
@@ -73,7 +80,7 @@ export default function ChatBubble() {
   }
   async function send(event) {
     event.preventDefault();
-    if (sending.current || !question.trim() || loading) return;
+    if (examActive || sending.current || !question.trim() || loading) return;
     sending.current = true; setBusy(true); setError('');
     const text = question.trim();
     let item = conversation;
@@ -104,6 +111,7 @@ export default function ChatBubble() {
         {!conversation && <><div className="tutor-welcome"><span>ENGLINGO · AI TUTOR</span><h2>Bạn muốn học gì hôm nay?</h2><p>Hỏi về ngữ pháp, từ vựng hoặc cách dùng tiếng Anh trong TOEIC.</p></div>
           {!list.length && !loading && <button className="tutor-suggestion" type="button" onClick={() => { setQuestion('Khi nào sử dụng thì hiện tại hoàn thành?'); input.current?.focus(); }}>Khi nào dùng thì hiện tại hoàn thành?</button>}
           {!!list.length && <div className="tutor-history"><small>Hội thoại gần đây</small>{list.map(item => <div className="tutor-history-row" key={item.id}><button className="tutor-history-open" type="button" disabled={busy || loading} onClick={() => select(item)}><MessageCircle size={16} />{item.title}</button><button className="tutor-history-delete" type="button" disabled={busy || loading} aria-label={`Xóa hội thoại ${item.title}`} onClick={() => remove(item)}><Trash2 size={16} /></button></div>)}{moreConversations && <button type="button" disabled={loading} onClick={() => loadList(true)}>Xem thêm hội thoại</button>}</div>}</>}
+        {examActive && <p className="tutor-warning" role="status">AI Tutor tạm khóa trong lúc bạn đang làm bài thi.</p>}
         {older && conversation && <button type="button" className="tutor-reload" disabled={loading || busy} onClick={() => select(conversation, true)}>Xem tin nhắn trước</button>}
         <div role="log" aria-label="Tin nhắn">{messages.map(message => <article key={message.id} className={`tutor-message tutor-${message.role}`}>
           <small>{message.role === 'user' ? 'Bạn' : 'Trợ lý TOEIC'}</small><p>{message.content}</p>
