@@ -28,6 +28,26 @@ const attempt = {
 
 test('Full Test: chọn đề đã xuất bản, tạo phiên đúng phiên bản và vào phòng thi', async ({ page }) => {
   let startRequests = 0;
+  let currentAttempt = structuredClone(attempt);
+  const result = {
+    attemptId,
+    status: 'GRADED',
+    submittedAt: '2026-11-24T00:05:00Z',
+    totalQuestions: 1,
+    correctCount: 1,
+    incorrectCount: 0,
+    unansweredCount: 0,
+    rawScore: 1,
+    accuracy: 100,
+    parts: [{ partNumber: 5, correctCount: 1, totalQuestions: 1 }],
+    questions: [{
+      questionVersionId: attempt.questions[0].questionVersionId,
+      selectedChoiceId: attempt.questions[0].choices[0].choiceId,
+      correctChoiceId: attempt.questions[0].choices[0].choiceId,
+      isCorrect: true,
+      explanation: 'Answer A is correct.',
+    }],
+  };
   page.on('dialog', dialog => dialog.accept());
   await page.addInitScript(({ key }) => {
     localStorage.setItem(key, JSON.stringify({ accessToken: 'browser-fixture-token', tokenType: 'Bearer', expiresAt: Date.now() + 60_000 }));
@@ -45,9 +65,22 @@ test('Full Test: chọn đề đã xuất bản, tạo phiên đúng phiên bả
     }
     if (path.endsWith(`/full-tests/${testVersionId}/attempts`) && request.method() === 'POST') {
       startRequests += 1;
-      return json(attempt);
+      return json(currentAttempt);
     }
-    if (path.endsWith(`/attempts/${attemptId}`) && request.method() === 'GET') return json(attempt);
+    if (path.endsWith(`/attempts/${attemptId}/answers/${attempt.questions[0].questionVersionId}`) && request.method() === 'PUT') {
+      const body = request.postDataJSON();
+      currentAttempt = {
+        ...currentAttempt,
+        answers: [{ questionVersionId: attempt.questions[0].questionVersionId, selectedChoiceId: body.selectedChoiceId }],
+      };
+      return json({});
+    }
+    if (path.endsWith(`/attempts/${attemptId}/submit`) && request.method() === 'POST') {
+      currentAttempt = { ...currentAttempt, status: 'GRADED' };
+      return json(result);
+    }
+    if (path.endsWith(`/attempts/${attemptId}/result`) && request.method() === 'GET') return json(result);
+    if (path.endsWith(`/attempts/${attemptId}`) && request.method() === 'GET') return json(currentAttempt);
     return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: 'UNEXPECTED_REQUEST', message: path }) });
   });
 
@@ -60,5 +93,41 @@ test('Full Test: chọn đề đã xuất bản, tạo phiên đúng phiên bả
   await expect(page).toHaveURL(new RegExp(`/practice/attempts/${attemptId}$`));
   await expect(page.getByRole('heading', { name: 'ENGLINGO — Full TOEIC Listening & Reading', exact: true })).toBeVisible();
   await expect(page.getByText('Choose the best answer.')).toBeVisible();
+  await page.locator('.question-panel .answer-option').first().click();
+  await expect(page.getByText('Đã lưu', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.question-panel .answer-option').first()).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Nộp bài', exact: true }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/practice/attempts/${attemptId}/result$`));
+  await expect(page.getByRole('heading', { name: 'Kết quả bài thi', exact: true })).toBeVisible();
+  await expect(page.getByText('Điểm thô: 1')).toBeVisible();
+  await page.getByRole('button', { name: 'Mở đáp án', exact: true }).click();
+  await expect(page.getByText('Answer A is correct.')).toBeVisible();
   expect(startRequests).toBe(1);
+});
+
+test('Full Test hết giờ khóa đáp án và nút nộp bài', async ({ page }) => {
+  const expiredAttempt = {
+    ...attempt,
+    expiresAt: '2026-11-24T00:00:00Z',
+    expired: true,
+  };
+  await page.addInitScript(({ key }) => {
+    localStorage.setItem(key, JSON.stringify({ accessToken: 'browser-fixture-token', tokenType: 'Bearer', expiresAt: Date.now() + 60_000 }));
+  }, { key: sessionKey });
+  await page.route('**/api/v1/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const json = body => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+    if (path.endsWith('/users/me')) {
+      return json({ userId: 'learner-fixture', email: 'learner@example.test', fullName: 'Learner Fixture', roles: ['LEARNER'], status: 'ACTIVE' });
+    }
+    if (path.endsWith(`/attempts/${attemptId}`)) return json(expiredAttempt);
+    return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: 'UNEXPECTED_REQUEST', message: path }) });
+  });
+
+  await page.goto(`/practice/attempts/${attemptId}`);
+  await expect(page.getByRole('status')).toContainText('Full Test đã hết hạn và không nhận nộp mới.');
+  await expect(page.locator('.question-panel .answer-option').first()).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Nộp bài', exact: true }).first()).toBeDisabled();
 });
