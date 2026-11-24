@@ -20,7 +20,12 @@ public class AttemptHistoryRepository {
             user_id=:actor and (
               (:practice and attempt_source_type='PRACTICE_SNAPSHOT') or
               (:exam and (attempt_source_type='SECTION_SNAPSHOT' or
-                (attempt_source_type='TEST_VERSION' and test_blueprint_snapshot is not null))))
+                (attempt_source_type='TEST_VERSION' and (test_blueprint_snapshot is not null or (attempt_type='FULL_TEST' AND test_version_id IS NOT NULL AND test_blueprint_snapshot IS NULL
+                    AND total_questions=200 AND expires_at=started_at+interval '120 minutes'
+                    AND (SELECT count(*) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200
+                    AND (SELECT count(DISTINCT s.question_version_id) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200
+                    AND (SELECT min(s.question_order) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=1
+                    AND (SELECT max(s.question_order) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200))))))
             """;
     private final NamedParameterJdbcTemplate jdbc;
     public AttemptHistoryRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }

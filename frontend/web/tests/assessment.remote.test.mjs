@@ -29,6 +29,10 @@ test('Full Mock uses the shared attempts API and preserves the server blueprint 
   const view = toServerAttempt(dto);
   assert.deepEqual(view.test, dto.test); assert.equal(view.testTitle, 'Published mock · v3');
   assert.equal(view.expiresAt, Date.parse(dto.expiresAt));
+  assert.equal(view.autoSubmitAtExpiry, true);
+  const legacy = toServerAttempt({ ...dto, test: null });
+  assert.equal(legacy.autoSubmitAtExpiry, false);
+  assert.equal(legacy.expiresAt, view.expiresAt);
 });
 test('timer never signals expiry during the last positive fraction of a server deadline', () => {
   assert.equal(remainingSeconds(2000, 1001), 1);
@@ -41,6 +45,22 @@ beforeEach(() => {
   globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
   globalThis.window = new EventTarget();
   globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return new Response(JSON.stringify(snapshot())); };
+});
+test('published full-test catalog and start use the selected version instead of a hard-coded ID', async () => {
+  const catalog = [{ versionId: 'published-version', title: 'Published test', blueprintCode: 'MINI-LAB', blueprintVersion: 1 }];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, ...options });
+    return new Response(JSON.stringify(url.endsWith('/tests') ? catalog : snapshot()));
+  };
+
+  const repo = new RemoteAssessmentRepository();
+  assert.deepEqual(await repo.listFullTests(), [{ ...catalog[0], testVersionId: 'published-version' }]);
+  await repo.startFullTest('published-version');
+
+  assert.equal(calls[0].url, '/api/v1/tests');
+  assert.equal(calls[1].url, '/api/v1/attempts');
+  assert.equal(calls[1].method, 'POST');
+  assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'TEST_VERSION', testVersionId: 'published-version' });
 });
 test('runtime creation sends camelCase source-specific DTOs and no identity fields', async () => {
   const repo = new RemoteAssessmentRepository();

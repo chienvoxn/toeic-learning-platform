@@ -2,6 +2,15 @@ import { apiRequest } from '../../../services/apiClient.js';
 import { toServerAttempt, toServerResult } from '../api/server-attempt.mapper.js';
 
 export class RemoteAssessmentRepository {
+  async listFullTests() {
+    const items = await this.getCatalog();
+    return items.map(item => ({ ...item, testVersionId: item.versionId }));
+  }
+  async startFullTest(testVersionId) {
+    if (!testVersionId) throw new Error('Thiếu phiên bản đề thi.');
+    return this.startFullMock(testVersionId);
+  }
+
   async startPractice({ partNumbers, questionCount }) {
     return toServerAttempt(await apiRequest('/attempts', { method: 'POST',
       body: { sourceType: 'PRACTICE_SNAPSHOT', practice: { partNumbers, questionCount } } }));

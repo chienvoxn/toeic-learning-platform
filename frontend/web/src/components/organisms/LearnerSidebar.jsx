@@ -9,7 +9,7 @@ const items = [
   ['Trang chủ', '/', 'imgSvg1'], ['Chủ đề', '/catalog', 'imgSvg2'],
   ['Luyện nghe', '/listening', 'imgSvg3'], ['Shadowing', '/listening?mode=shadowing', 'imgSvg4'],
   ['Từ vựng', '/vocabulary', 'imgSvg5'], ['Luyện nói', '/listening?mode=shadowing&view=exercise', 'imgSvg6'],
-  ['Luyện thi TOEIC', '/practice', 'imgSvg7'], ['Trò Chơi', '/games', 'imgSvg8'], ['Ôn tập', '/vocabulary?view=review', 'imgSvg9'],
+  ['Luyện thi TOEIC', '/tests', 'imgSvg7'], ['Trò Chơi', '/games', 'imgSvg8'], ['Ôn tập', '/vocabulary?view=review', 'imgSvg9'],
 ];
 
 import ModerationNavigation from '@/features/admin/ModerationNavigation';

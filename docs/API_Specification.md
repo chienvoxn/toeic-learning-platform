@@ -203,12 +203,18 @@ version fork, TEST_VERSION runtime hoặc quy đổi TOEIC. Giữ nguyên năm r
 
 **Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.
 
+**Runtime hợp nhất Full Test/Full Mock (working tree tích hợp 2026-11-24):** client dùng `GET /tests` và `POST /attempts` với `{sourceType:"TEST_VERSION",testVersionId}`. Chỉ current published TestVersion có blueprint snapshot, publication evidence, nguồn question/group version còn hợp lệ và quyền media M1 mới được cung cấp; start khóa và kiểm lại. Số câu/thời hạn lấy từ blueprint/version, không hard-code 200/120. `/full-tests` và `/full-tests/{testVersionId}/attempts` được giữ làm adapter tới cùng engine, cần `exam:manage:self`; catalog alias có `testId`, `testVersionId`, `title`, `description`, `durationSeconds`, `totalQuestions`, `publishedAt`, `blueprintCode`, `blueprintVersion`. Không có submit/result route thứ hai. FULL-LR/v1 và khóa/chuyển Section vẫn OPEN, không seed. Attempt FULL_TEST cũ của develop giữ pin, deadline, kết quả và timeout cũ; không backfill blueprint hoặc áp worker hồi tố. Chi tiết: [báo cáo tích hợp](TV2_G1_Develop_Integration_20261124.md).
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
 | `GET` | `/tests` | Learner | type,part,page,size | 200 Page<PublishedTest> | 400 |
 
 | `GET` | `/tests/{id}/versions/{versionId}` | Learner | — | 200 TestOverview (no answer key) | 404 |
+
+| `GET` | `/full-tests` | exam:manage:self | — | 200 List<PublishedFullTest> | 401/403 |
+
+| `POST` | `/full-tests/{testVersionId}/attempts` | exam:manage:self | — | 201 PracticeSession | 400/401/403/409 |
 
 | `POST` | `/teacher/blueprints` | Teacher | CreateBlueprintRequest | 201 Blueprint | 422 |
 

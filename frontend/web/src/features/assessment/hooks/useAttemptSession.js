@@ -42,9 +42,9 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
     return () => { active = false; window.removeEventListener('beforeunload', leaving); };
   }, [attemptId, repository]);
 
-  const source = attempt?.sourceType, status = attempt?.status, deadline = attempt?.expiresAt;
+  const status = attempt?.status, deadline = attempt?.expiresAt, autoSubmitAtExpiry = attempt?.autoSubmitAtExpiry;
   useEffect(() => {
-    if (source !== 'TEST_VERSION' || status !== 'IN_PROGRESS' || !Number.isFinite(deadline)) return;
+    if (!autoSubmitAtExpiry || status !== 'IN_PROGRESS' || !Number.isFinite(deadline)) return;
     let stop = () => {};
     const timer = setTimeout(() => {
       queue.current?.seal();
@@ -55,7 +55,7 @@ export function useAttemptSession(attemptId, repository = assessmentRepo) {
       });
     }, Math.max(0, deadline - Date.now()));
     return () => { clearTimeout(timer); stop(); };
-  }, [attemptId, repository, source, status, deadline]);
+  }, [attemptId, repository, autoSubmitAtExpiry, status, deadline]);
 
   const persist = useCallback(payload => {
     return queue.current?.enqueue(payload);

@@ -36,6 +36,14 @@ import ModerationPage from '../pages/admin/ModerationPage';
 import TeacherTestsPage from '../pages/assessment/TeacherTestsPage';
 import AttemptHistoryPage from '../pages/assessment/AttemptHistoryPage';
 
+import RequireTeacher from '../features/auth/RequireTeacher';
+import TeacherLayout from '../components/teacher/TeacherLayout';
+import TeacherDashboardPage from '../pages/teacher/TeacherDashboardPage';
+import TeacherExamsPage from '../pages/teacher/TeacherExamsPage';
+import TeacherContentsPage from '../pages/teacher/TeacherContentsPage';
+import TeacherQuestionsPage from '../pages/teacher/TeacherQuestionsPage';
+import TeacherQuestionEditor from '../pages/teacher/TeacherQuestionEditor';
+
 function RootLayout() {
   return (
     <AppProviders>
@@ -67,7 +75,16 @@ export const router = createBrowserRouter([
       { path: '/admin/settings', element: <AdminSettingsPage /> },
       { path: '/admin/content', element: <AdminContentPage /> },
       { path: '/teacher/content', element: <AdminContentPage /> },
-      { path: '/teacher/tests', element: <TeacherTestsPage /> },
+      { element: <RequireTeacher />, children: [
+        { path: '/teacher', element: <TeacherLayout />, children: [
+          { index: true, element: <TeacherDashboardPage /> },
+          { path: 'exams', element: <TeacherExamsPage /> },
+          { path: 'tests', element: <TeacherTestsPage embedded /> },
+          { path: 'contents', element: <TeacherContentsPage /> },
+          { path: 'questions', element: <TeacherQuestionsPage /> },
+          { path: 'questions/new', element: <TeacherQuestionEditor /> },
+        ] },
+      ] },
       { path: '/moderation', element: <ModerationPage /> },
       { path: '/practice', element: <PracticeSetupPage /> },
       { path: '/practice/history', element: <AttemptHistoryPage /> },

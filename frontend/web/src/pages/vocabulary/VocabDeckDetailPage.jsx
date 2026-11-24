@@ -42,6 +42,12 @@ export default function VocabDeckDetailPage() {
   const [stateWarning, setStateWarning] = useState('');
   const [statesLoading, setStatesLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -156,7 +162,6 @@ export default function VocabDeckDetailPage() {
   }
 
   const { deck, groups, totalWords } = data;
-  const now = Date.now();
   const stateValues = Object.values(states);
   const learnedCount = stateValues.filter((state) => state.repetitionCount >= 2 && new Date(state.nextReviewAt).getTime() > now).length;
   const dueCount = stateValues.filter((state) => new Date(state.nextReviewAt).getTime() <= now).length;

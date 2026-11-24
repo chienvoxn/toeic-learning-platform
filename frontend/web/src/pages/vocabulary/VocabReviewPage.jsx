@@ -77,7 +77,7 @@ function ReviewRound({ deckId }) {
   function showSnapshot(snapshot, cards = data.cards) {
     setSession(restoreLearningSession(cards, snapshot?.data ?? {}));
     setRevision(snapshot?.revision ?? 0);
-    setClock(Date.now());
+    setClock(Date.now);
     setRevealed(false);
   }
 

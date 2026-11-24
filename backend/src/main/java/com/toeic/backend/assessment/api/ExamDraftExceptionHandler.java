@@ -8,7 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes={TeacherTestController.class,TestBlueprintController.class})
+@RestControllerAdvice(assignableTypes={TeacherTestController.class,TestBlueprintController.class,TeacherDraftAssemblyController.class})
 public class ExamDraftExceptionHandler {
     @ExceptionHandler(ExamDraftException.class)
     public ResponseEntity<Error> business(ExamDraftException e) {

@@ -18,6 +18,19 @@ public class MediaPublicationPolicy {
         validateIds(ids(kind,version),actor,visibility,kind==Kind.contents);
     }
     public record Target(Kind kind,UUID version) { }
+    /** Catalog chỉ kiểm khả dụng bằng read snapshot; start vẫn khóa và kiểm lại đúng M1. */
+    @Transactional(propagation=Propagation.MANDATORY,readOnly=true)
+    public boolean available(Kind kind,UUID version,State actor){
+        for(var id:ids(kind,version)){
+            var rows=jdbc.queryForList("SELECT owner_id,visibility,resource_type FROM media_resources WHERE resource_id=?",id);
+            if(rows.isEmpty())return false;var r=rows.getFirst();
+            boolean owned=actor.userId().equals(r.get("owner_id"));
+            boolean granted=owned||Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM media_reuse_grants WHERE media_id=? AND user_id=? AND revoked_at IS NULL)",Boolean.class,id,actor.userId()));
+            boolean readable="PUBLIC".equals(r.get("visibility"))||"AUTHENTICATED".equals(r.get("visibility"))&&actor.permissions().contains("content:read");
+            if(!granted||!readable||kind!=Kind.contents&&!Set.of("AUDIO","IMAGE").contains(r.get("resource_type")))return false;
+        }
+        return true;
+    }
     @Transactional(propagation=Propagation.MANDATORY)
     public void validateBatch(List<Target> targets,State actor){
         // One global order across the whole aggregate, consistent with test publication.

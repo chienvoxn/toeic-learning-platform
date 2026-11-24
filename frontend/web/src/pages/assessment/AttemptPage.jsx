@@ -1,3 +1,4 @@
+import { PracticeGoalTimer } from '@/features/assessment/ui/molecules/PracticeGoalTimer';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LogOut, Check } from 'lucide-react';
@@ -34,7 +35,7 @@ export default function AttemptPage({ remote = false }) {
   const questions = attempt.parts.flatMap(p => p.questions);
   const answered = questions.filter(q => q.userAnswer).length;
   const expired = attempt.expired || timedOutId === attemptId;
-  const submitDisabled = isSubmitting || (remote && expired && !['SECTION_SNAPSHOT', 'TEST_VERSION'].includes(attempt.sourceType));
+  const submitDisabled = isSubmitting || (remote && expired && attempt.sourceType !== 'SECTION_SNAPSHOT' && !attempt.autoSubmitAtExpiry);
   const hasListeningMedia = questions.some(q => q.partNumber <= 4 || q.hasMedia);
   const strictExamMode = strictAudioOverride !== null ? strictAudioOverride : attempt.sourceType === 'SECTION_SNAPSHOT';
   const isDisabled = isSubmitting || attempt.status !== 'IN_PROGRESS' || (remote && expired);
@@ -67,7 +68,27 @@ export default function AttemptPage({ remote = false }) {
               <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} retryDisabled={expired && attempt.sourceType === 'TEST_VERSION'} />
             </div>
           </div>
-          <CountdownTimer expiresAt={attempt.expiresAt} onExpire={remote ? () => setTimedOutId(attemptId) : () => submit(true)} />
+          {attempt.sourceType === 'PRACTICE_SNAPSHOT' &&
+            localStorage.getItem(`englingo_practice_goal_${attemptId}`)
+              ? (
+                <PracticeGoalTimer
+                  startedAt={attempt.startedAt}
+                  minutes={Number(
+                    localStorage.getItem(
+                      `englingo_practice_goal_${attemptId}`
+                    )
+                  )}
+                />
+              ) : (
+                <CountdownTimer
+                  expiresAt={attempt.expiresAt}
+                  onExpire={
+                    remote
+                      ? () => setTimedOutId(attemptId)
+                      : () => submit(true)
+                  }
+                />
+              )}
           <div className="exam-toolbar-actions">
             {hasListeningMedia && (
               <label className="text-xs flex items-center gap-1.5 cursor-pointer select-none">
@@ -108,7 +129,7 @@ export default function AttemptPage({ remote = false }) {
           )}
           {expired && remote && (
             <p role="status" className="integration-notice">
-              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'TEST_VERSION' ? 'Máy chủ đang tự chốt Full Mock. Chỉ đáp án đã lưu trước hạn được chấm; đang đọc lại trạng thái và kết quả.' : attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên Practice hết hạn không nhận nộp mới.'}
+              Đã hết thời gian, không thể đổi đáp án. {attempt.autoSubmitAtExpiry ? 'Máy chủ đang tự chốt Full Mock. Chỉ đáp án đã lưu trước hạn được chấm; đang đọc lại trạng thái và kết quả.' : attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên cũ hết hạn không nhận nộp mới; không áp worker hồi tố.'}
             </p>
           )}
           {(error || saveError) && <p className="form-error" role="alert">{error || saveError}</p>}
@@ -129,7 +150,15 @@ export default function AttemptPage({ remote = false }) {
                     {showGroupHeader && (
                       <div className="surface exam-passage" style={{ whiteSpace: 'pre-line' }}>
                         {question.passage.instruction && <strong>{question.passage.instruction}</strong>}
-                        {question.passage.text && <p>{question.passage.text}</p>}
+                        {part.partNumber >= 5 && question.passage.text && (
+                           <p>{question.passage.text}</p>
+                         )}
+                         {part.partNumber >= 3 && part.partNumber <= 4 && (
+                           <p className="text-sm text-slate-500">
+                             Nghe đoạn hội thoại hoặc bài nói để trả lời
+                             các câu hỏi bên dưới.
+                           </p>
+                         )}
                         <ListeningMediaPlayer
                           audioAssets={question.passage.audioAssets}
                           imageAssets={question.passage.imageAssets}

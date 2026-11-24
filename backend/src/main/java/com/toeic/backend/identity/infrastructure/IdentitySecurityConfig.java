@@ -92,6 +92,8 @@ public class IdentitySecurityConfig {
                         .requestMatchers("/api/v1/teacher/tests", "/api/v1/teacher/tests/**", "/api/v1/teacher/blueprints", "/api/v1/teacher/blueprints/**")
                         .hasAnyAuthority("test:manage:self", "test:manage:any", "test:review", "test:publish")
 
+                        .requestMatchers("/api/v1/full-tests","/api/v1/full-tests/**")
+                        .hasAuthority("exam:manage:self")
                         .requestMatchers(HttpMethod.GET,"/api/v1/tests","/api/v1/tests/**")
                         .hasAuthority("exam:manage:self")
 

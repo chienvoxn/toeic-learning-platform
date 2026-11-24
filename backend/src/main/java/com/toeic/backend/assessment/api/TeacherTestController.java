@@ -45,7 +45,18 @@ public class TeacherTestController {
     @PostMapping(consumes="application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public Object create(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params, @RequestBody String body) {
-        noParams(params); var draft=service.create(actor.userId(),ExamDraftRequest.parse(body,false).document());return workflow.read(actor.userId(),draft.testId(),draft.versionId());
+        noParams(params); var node=ExamDraftRequest.tree(body);
+        com.toeic.backend.assessment.domain.ExamDraftDocument document;
+        if(!node.has("testType")&&!node.has("sections")) {
+            // Title-only client from develop still creates a real canonical DRAFT, without numeric preset.
+            if(!node.has("title")||node.size()!=(node.has("description")?2:1)||!node.get("title").isString()
+                    ||node.has("description")&&!node.get("description").isNull()&&!node.get("description").isString())throw ExamDraftException.invalid();
+            document=new com.toeic.backend.assessment.domain.ExamDraftDocument(node.get("title").asString(),
+                    !node.has("description")||node.get("description").isNull()?null:node.get("description").asString(),"FULL",null,List.of());
+        }else document=ExamDraftRequest.parse(body,false).document();
+        var draft=service.create(actor.userId(),document);
+        var result=new LinkedHashMap<>(workflow.read(actor.userId(),draft.testId(),draft.versionId()));
+        result.put("testVersionId",draft.versionId());result.put("title",document.title());return result;
     }
     @PutMapping(path="/{testId}/versions/{versionId}",consumes="application/json")
     public Object save(@AuthenticationPrincipal SessionPrincipal actor, @PathVariable UUID testId, @PathVariable UUID versionId,

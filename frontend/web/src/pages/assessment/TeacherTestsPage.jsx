@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import LearnerTemplate from '@/components/templates/LearnerTemplate';
 import { useAdminReport } from '@/features/admin/useAdminReport';
 import { examDraftApi as api, documentUnits, toDraftDocument, unitKey } from '@/features/assessment/exam-drafts.api';
 
 const empty = () => ({ title: '', description: '', testType: 'FULL', durationSeconds: '' });
-export default function TeacherTestsPage() {
+export default function TeacherTestsPage({ embedded = false }) {
+  const [searchParams] = useSearchParams();
+  const requestedTest = searchParams.get("testId");
+  const Layout = embedded ? Fragment : LearnerTemplate;
   const [page, setPage] = useState(0), [revision, setRevision] = useState(0);
   const [query, setQuery] = useState({ partNumber: 1, page: 0 });
   const [draft, setDraft] = useState(null), [editor, setEditor] = useState(empty), [selected, setSelected] = useState([]);
@@ -17,14 +21,15 @@ export default function TeacherTestsPage() {
   const bank = useAdminReport(api.units, query, caps.data?.readQuestions === true);
   const editable = draft ? (draft.capabilities?.edit ?? (draft.status === 'DRAFT' && draft.document)) : (caps.data?.manage ?? true);
   function reset() { setDraft(null); setEditor(empty()); setSelected([]); setError(''); setNotice(''); setStale(false); }
-  async function read(id, version) {
+  const read = useCallback(async (id, version) => {
     setBusy(true); setError(''); setNotice('');
     try {
       const value = await (version ? api.readVersion(id, version) : api.read(id)); setDraft(value); setStale(false);
       setEditor(value.document ? { ...value.document, description: value.document.description ?? '', durationSeconds: value.document.durationSeconds ?? '' } : empty());
       setSelected(value.document ? documentUnits(value.document) : []);
     } catch (e) { setError(e.message); } finally { setBusy(false); }
-  }
+  }, []);
+  useEffect(() => { if (requestedTest) void read(requestedTest); }, [requestedTest, read]);
   async function save(event) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
@@ -49,7 +54,7 @@ export default function TeacherTestsPage() {
     if (other < 0 || other >= selected.length || selected[index].partNumber !== selected[other].partNumber) return;
     setSelected(values => { const next = [...values]; [next[index], next[other]] = [next[other], next[index]]; return next; });
   }
-  return <LearnerTemplate><div className="space-y-5">
+  return <Layout><div className="space-y-5">
     <h1>Biên soạn bộ đề</h1>
     <p>Duyệt và xuất bản theo quyền ADMIN, contributor và revision. Full Mock phải khớp blueprint đã cấu hình.</p>
     {(error || list.error) && <p role="alert">{error || list.error}</p>}
@@ -104,5 +109,5 @@ export default function TeacherTestsPage() {
       <button disabled={query.page === 0 || bank.loading} onClick={() => setQuery(q => ({ ...q, page: q.page - 1 }))}>Nhóm trước</button>
       <button disabled={bank.loading || (bank.data?.length ?? 0) < 50} onClick={() => setQuery(q => ({ ...q, page: q.page + 1 }))}>Nhóm sau</button>
     </section>
-  </div></LearnerTemplate>;
+  </div></Layout>;
 }

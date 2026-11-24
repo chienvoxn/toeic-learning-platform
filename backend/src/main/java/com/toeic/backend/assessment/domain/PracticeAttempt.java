@@ -52,6 +52,17 @@ public class PracticeAttempt {
             questions.add(new PracticeQuestionSnapshot(this, pins.get(i), i + 1, started));
         }
     }
+    public String getAttemptType() { return attemptType; }
+    /** Chỉ đọc dữ liệu từ factory FULL_TEST của develop; không tạo phiên fixed 200/120 mới. */
+    public boolean isLegacyFullTest() {
+        if(!"TEST_VERSION".equals(sourceType)||!"FULL_TEST".equals(attemptType)||testSnapshot!=null||testVersionId==null
+                ||!Objects.equals(totalQuestions,200)||startedAt==null||expiresAt==null
+                ||!expiresAt.toInstant().equals(startedAt.plusMinutes(120).toInstant())||questions.size()!=200)return false;
+        var seen=new HashSet<UUID>();int order=0;
+        for(var pin:questions)if(pin.getQuestionVersionId()==null||!seen.add(pin.getQuestionVersionId())||pin.getQuestionOrder()!=++order)return false;
+        return true;
+    }
+    public boolean isFullTest() { return isTestVersion() || isLegacyFullTest(); }
     public UUID getAttemptId() { return attemptId; }
     public static PracticeAttempt section(UUID actor,OffsetDateTime started,String type,int minutes,List<Pin> pins) {
         if(type==null||!Set.of("LISTENING","READING").contains(type)||minutes<1||minutes>120||pins==null||pins.size()>100) {
