@@ -23,6 +23,11 @@ class FullMockIntegrationTest extends FullMockTestSupport {
         assertEquals(session.get("test"),read(learner,id).get("test"));assertEquals(before,jdbc.queryForObject("SELECT test_blueprint_snapshot::text FROM attempts WHERE attempt_id=?",String.class,id));
         var result=tree(call(post(API+"/"+id+"/submit"),learner).andExpect(status().isOk()));assertEquals(7,result.get("parts").size());assertEquals(13,result.get("unansweredCount").asInt());
         assertEquals(result,tree(call(post(API+"/"+id+"/submit"),learner).andExpect(status().isOk())));assertEquals(result,tree(call(get(API+"/"+id+"/result"),learner).andExpect(status().isOk())));
+        var history=tree(call(get(API+"?page=0&size=20"),learner).andExpect(status().isOk()));
+        assertEquals(1,history.get("totalElements").asInt());
+        assertEquals("TEST_VERSION",history.get("items").get(0).get("sourceType").asString());
+        assertEquals(13,history.get("items").get(0).get("score").get("unansweredCount").asInt());
+        assertFalse(history.toString().contains("correctChoiceId"));
         call(get(API+"/"+id),token(OTHER)).andExpect(status().isNotFound());
     }
     @Test void forkProvenanceOneWorkingDraftCurrentOnlyAndOldAttemptUnchanged()throws Exception{

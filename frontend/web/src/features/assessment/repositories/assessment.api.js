@@ -23,6 +23,10 @@ export class RemoteAssessmentRepository {
     return toServerAttempt(data);
   }
 
+  async listAttempts({ page = 0, size = 20 } = {}) {
+    return apiRequest(`/attempts?${new URLSearchParams({ page: String(page), size: String(size) })}`);
+  }
+
   async getAttemptMedia(attemptId) {
     return apiRequest(`/attempts/${attemptId}/media`);
   }

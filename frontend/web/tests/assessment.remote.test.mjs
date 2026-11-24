@@ -14,6 +14,12 @@ const snapshot = () => ({ attemptId: 'attempt-pinned', sourceType: 'SECTION_SNAP
     assets: [{ resourceId: 'media', storageUrl: 'must-not-enter-view' }] }] });
 let calls;
 
+test('own history uses paginated authenticated attempts collection without actor filters', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.listAttempts({ page: 2, size: 20, actorId: 'ignored' });
+  assert.equal(calls[0].url, '/api/v1/attempts?page=2&size=20');
+});
+
 test('Full Mock uses the shared attempts API and preserves the server blueprint snapshot', async () => {
   const repo = new RemoteAssessmentRepository();
   await repo.startFullMock('test-version-pin');

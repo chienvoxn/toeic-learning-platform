@@ -34,6 +34,7 @@ import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
 import AdminContentPage from '../pages/admin/AdminContentPage';
 import ModerationPage from '../pages/admin/ModerationPage';
 import TeacherTestsPage from '../pages/assessment/TeacherTestsPage';
+import AttemptHistoryPage from '../pages/assessment/AttemptHistoryPage';
 
 function RootLayout() {
   return (
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
       { path: '/teacher/tests', element: <TeacherTestsPage /> },
       { path: '/moderation', element: <ModerationPage /> },
       { path: '/practice', element: <PracticeSetupPage /> },
+      { path: '/practice/history', element: <AttemptHistoryPage /> },
       { path: '/practice/attempts/:attemptId', element: <AttemptPage remote /> },
       { path: '/practice/attempts/:attemptId/result', element: <ResultPage remote /> },
       { path: '/dashboard', element: <HomePage /> },

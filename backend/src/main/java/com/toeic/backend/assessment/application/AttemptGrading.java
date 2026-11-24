@@ -80,11 +80,13 @@ class AttemptGrading {
         return new PracticeResultDtos.Result(attempt.getAttemptId(),attempt.getStatus(),attempt.getSubmittedAt(),attempt.getTotalQuestions(),
                 correct,incorrect,unanswered,correct,accuracy(correct,attempt.getTotalQuestions()),attempt.getListeningCorrectCount(),
                 attempt.getReadingCorrectCount(),questions,SectionDtos.configuration(attempt),
-                attempt.isTimed()?partResults(attempt,questions):null,attempt.getTestSnapshot());
+                partResults(attempt,questions),attempt.getTestSnapshot());
     }
     private List<SectionDtos.PartResult> partResults(PracticeAttempt attempt,List<PracticeResultDtos.QuestionResult> questions) {
         var persisted=answers.partResults(attempt.getAttemptId());
-        var required=attempt.isSection()?SectionDtos.configuration(attempt).partNumbers():attempt.getTestSnapshot().blueprint().parts().stream().map(p->p.partNumber()).toList();
+        var required=attempt.isSection()?SectionDtos.configuration(attempt).partNumbers():attempt.isTestVersion()
+                ?attempt.getTestSnapshot().blueprint().parts().stream().map(p->p.partNumber()).toList()
+                :questions.stream().map(PracticeResultDtos.QuestionResult::partNumber).distinct().sorted().toList();
         if(!persisted.stream().map(p->p.partNumber()).toList().equals(required))throw new PracticeQuestionCatalog.Unavailable(false);
         return persisted.stream().map(p->{
             var rows=questions.stream().filter(q->q.partNumber()==p.partNumber()).toList();

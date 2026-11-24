@@ -717,3 +717,13 @@ Không worker EXAM-03, quy đổi điểm hoặc bypass G1/media trong gói này
 ## Bổ sung EXAM-03 — 2026-11-22
 
 [Worker Full Mock expiry](EXAM03_Worker_20261122.md) bổ sung tự chốt chỉ cho TEST_VERSION/FULL_MOCK có pin/snapshot hợp lệ. Scheduler chạy độc lập token/browser, claim parent SKIP LOCKED, reuse grading transaction và durable retry V42. Năm route attempts giữ nguyên; GET không tự grade. Hết hạn chặn save; UI đọc lại trạng thái đến GRADED rồi đọc result DB. Worker/submit tay chỉ commit một bộ kết quả. Practice và Section giữ policy cũ, không tự chốt bởi worker này. Chưa seed blueprint chính thức hoặc thực thi đề xuất khóa/chuyển Section 45/75 phút.
+
+## Bổ sung EXAM-05 — 2026-11-24
+
+`GET /api/v1/attempts?page=0&size=20` trả lịch sử own có phân trang (size 1–100),
+lọc đúng permission theo source trước count/page, không nhận actorId hoặc query ngoài
+allowlist. Summary GRADED chỉ đọc điểm/count/accuracy đã lưu; IN_PROGRESS không có
+score. Không trả key/explanation/transcript trong list. Result và submit replay vẫn
+dùng endpoint cũ; Part stats đã lưu được trả thêm cho Practice, không chấm lại bank.
+Payload/error/demo/giới hạn: [runbook TV2](TV2_Sprint3_Completion_20261124.md).
+Không có quy đổi TOEIC, FULL-LR seed hoặc Section timing mới.

@@ -42,6 +42,7 @@ export function LearnerSidebar({ sidebarRef, compact = false, open, onClose, onC
         <div className="sidebar-personal">
           {user && <ModerationNavigation />}
           {user && <ExamDraftNavigation />}
+          {user && navItem(['Lịch sử bài làm', '/practice/history', 'imgSvg7'])}
           {user?.adminCapabilities?.userManagement && navItem(['Quản lý người dùng', '/admin/users', 'imgSvg11'])}
           {user?.adminCapabilities?.rbacManagement && navItem(['Vai trò và quyền', '/admin/roles', 'imgSvg11'])}
           {user?.adminCapabilities?.auditRead && navItem(['Audit quản trị', '/admin/audit', 'imgSvg11'])}
