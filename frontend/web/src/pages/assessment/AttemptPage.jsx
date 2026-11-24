@@ -26,6 +26,12 @@ export default function AttemptPage({ remote = false }) {
   const catalogPath = remote ? '/practice' : '/tests';
 
   useEffect(() => {
+    if (!remote || !attemptId) return undefined;
+    localStorage.setItem('toeic.active.exam', attemptId);
+    return () => localStorage.removeItem('toeic.active.exam');
+  }, [remote, attemptId]);
+
+  useEffect(() => {
     if (attempt?.status === 'GRADED') navigate(`${attemptBase}/${attemptId}/result`, { replace: true });
   }, [attempt?.status, attemptId, navigate, attemptBase]);
 

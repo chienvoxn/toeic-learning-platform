@@ -29,6 +29,8 @@ export default function VocabDeckListPage() {
   const [startingDeckId, setStartingDeckId] = useState(null);
   const [startError, setStartError] = useState('');
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const openedFromDashboard = search.get('review') === 'due';
   const [reviewStats, setReviewStats] = useState(null);
   const [dueItems, setDueItems] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -36,7 +38,7 @@ export default function VocabDeckListPage() {
   const [recommendationLoading, setRecommendationLoading] = useState(false);
   const [recommendationAttempt, setRecommendationAttempt] = useState(0);
   const [deckCardsById, setDeckCardsById] = useState({});
-  const [showDueList, setShowDueList] = useState(false);
+  const [showDueList, setShowDueList] = useState(openedFromDashboard);
   const [dueError, setDueError] = useState('');
   const [dueActiveId, setDueActiveId] = useState(null);
   const [dueRevealed, setDueRevealed] = useState(false);
@@ -61,8 +63,6 @@ export default function VocabDeckListPage() {
   const [reviewMode, setReviewMode] = useState('continue');
   const [showAllPersonalDecks, setShowAllPersonalDecks] = useState(false);
   const [showAllCatalogDecks, setShowAllCatalogDecks] = useState(false);
-
-  const [search] = useSearchParams();
 
   useEffect(() => {
     if (useMock) return undefined;
@@ -459,7 +459,7 @@ export default function VocabDeckListPage() {
           </div>
         )}
 
-        {showDueList && (
+        {showDueList && !loading && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !dueSaving && !pendingDueRating) { setShowDueList(false); setDueActiveId(null); } }}>
             <section role="dialog" aria-modal="true" aria-labelledby="due-list-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl text-slate-900">
               <div className="flex items-start justify-between gap-3">
@@ -493,7 +493,10 @@ export default function VocabDeckListPage() {
                       <div className="mt-2 flex flex-wrap gap-3"><button type="button" className="text-sm font-semibold text-blue-600" onClick={() => openDueReview(item.vocabularyId)}>Ôn ngay</button>{item.deck && <Link className="text-sm font-semibold text-slate-600" to={`/vocabulary/${item.deck.id}`} onClick={() => setShowDueList(false)}>Xem bộ từ</Link>}</div>
                     </div>)}
                   </div>
-                  <div className="mt-5 flex justify-end"><button type="button" className="rounded-xl bg-blue-600 px-5 py-2 font-semibold text-white" onClick={() => setShowDueList(false)}>Đóng</button></div>
+                  <div className="mt-5 flex flex-wrap justify-end gap-3">
+                    {openedFromDashboard && <Link to="/dashboard" className="rounded-xl border border-slate-300 px-5 py-2 font-semibold">Về Dashboard</Link>}
+                    <button type="button" className="rounded-xl bg-blue-600 px-5 py-2 font-semibold text-white" onClick={() => setShowDueList(false)}>Đóng</button>
+                  </div>
                 </>
               )}
             </section>
