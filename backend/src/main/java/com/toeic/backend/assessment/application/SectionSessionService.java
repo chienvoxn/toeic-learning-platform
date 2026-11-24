@@ -35,6 +35,7 @@ public class SectionSessionService {
             throw ex;
         }
         catalog.pin(actorId,criteria,selected,OffsetDateTime.now(clock));
+        attempts.lockExamActor(actorId);
         var started=OffsetDateTime.now(clock).truncatedTo(ChronoUnit.MICROS);
         var attempt=PracticeAttempt.section(actorId,started,query.type(),query.durationMinutes(),selected.stream()
                 .map(p->new PracticeAttempt.Pin(p.questionVersionId(),p.groupVersionId())).toList());

@@ -17,12 +17,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class ChatService {
     private final ChatRepository store;
     private final RagClient rag;
+    private final ExamGuardService examGuard;
     private final ContentAccessPolicy access;
     private final TransactionTemplate tx;
     private final int dailyLimit,minuteLimit;
     public ChatService(ChatRepository store,RagClient rag,ContentAccessPolicy access,TransactionTemplate tx,
+                       ExamGuardService examGuard,
                        @Value("${app.ai.daily-limit:30}") int dailyLimit,@Value("${app.ai.minute-limit:5}") int minuteLimit) {
-        this.store=store;this.rag=rag;this.access=access;this.tx=tx;this.dailyLimit=dailyLimit;this.minuteLimit=minuteLimit;
+        this.examGuard=examGuard;this.store=store;this.rag=rag;this.access=access;this.tx=tx;this.dailyLimit=dailyLimit;this.minuteLimit=minuteLimit;
     }
     private UUID actor(String permission) {
         var auth=SecurityContextHolder.getContext().getAuthentication();
@@ -43,7 +45,9 @@ public class ChatService {
         });
     }
     public List<Message> messages(UUID conversation,int page) {
-        store.own(actor("ai:chat:self"),conversation);
+        UUID actor=actor("ai:chat:self");
+        store.own(actor,conversation);
+        examGuard.requireAiAllowed(actor);
         return store.messages(conversation,page).stream().map(m->{
             if(m.answer()==null) return m;
             var filtered=visible(m.answer());
@@ -75,6 +79,7 @@ public class ChatService {
             // Serialize reservations per user, including quota and multiple conversations.
             store.jdbc().queryForList("select user_id from users where user_id=? for update",actor);
             store.own(actor,conversation);
+            examGuard.requireAiAllowed(actor);
             var existing=store.jdbc().queryForList("select * from ai_chat_requests where request_id=?",request);
             if(!existing.isEmpty()) {
                 var row=existing.getFirst();
@@ -94,8 +99,12 @@ public class ChatService {
             store.jdbc().update("insert into ai_chat_requests(request_id,conversation_id,user_id,question,status) values(?,?,?,?,'PENDING')",request,conversation,actor,question);
             return new Reservation(null,history);
         });
-        if(reservation.replay()!=null) return visible(reservation.replay());
+        if(reservation.replay()!=null) {
+            examGuard.requireAiAllowed(actor);
+            return visible(reservation.replay());
+        }
         try {
+            examGuard.requireAiAllowed(actor);
             var greeting=BasicGreetingResponder.respondTo(question);
             var scope=store.scope(access.canReadMemberContent());
             RemoteAnswer remote=null;
@@ -112,7 +121,10 @@ public class ChatService {
             final Answer result=answer;
             final RemoteAnswer providerResult=remote;
             tx.executeWithoutResult(status->{
+                store.jdbc().queryForList(
+                    "select user_id from users where user_id=? for update",actor);
                 store.own(actor,conversation);
+                examGuard.requireAiAllowed(actor);
                 UUID userMessage=UUID.randomUUID(),assistantMessage=UUID.randomUUID();
                 store.jdbc().update("insert into ai_messages(message_id,conversation_id,role,content,created_at) values(?,?,'user',?,clock_timestamp())",userMessage,conversation,question);
                 store.jdbc().update("insert into ai_messages(message_id,conversation_id,role,content,created_at) values(?,?,'assistant',?,clock_timestamp())",assistantMessage,conversation,result.answer());
