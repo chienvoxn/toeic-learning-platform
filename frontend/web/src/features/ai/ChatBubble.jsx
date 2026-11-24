@@ -93,6 +93,12 @@ export default function ChatBubble() {
       if (!mounted.current) return;
       setQuestion(''); await select(item);
     } catch (err) {
+      if (err.code === 'AI_EXAM_RESTRICTED' || err.status === 403 && err.code === 'AI_EXAM_RESTRICTED') {
+        localStorage.setItem('toeic.active.exam', 'server-enforced');
+        setExamActive(true);
+        if (mounted.current) setError('AI Tutor tạm khóa trong lúc bạn đang làm bài thi. Hãy nộp bài hoặc kết thúc phiên thi để tiếp tục.');
+        return;
+      }
       // A transport failure may hide a completed server response. Reuse its identifier on retry.
       if (err.status && err.status !== 409) pendingRequest.current = null;
       if (mounted.current) setError(`${err.message} Bạn có thể tải lại lịch sử trước khi gửi câu hỏi mới.`);
