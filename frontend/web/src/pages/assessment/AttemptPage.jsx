@@ -18,7 +18,7 @@ import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessm
 export default function AttemptPage({ remote = false }) {
   const { attemptId } = useParams();
   const navigate = useNavigate();
-  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
+  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave, mediaError, retryMedia } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
   const [error, setError] = useState('');
   const [timedOutId, setTimedOutId] = useState(null);
   const [strictAudioOverride, setStrictAudioOverride] = useState(null);
@@ -129,7 +129,16 @@ export default function AttemptPage({ remote = false }) {
           )}
           {expired && remote && (
             <p role="status" className="integration-notice">
-              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên Practice hết hạn không nhận nộp mới.'}
+              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'SECTION_SNAPSHOT'
+                ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.'
+                : attempt.sourceType === 'TEST_VERSION'
+                  ? 'Full Test đã hết hạn và không nhận nộp mới.'
+                  : 'Phiên Practice hết hạn không nhận nộp mới.'}
+            </p>
+          )}
+          {mediaError && (
+            <p role="status" className="integration-notice">
+              {mediaError} <button type="button" className="text-button" onClick={retryMedia}>Tải lại học liệu</button>
             </p>
           )}
           {(error || saveError) && <p className="form-error" role="alert">{error || saveError}</p>}
