@@ -194,12 +194,18 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 **Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.
 
+**Runtime Full Test catalog (2026-11-23):** `GET /full-tests` trả danh sách phẳng các phiên bản `FULL_TEST` mà cả test/version đều `PUBLISHED`, có thời lượng, khai báo 200 câu và thực tế gắn đúng 200 question/group version đang `PUBLISHED`. Route cần `exam:manage:self`; dữ liệu trả về gồm `testId`, `testVersionId`, `title`, `description`, `durationSeconds`, `totalQuestions`, `publishedAt`. `POST /full-tests/{testVersionId}/attempts` tạo attempt pin đúng phiên bản người học đã chọn. Luồng này không tự publish đề và không thay thế các API `/tests` còn DESIGN.
+
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
 
 | `GET` | `/tests` | Learner | type,part,page,size | 200 Page<PublishedTest> | 400 |
 
 | `GET` | `/tests/{id}/versions/{versionId}` | Learner | — | 200 TestOverview (no answer key) | 404 |
+
+| `GET` | `/full-tests` | exam:manage:self | — | 200 List<PublishedFullTest> | 401/403 |
+
+| `POST` | `/full-tests/{testVersionId}/attempts` | exam:manage:self | — | 201 PracticeSession | 400/401/403/409 |
 
 | `POST` | `/teacher/blueprints` | Teacher | CreateBlueprintRequest | 201 Blueprint | 422 |
 

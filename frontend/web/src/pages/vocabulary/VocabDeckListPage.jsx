@@ -82,7 +82,7 @@ export default function VocabDeckListPage() {
     setShowDueList(true);
     setDueActiveId(pendingDueRating.vocabularyId);
     setDueRevealed(true);
-  }, []);
+  }, [pendingDueRating]);
 
 
   useEffect(() => {

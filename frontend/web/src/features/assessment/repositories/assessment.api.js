@@ -2,6 +2,10 @@ import { apiRequest } from '../../../services/apiClient.js';
 import { toServerAttempt, toServerResult } from '../api/server-attempt.mapper.js';
 
 export class RemoteAssessmentRepository {
+  async listFullTests() {
+    return apiRequest('/full-tests');
+  }
+
   async startFullTest(testVersionId) {
     if (!testVersionId) {
       throw new Error('Thieu phien ban de thi.');
