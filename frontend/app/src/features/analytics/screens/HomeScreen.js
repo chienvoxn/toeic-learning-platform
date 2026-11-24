@@ -45,6 +45,31 @@ export default function HomeScreen({ navigate }) {
         <Text style={s.loginText}>Đăng nhập để bắt đầu học</Text>
         <Ionicons name="chevron-forward" size={19} color="white" />
       </AppButton>
+
+      {/* Lối tắt học tập: Ôn từ vựng SRS & AI Tutor */}
+      <View style={s.quickHub}>
+        <AppButton onPress={() => navigate("flashcardReview")} style={s.quickCardVocab}>
+          <View style={s.quickIconBoxVocab}>
+            <Ionicons name="albums" size={20} color="#009DFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.quickTitle}>Ôn tập Flashcard SRS</Text>
+            <Text style={s.quickSub}>Ôn từ vựng ngắt quãng thông minh</Text>
+          </View>
+          <Ionicons name="arrow-forward-circle" size={22} color="#009DFF" />
+        </AppButton>
+
+        <AppButton onPress={() => navigate("aiChat")} style={s.quickCardAi}>
+          <View style={s.quickIconBoxAi}>
+            <Ionicons name="sparkles" size={18} color="#8A2BE2" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.quickTitle}>Hỏi Parroto AI</Text>
+            <Text style={s.quickSub}>Trợ giảng giải đáp thắc mắc 24/7</Text>
+          </View>
+          <Ionicons name="arrow-forward-circle" size={22} color="#8A2BE2" />
+        </AppButton>
+      </View>
       <View style={s.heading}>
         <Text style={s.section}>
           <Text style={{ color: "#A43DFF" }}>★ </Text>GỢI Ý CHO BẠN
@@ -320,4 +345,43 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   rank: { fontSize: 16, color: "white", fontWeight: "800" },
+  quickHub: { gap: 10, marginTop: 14 },
+  quickCardVocab: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F9FF",
+    borderWidth: 1.5,
+    borderColor: "#BAE6FD",
+    borderRadius: 16,
+    padding: 12,
+    gap: 12,
+  },
+  quickIconBoxVocab: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E0F2FE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickCardAi: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FAF5FF",
+    borderWidth: 1.5,
+    borderColor: "#E9D5FF",
+    borderRadius: 16,
+    padding: 12,
+    gap: 12,
+  },
+  quickIconBoxAi: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3E8FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickTitle: { fontSize: 13, fontWeight: "800", color: "#1E293B" },
+  quickSub: { fontSize: 11, color: "#64748B", marginTop: 2 },
 });

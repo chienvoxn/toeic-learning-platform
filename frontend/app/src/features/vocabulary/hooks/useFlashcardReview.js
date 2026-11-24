@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { vocabularyRepository } from '../repositories/vocabulary.mock';
+import { vocabularyApi } from '../../../services/vocabulary.api';
 
 export default function useFlashcardReview() {
   const cards = vocabularyRepository.getReviewCards();
@@ -10,7 +11,14 @@ export default function useFlashcardReview() {
 
   const current = cards[currentIndex];
 
-  const handleRate = () => {
+  const handleRate = async (quality = 4) => {
+    if (current?.id) {
+      try {
+        await vocabularyApi.submitReview(current.id, quality);
+      } catch {
+        // offline fallback
+      }
+    }
     if (currentIndex + 1 < cards.length) {
       setCurrentIndex(prev => prev + 1);
       setIsRevealed(false);

@@ -1,6 +1,6 @@
 import React from "react";
 import { HomeScreen } from "../features/analytics";
-import { CatalogScreen } from "../features/content";
+import { CatalogScreen, ContentDetailScreen } from "../features/content";
 import {
   VocabScreen,
   DeckDetailScreen,
@@ -10,6 +10,7 @@ import { GamesScreen, WordMatchScreen } from "../features/games";
 import { SettingsScreen } from "../features/profile";
 import { OnboardingScreen } from "../features/onboarding";
 import { LoginScreen } from "../features/auth";
+import { AIChatScreen } from "../features/ai";
 import LearnerTemplate from "../components/templates/LearnerTemplate";
 import BottomTabBar from "../components/organisms/BottomTabBar";
 import useAppNavigation from "./useAppNavigation";
@@ -18,6 +19,7 @@ import { MAIN_TABS } from "./routes";
 const screens = {
   home: HomeScreen,
   catalog: CatalogScreen,
+  contentDetail: ContentDetailScreen,
   vocab: VocabScreen,
   deckDetail: DeckDetailScreen,
   flashcardReview: FlashcardScreen,
@@ -26,6 +28,7 @@ const screens = {
   settings: SettingsScreen,
   onboarding: OnboardingScreen,
   login: LoginScreen,
+  aiChat: AIChatScreen,
 };
 
 export default function AppNavigator() {
