@@ -46,12 +46,13 @@ export default function ResultPage({ remote = false }) {
     <AssessmentLayout variant="catalog">
       <div className="result-page">
         {remote ? <p role="note" className="integration-notice">Kết quả đã nộp do máy chủ chấm trên phiên bản đã lưu.</p> : <GuestPracticeNotice />}
-        <Link className="breadcrumb-back" to={remote ? '/practice' : '/tests'}><ChevronLeft size={16} />Quay về danh sách</Link>
+        <Link className="breadcrumb-back" to={remote && !result?.test ? '/practice' : '/tests'}><ChevronLeft size={16} />Quay về danh sách</Link>
         <div className="page-heading"><h1>Kết quả bài thi</h1></div>
         {loading && <LoadingSpinner text="Đang tải kết quả..." />}
         {error && <p className="form-error" role="alert">{error}</p>}
         {result && (
           <>
+            {result.test && <p>{result.test.title} · v{result.test.version} · {result.test.blueprint.code}/v{result.test.blueprint.version}</p>}
             <ExamScoreSummary result={result} />
             <section className="surface result-panel">
               <h2>KẾT QUẢ THEO PART</h2>

@@ -48,6 +48,8 @@ class PracticeSubmissionIntegrationTest extends PracticeTestSupport {
         assertEquals(5,count("select count(*) from attempt_answers where attempt_id=? and is_correct is not null and correct_choice_id is not null",attempt));
         assertEquals(3,count("select count(*) from attempt_part_results where attempt_id=?",attempt));
         assertEquals(2,count("select sum(correct_count)::integer from attempt_part_results where attempt_id=?",attempt));
+        assertEquals(List.of(1,2,5),java.util.stream.StreamSupport.stream(result.get("parts").spliterator(),false).map(p->p.get("partNumber").asInt()).toList());
+        assertEquals(2,java.util.stream.StreamSupport.stream(result.get("parts").spliterator(),false).mapToInt(p->p.get("unansweredCount").asInt()).sum());
         var partSnapshots=new TransactionTemplate(transactions).execute(status->answerRepository.partResults(attempt));
         assertNotNull(partSnapshots);
         assertEquals(List.of(1,2,5),partSnapshots.stream().map(p->p.partNumber()).toList());

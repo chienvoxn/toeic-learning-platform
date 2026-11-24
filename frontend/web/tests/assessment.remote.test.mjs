@@ -13,6 +13,27 @@ const snapshot = () => ({ attemptId: 'attempt-pinned', sourceType: 'SECTION_SNAP
     isCorrect: true, explanation: 'must not enter session view', correctChoiceId: 'choice-pinned-a',
     assets: [{ resourceId: 'media', storageUrl: 'must-not-enter-view' }] }] });
 let calls;
+
+test('own history uses paginated authenticated attempts collection without actor filters', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.listAttempts({ page: 2, size: 20, actorId: 'ignored' });
+  assert.equal(calls[0].url, '/api/v1/attempts?page=2&size=20');
+});
+
+test('Full Mock uses the shared attempts API and preserves the server blueprint snapshot', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.startFullMock('test-version-pin');
+  assert.deepEqual(JSON.parse(calls[0].body), { sourceType: 'TEST_VERSION', testVersionId: 'test-version-pin' });
+  assert.equal(calls[0].url, '/api/v1/attempts');
+  const dto = snapshot(); dto.sourceType = 'TEST_VERSION'; dto.test = { title: 'Published mock', version: 3, blueprint: { code: 'LAB', version: 2, durationSeconds: 600 } };
+  const view = toServerAttempt(dto);
+  assert.deepEqual(view.test, dto.test); assert.equal(view.testTitle, 'Published mock · v3');
+  assert.equal(view.expiresAt, Date.parse(dto.expiresAt));
+  assert.equal(view.autoSubmitAtExpiry, true);
+  const legacy = toServerAttempt({ ...dto, test: null });
+  assert.equal(legacy.autoSubmitAtExpiry, false);
+  assert.equal(legacy.expiresAt, view.expiresAt);
+});
 test('timer never signals expiry during the last positive fraction of a server deadline', () => {
   assert.equal(remainingSeconds(2000, 1001), 1);
   assert.equal(remainingSeconds(2000, 1999), 1);
@@ -26,19 +47,20 @@ beforeEach(() => {
   globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return new Response(JSON.stringify(snapshot())); };
 });
 test('published full-test catalog and start use the selected version instead of a hard-coded ID', async () => {
-  const catalog = [{ testVersionId: 'published-version', title: 'Published test' }];
+  const catalog = [{ versionId: 'published-version', title: 'Published test', blueprintCode: 'MINI-LAB', blueprintVersion: 1 }];
   globalThis.fetch = async (url, options) => {
     calls.push({ url, ...options });
-    return new Response(JSON.stringify(url.endsWith('/full-tests') ? catalog : snapshot()));
+    return new Response(JSON.stringify(url.endsWith('/tests') ? catalog : snapshot()));
   };
 
   const repo = new RemoteAssessmentRepository();
-  assert.deepEqual(await repo.listFullTests(), catalog);
+  assert.deepEqual(await repo.listFullTests(), [{ ...catalog[0], testVersionId: 'published-version' }]);
   await repo.startFullTest('published-version');
 
-  assert.equal(calls[0].url, '/api/v1/full-tests');
-  assert.equal(calls[1].url, '/api/v1/full-tests/published-version/attempts');
+  assert.equal(calls[0].url, '/api/v1/tests');
+  assert.equal(calls[1].url, '/api/v1/attempts');
   assert.equal(calls[1].method, 'POST');
+  assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'TEST_VERSION', testVersionId: 'published-version' });
 });
 test('runtime creation sends camelCase source-specific DTOs and no identity fields', async () => {
   const repo = new RemoteAssessmentRepository();
@@ -47,6 +69,22 @@ test('runtime creation sends camelCase source-specific DTOs and no identity fiel
   await repo.startSection({ type: 'READING', questionCount: 8, durationMinutes: 20 });
   assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'SECTION_SNAPSHOT', section: { type: 'READING', questionCount: 8, durationMinutes: 20 } });
   assert.ok(calls.every(call => call.url === '/api/v1/attempts'));
+});
+
+test('Listening Section and all-Part practice preserve the source-specific server payloads', async () => {
+  const repo = new RemoteAssessmentRepository();
+  await repo.startSection({ type: 'LISTENING', questionCount: 7, durationMinutes: 1 });
+  await repo.startPractice({ partNumbers: [1,2,3,4,5,6,7], questionCount: 22 });
+  assert.deepEqual(JSON.parse(calls[0].body), { sourceType: 'SECTION_SNAPSHOT', section: { type: 'LISTENING', questionCount: 7, durationMinutes: 1 } });
+  assert.deepEqual(JSON.parse(calls[1].body), { sourceType: 'PRACTICE_SNAPSHOT', practice: { partNumbers: [1,2,3,4,5,6,7], questionCount: 22 } });
+});
+
+test('restored Listening type and expired state come from the pinned server snapshot', () => {
+  const dto = snapshot(); dto.section = { type: 'LISTENING', questionCount: 7, durationMinutes: 1 }; dto.expired = true;
+  const view = toServerAttempt(dto);
+  assert.equal(view.testTitle, 'Section LISTENING');
+  assert.deepEqual(view.section, dto.section); assert.equal(view.expired, true);
+  assert.equal(view.sourceType, 'SECTION_SNAPSHOT');
 });
 test('safe view uses pinned IDs/server deadline and cannot render a key, explanation or media path', () => {
   const dto = snapshot(); dto.answers = [{ questionVersionId: 'version-pinned', selectedChoiceId: 'choice-pinned-b' }];

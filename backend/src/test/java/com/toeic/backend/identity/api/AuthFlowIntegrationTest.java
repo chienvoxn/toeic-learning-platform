@@ -24,7 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -49,7 +48,6 @@ import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -356,6 +354,7 @@ class AuthFlowIntegrationTest {
                     "content:read",
                     "question:manage:self",
                     "question:read",
+                    "test:manage:self",
                     "user:password:change:self",
                     "user:read:self",
                     "user:update:self"
@@ -366,13 +365,22 @@ class AuthFlowIntegrationTest {
                     "audit:read",
                     "content:manage:any",
                     "content:manage:self",
+                    "content:publish",
                     "content:read",
+                    "content:review",
                     "question:manage:any",
                     "question:manage:self",
+                    "question:publish",
                     "question:read",
+                    "question:review",
                     "rbac:manage",
                     "system:health:read",
+                    "system:settings:manage",
                     "system:usage:read",
+                    "test:manage:any",
+                    "test:manage:self",
+                    "test:publish",
+                    "test:review",
                     "user:manage",
                     "user:password:change:self",
                     "user:read:self",

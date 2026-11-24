@@ -338,15 +338,15 @@ export default function TeacherExamsPage() {
                       <button
                         type="button"
                         className="teacher-primary-button"
-                        disabled
-                        title="Chờ API xuất bản đề thi từ backend"
+                        onClick={() => { window.location.href = `/teacher/tests?testId=${encodeURIComponent(test.testId)}`; }}
                       >
                         Xuất bản
                       </button>
                     </div>
                   )}
+                  <Link className="teacher-outline-button" to={`/teacher/tests?testId=${encodeURIComponent(test.testId)}`}>Mở biên soạn / phiên bản</Link>
                   <span className="teacher-exams-awaiting">
-                    Biên soạn, kiểm tra và xuất bản cần API backend tương ứng.
+                    Biên soạn, chọn blueprint và duyệt/xuất bản theo quyền, revision trên cùng phiên bản.
                   </span>
                 </div>
               </article>

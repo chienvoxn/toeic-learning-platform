@@ -1,0 +1,1152 @@
+column|ai_chat_requests|conversation_id|uuid|true|||
+column|ai_chat_requests|created_at|timestamp with time zone|true|now()||
+column|ai_chat_requests|error_code|character varying(100)|false|||
+column|ai_chat_requests|finished_at|timestamp with time zone|false|||
+column|ai_chat_requests|question|text|true|||
+column|ai_chat_requests|request_id|uuid|true|||
+column|ai_chat_requests|response_json|text|false|||
+column|ai_chat_requests|status|character varying(20)|true|||
+column|ai_chat_requests|user_id|uuid|true|||
+column|ai_citation_snapshots|message_id|uuid|true|||
+column|ai_citation_snapshots|response_json|text|true|||
+column|ai_configs|config_id|uuid|true|||
+column|ai_configs|config_key|character varying(100)|true|||
+column|ai_configs|config_value|text|true|||
+column|ai_configs|description|text|false|||
+column|ai_configs|updated_at|timestamp with time zone|true|now()||
+column|ai_configs|updated_by|uuid|false|||
+column|ai_conversations|conversation_id|uuid|true|||
+column|ai_conversations|created_at|timestamp with time zone|true|now()||
+column|ai_conversations|title|character varying(255)|false|||
+column|ai_conversations|updated_at|timestamp with time zone|true|now()||
+column|ai_conversations|user_id|uuid|true|||
+column|ai_indexed_versions|content_version_id|uuid|true|||
+column|ai_indexed_versions|document_id|uuid|true|||
+column|ai_indexed_versions|indexed_at|timestamp with time zone|true|now()||
+column|ai_message_sources|chunk_id|uuid|true|||
+column|ai_message_sources|message_id|uuid|true|||
+column|ai_message_sources|relevance_score|numeric(6,5)|false|||
+column|ai_messages|content|text|true|||
+column|ai_messages|conversation_id|uuid|true|||
+column|ai_messages|created_at|timestamp with time zone|true|now()||
+column|ai_messages|message_id|uuid|true|||
+column|ai_messages|role|character varying(20)|true|||
+column|ai_request_logs|completion_tokens|integer|false|||
+column|ai_request_logs|conversation_id|uuid|false|||
+column|ai_request_logs|cost_currency|character varying(3)|false|||
+column|ai_request_logs|created_at|timestamp with time zone|true|||
+column|ai_request_logs|error_code|character varying(100)|false|||
+column|ai_request_logs|estimated_cost|numeric(16,8)|false|||
+column|ai_request_logs|latency_ms|integer|false|||
+column|ai_request_logs|model|character varying(150)|true|||
+column|ai_request_logs|prompt_tokens|integer|false|||
+column|ai_request_logs|provider|character varying(100)|true|||
+column|ai_request_logs|request_id|uuid|true|||
+column|ai_request_logs|status|character varying(30)|true|||
+column|ai_request_logs|total_tokens|integer|false|||
+column|ai_request_logs|user_id|uuid|false|||
+column|attempt_answers|answered_at|timestamp with time zone|false|||
+column|attempt_answers|attempt_answer_id|uuid|true|||
+column|attempt_answers|attempt_id|uuid|true|||
+column|attempt_answers|correct_choice_id|uuid|false|||
+column|attempt_answers|explanation_snapshot|text|false|||
+column|attempt_answers|is_correct|boolean|false|||
+column|attempt_answers|part_number_snapshot|integer|false|||
+column|attempt_answers|question_version_id|uuid|true|||
+column|attempt_answers|selected_choice_id|uuid|false|||
+column|attempt_answers|updated_at|timestamp with time zone|true|||
+column|attempt_part_results|accuracy|numeric(5,2)|false|||
+column|attempt_part_results|attempt_id|uuid|true|||
+column|attempt_part_results|attempt_part_result_id|uuid|true|||
+column|attempt_part_results|correct_count|integer|true|||
+column|attempt_part_results|part_id|integer|true|||
+column|attempt_part_results|total_questions|integer|true|||
+column|attempt_question_snapshots|attempt_id|uuid|true|||
+column|attempt_question_snapshots|created_at|timestamp with time zone|true|||
+column|attempt_question_snapshots|points|numeric(6,2)|false|||
+column|attempt_question_snapshots|question_group_version_id|uuid|false|||
+column|attempt_question_snapshots|question_order|integer|true|||
+column|attempt_question_snapshots|question_version_id|uuid|true|||
+column|attempt_question_snapshots|snapshot_id|uuid|true|||
+column|attempts|attempt_id|uuid|true|||
+column|attempts|attempt_source_type|character varying(30)|true|||
+column|attempts|attempt_type|character varying(30)|true|||
+column|attempts|configured_duration_seconds|integer|false|||
+column|attempts|correct_count|integer|false|||
+column|attempts|created_at|timestamp with time zone|true|||
+column|attempts|duration_seconds|integer|false|||
+column|attempts|expires_at|timestamp with time zone|true|||
+column|attempts|listening_correct_count|integer|false|||
+column|attempts|listening_estimated_score|integer|false|||
+column|attempts|max_attempts_snapshot|integer|false|||
+column|attempts|reading_correct_count|integer|false|||
+column|attempts|reading_estimated_score|integer|false|||
+column|attempts|score_conversion_table_id|uuid|false|||
+column|attempts|section_type|character varying(20)|false|||
+column|attempts|started_at|timestamp with time zone|true|||
+column|attempts|status|character varying(20)|true|||
+column|attempts|submitted_at|timestamp with time zone|false|||
+column|attempts|test_version_id|uuid|false|||
+column|attempts|total_estimated_score|integer|false|||
+column|attempts|total_questions|integer|false|||
+column|attempts|user_id|uuid|true|||
+column|audit_logs|action|character varying(100)|true|||
+column|audit_logs|actor_user_id|uuid|false|||
+column|audit_logs|audit_id|uuid|true|||
+column|audit_logs|created_at|timestamp with time zone|true|now()||
+column|audit_logs|details|jsonb|false|||
+column|audit_logs|entity_id|uuid|false|||
+column|audit_logs|entity_type|character varying(100)|true|||
+column|auth_sessions|created_at|timestamp with time zone|true|||
+column|auth_sessions|expires_at|timestamp with time zone|true|||
+column|auth_sessions|revoked_at|timestamp with time zone|false|||
+column|auth_sessions|session_id|uuid|true|||
+column|auth_sessions|token_hash|character varying(64)|true|||
+column|auth_sessions|user_id|uuid|true|||
+column|bookmarks|content_id|uuid|true|||
+column|bookmarks|created_at|timestamp with time zone|true|||
+column|bookmarks|user_id|uuid|true|||
+column|content_categories|category_id|integer|true||d|
+column|content_categories|code|character varying(50)|true|||
+column|content_categories|description|text|false|||
+column|content_categories|name|character varying(100)|true|||
+column|content_resources|content_id|uuid|true|||
+column|content_resources|resource_id|uuid|true|||
+column|deck_vocabularies|added_at|timestamp with time zone|true|now()||
+column|deck_vocabularies|deck_id|uuid|true|||
+column|deck_vocabularies|vocabulary_id|uuid|true|||
+column|dictation_answers|accuracy|numeric(5,2)|false|||
+column|dictation_answers|answer_id|uuid|true|||
+column|dictation_answers|attempt_id|uuid|true|||
+column|dictation_answers|submitted_at|timestamp with time zone|true|now()||
+column|dictation_answers|user_text|text|true|||
+column|dictation_attempts|attempt_id|uuid|true|||
+column|dictation_attempts|completed_at|timestamp with time zone|false|||
+column|dictation_attempts|created_at|timestamp with time zone|true|now()||
+column|dictation_attempts|dictation_id|uuid|true|||
+column|dictation_attempts|score|numeric(5,2)|false|||
+column|dictation_attempts|started_at|timestamp with time zone|true|||
+column|dictation_attempts|status|character varying(20)|true|||
+column|dictation_attempts|user_id|uuid|true|||
+column|dictation_exercises|audio_resource_id|uuid|true|||
+column|dictation_exercises|created_at|timestamp with time zone|true|now()||
+column|dictation_exercises|created_by|uuid|true|||
+column|dictation_exercises|dictation_id|uuid|true|||
+column|dictation_exercises|difficulty|character varying(20)|false|||
+column|dictation_exercises|instruction|text|false|||
+column|dictation_exercises|status|character varying(20)|true|||
+column|dictation_exercises|title|character varying(255)|true|||
+column|dictation_exercises|transcript|text|true|||
+column|dictation_exercises|updated_at|timestamp with time zone|true|now()||
+column|email_verification_otps|created_at|timestamp with time zone|true|CURRENT_TIMESTAMP||
+column|email_verification_otps|expires_at|timestamp with time zone|true|||
+column|email_verification_otps|failed_attempts|integer|true|0||
+column|email_verification_otps|otp_hash|character varying(255)|true|||
+column|email_verification_otps|otp_id|uuid|true|||
+column|email_verification_otps|used_at|timestamp with time zone|false|||
+column|email_verification_otps|user_id|uuid|true|||
+column|error_categories|code|character varying(80)|true|||
+column|error_categories|created_at|timestamp with time zone|true|||
+column|error_categories|description|text|false|||
+column|error_categories|error_category_id|uuid|true|||
+column|error_categories|name|character varying(150)|true|||
+column|error_categories|updated_at|timestamp with time zone|true|||
+column|google_identities|created_at|timestamp with time zone|true|||
+column|google_identities|google_subject|character varying(255)|true|||
+column|google_identities|user_id|uuid|true|||
+column|google_login_challenges|binding_hash|character varying(64)|true|||
+column|google_login_challenges|challenge_id|uuid|true|||
+column|google_login_challenges|consumed_at|timestamp with time zone|false|||
+column|google_login_challenges|created_at|timestamp with time zone|true|||
+column|google_login_challenges|expires_at|timestamp with time zone|true|||
+column|google_login_challenges|nonce_hash|character varying(64)|true|||
+column|knowledge_chunks|chunk_id|uuid|true|||
+column|knowledge_chunks|chunk_index|integer|true|||
+column|knowledge_chunks|content|text|true|||
+column|knowledge_chunks|created_at|timestamp with time zone|true|now()||
+column|knowledge_chunks|document_id|uuid|true|||
+column|knowledge_chunks|embedding_model|character varying(120)|false|||
+column|knowledge_chunks|embedding|real[]|false|||
+column|knowledge_chunks|learning_content_version_id|uuid|false|||
+column|knowledge_documents|created_at|timestamp with time zone|true|now()||
+column|knowledge_documents|document_id|uuid|true|||
+column|knowledge_documents|learning_content_version_id|uuid|false|||
+column|knowledge_documents|source_type|character varying(50)|false|||
+column|knowledge_documents|source_url|text|false|||
+column|knowledge_documents|status|character varying(20)|true|||
+column|knowledge_documents|title|character varying(255)|true|||
+column|knowledge_documents|updated_at|timestamp with time zone|true|now()||
+column|learning_content_history|content_id|uuid|true|||
+column|learning_content_history|content_version_id|uuid|true|||
+column|learning_content_history|last_accessed_at|timestamp with time zone|true|||
+column|learning_content_history|user_id|uuid|true|||
+column|learning_content_version_resources|content_version_id|uuid|true|||
+column|learning_content_version_resources|display_order|integer|true|1||
+column|learning_content_version_resources|resource_id|uuid|true|||
+column|learning_content_versions|archived_at|timestamp with time zone|false|||
+column|learning_content_versions|body|text|true|||
+column|learning_content_versions|content_id|uuid|true|||
+column|learning_content_versions|content_version_id|uuid|true|||
+column|learning_content_versions|created_at|timestamp with time zone|true|||
+column|learning_content_versions|created_by|uuid|true|||
+column|learning_content_versions|published_at|timestamp with time zone|false|||
+column|learning_content_versions|status|character varying(20)|true|||
+column|learning_content_versions|summary|text|false|||
+column|learning_content_versions|title|character varying(255)|true|||
+column|learning_content_versions|updated_at|timestamp with time zone|true|||
+column|learning_content_versions|version_number|integer|true|||
+column|learning_contents|author_id|uuid|true|||
+column|learning_contents|body|text|false|||
+column|learning_contents|category_id|integer|true|||
+column|learning_contents|content_id|uuid|true|||
+column|learning_contents|created_at|timestamp with time zone|true|||
+column|learning_contents|current_published_version_id|uuid|false|||
+column|learning_contents|difficulty|character varying(20)|false|||
+column|learning_contents|published_at|timestamp with time zone|false|||
+column|learning_contents|status|character varying(20)|true|||
+column|learning_contents|summary|text|false|||
+column|learning_contents|title|character varying(255)|true|||
+column|learning_contents|updated_at|timestamp with time zone|true|||
+column|learning_contents|visibility|character varying(20)|true|'PRIVATE'::character varying||
+column|learning_profiles|estimated_score|integer|false|||
+column|learning_profiles|listening_level|character varying(30)|false|||
+column|learning_profiles|profile_id|uuid|true|||
+column|learning_profiles|reading_level|character varying(30)|false|||
+column|learning_profiles|target_score|integer|false|||
+column|learning_profiles|updated_at|timestamp with time zone|true|now()||
+column|learning_profiles|user_id|uuid|true|||
+column|learning_progress|completed_at|timestamp with time zone|false|||
+column|learning_progress|completed_content_version_id|uuid|false|||
+column|learning_progress|content_id|uuid|true|||
+column|learning_progress|last_accessed_at|timestamp with time zone|false|||
+column|learning_progress|progress_id|uuid|true|||
+column|learning_progress|progress_percent|numeric(5,2)|false|||
+column|learning_progress|started_at|timestamp with time zone|false|||
+column|learning_progress|status|character varying(20)|true|||
+column|learning_progress|user_id|uuid|true|||
+column|media_resources|created_at|timestamp with time zone|true|||
+column|media_resources|duration_seconds|integer|false|||
+column|media_resources|file_size|bigint|false|||
+column|media_resources|mime_type|character varying(100)|false|||
+column|media_resources|owner_id|uuid|false|||
+column|media_resources|resource_id|uuid|true|||
+column|media_resources|resource_type|character varying(30)|true|||
+column|media_resources|storage_url|text|true|||
+column|media_resources|transcript|text|false|||
+column|media_resources|visibility|character varying(20)|true|'PRIVATE'::character varying||
+column|media_reuse_grants|granted_at|timestamp with time zone|true|||
+column|media_reuse_grants|granted_by|uuid|true|||
+column|media_reuse_grants|media_id|uuid|true|||
+column|media_reuse_grants|revoked_at|timestamp with time zone|false|||
+column|media_reuse_grants|revoked_by|uuid|false|||
+column|media_reuse_grants|user_id|uuid|true|||
+column|moderation_contributors|action|character varying(12)|true|||
+column|moderation_contributors|actor_id|uuid|true|||
+column|moderation_contributors|created_at|timestamp with time zone|true|||
+column|moderation_contributors|event_id|uuid|true|||
+column|moderation_contributors|kind|character varying(20)|true|||
+column|moderation_contributors|version_id|uuid|true|||
+column|moderation_decisions|action|character varying(12)|true|||
+column|moderation_decisions|actor_id|uuid|true|||
+column|moderation_decisions|created_at|timestamp with time zone|true|||
+column|moderation_decisions|decision_id|uuid|true|||
+column|moderation_decisions|kind|character varying(20)|true|||
+column|moderation_decisions|reason|character varying(2000)|false|||
+column|moderation_decisions|revision|bigint|true|||
+column|moderation_decisions|version_id|uuid|true|||
+column|moderation_versions|approved_revision|bigint|false|||
+column|moderation_versions|cycle_key|uuid|true|||
+column|moderation_versions|evidence_complete|boolean|true|||
+column|moderation_versions|kind|character varying(20)|true|||
+column|moderation_versions|parent_id|uuid|true|||
+column|moderation_versions|revision|bigint|true|||
+column|moderation_versions|source_version_id|uuid|false|||
+column|moderation_versions|version_id|uuid|true|||
+column|notifications|body|text|true|||
+column|notifications|created_at|timestamp with time zone|true|now()||
+column|notifications|notification_id|uuid|true|||
+column|notifications|notification_type|character varying(60)|true|||
+column|notifications|payload_json|jsonb|false|||
+column|notifications|title|character varying(255)|true|||
+column|outbox_events|aggregate_id|uuid|true|||
+column|outbox_events|aggregate_type|character varying(80)|true|||
+column|outbox_events|event_id|uuid|true|||
+column|outbox_events|event_type|character varying(100)|true|||
+column|outbox_events|occurred_at|timestamp with time zone|true|now()||
+column|outbox_events|payload_json|jsonb|true|||
+column|outbox_events|processed_at|timestamp with time zone|false|||
+column|outbox_events|retry_count|integer|true|0||
+column|outbox_events|status|character varying(20)|true|||
+column|part_performance|accuracy|numeric(5,2)|false|||
+column|part_performance|attempted_questions|integer|true|0||
+column|part_performance|correct_questions|integer|true|0||
+column|part_performance|mastery_score|numeric(5,2)|false|||
+column|part_performance|part_id|integer|true|||
+column|part_performance|performance_id|uuid|true|||
+column|part_performance|updated_at|timestamp with time zone|true|now()||
+column|part_performance|user_id|uuid|true|||
+column|password_reset_otps|created_at|timestamp with time zone|true|||
+column|password_reset_otps|expires_at|timestamp with time zone|true|||
+column|password_reset_otps|failed_attempts|integer|true|0||
+column|password_reset_otps|otp_hash|character varying(255)|true|||
+column|password_reset_otps|otp_id|uuid|true|||
+column|password_reset_otps|used_at|timestamp with time zone|false|||
+column|password_reset_otps|user_id|uuid|true|||
+column|permissions|code|character varying(100)|true|||
+column|permissions|description|text|false|||
+column|permissions|permission_id|integer|true||d|
+column|question_choices|choice_id|uuid|true|||
+column|question_choices|choice_label|character varying(10)|true|||
+column|question_choices|content|text|true|||
+column|question_choices|display_order|integer|true|||
+column|question_choices|is_correct|boolean|true|||
+column|question_choices|question_version_id|uuid|true|||
+column|question_error_categories|error_category_id|uuid|true|||
+column|question_error_categories|question_id|uuid|true|||
+column|question_group_version_resources|display_order|integer|true|1||
+column|question_group_version_resources|group_version_id|uuid|true|||
+column|question_group_version_resources|resource_id|uuid|true|||
+column|question_group_version_resources|transcript|text|false|||
+column|question_group_versions|archived_at|timestamp with time zone|false|||
+column|question_group_versions|created_at|timestamp with time zone|true|||
+column|question_group_versions|group_id|uuid|true|||
+column|question_group_versions|group_version_id|uuid|true|||
+column|question_group_versions|instruction|text|false|||
+column|question_group_versions|passage_text|text|false|||
+column|question_group_versions|published_at|timestamp with time zone|false|||
+column|question_group_versions|status|character varying(20)|true|'DRAFT'::character varying||
+column|question_group_versions|version_number|integer|true|||
+column|question_groups|created_at|timestamp with time zone|true|||
+column|question_groups|created_by|uuid|false|||
+column|question_groups|current_published_version_id|uuid|false|||
+column|question_groups|group_id|uuid|true|||
+column|question_groups|group_type|character varying(30)|false|||
+column|question_groups|status|character varying(20)|true|'DRAFT'::character varying||
+column|question_groups|updated_at|timestamp with time zone|true|||
+column|question_resources|question_version_id|uuid|true|||
+column|question_resources|resource_id|uuid|true|||
+column|question_resources|transcript|text|false|||
+column|question_tags|created_at|timestamp with time zone|true|||
+column|question_tags|question_id|uuid|true|||
+column|question_tags|tag_id|uuid|true|||
+column|question_types|code|character varying(50)|true|||
+column|question_types|description|text|false|||
+column|question_types|name|character varying(100)|true|||
+column|question_types|question_type_id|integer|true||d|
+column|question_versions|approved_at|timestamp with time zone|false|||
+column|question_versions|approved_by|uuid|false|||
+column|question_versions|archived_at|timestamp with time zone|false|||
+column|question_versions|created_at|timestamp with time zone|true|||
+column|question_versions|difficulty|character varying(20)|false|||
+column|question_versions|explanation|text|false|||
+column|question_versions|group_question_order|integer|false|||
+column|question_versions|group_version_id|uuid|false|||
+column|question_versions|published_at|timestamp with time zone|false|||
+column|question_versions|question_id|uuid|true|||
+column|question_versions|question_text|text|true|||
+column|question_versions|question_version_id|uuid|true|||
+column|question_versions|reviewed_at|timestamp with time zone|false|||
+column|question_versions|reviewed_by|uuid|false|||
+column|question_versions|status|character varying(20)|true|'DRAFT'::character varying||
+column|question_versions|version_number|integer|true|||
+column|questions|created_at|timestamp with time zone|true|||
+column|questions|created_by|uuid|true|||
+column|questions|current_published_version_id|uuid|false|||
+column|questions|group_id|uuid|false|||
+column|questions|part_id|integer|true|||
+column|questions|question_id|uuid|true|||
+column|questions|question_type_id|integer|true|||
+column|questions|status|character varying(20)|true|||
+column|questions|topic_id|integer|false|||
+column|questions|updated_at|timestamp with time zone|true|||
+column|recommendations|description|text|false|||
+column|recommendations|expires_at|timestamp with time zone|false|||
+column|recommendations|generated_at|timestamp with time zone|true|now()||
+column|recommendations|priority|integer|false|||
+column|recommendations|recommendation_id|uuid|true|||
+column|recommendations|recommendation_type|character varying(50)|true|||
+column|recommendations|source|character varying(50)|false|||
+column|recommendations|title|character varying(255)|true|||
+column|recommendations|user_id|uuid|true|||
+column|review_history|new_interval|integer|false|||
+column|review_history|previous_interval|integer|false|||
+column|review_history|rating|integer|true|||
+column|review_history|review_history_id|uuid|true|||
+column|review_history|review_state_id|uuid|true|||
+column|review_history|reviewed_at|timestamp with time zone|true|now()||
+column|review_states|ease_factor|numeric(4,2)|false|2.50||
+column|review_states|interval_days|integer|true|0||
+column|review_states|last_reviewed_at|timestamp with time zone|false|||
+column|review_states|next_review_at|timestamp with time zone|true|now()||
+column|review_states|repetition_count|integer|true|0||
+column|review_states|review_state_id|uuid|true|||
+column|review_states|user_id|uuid|true|||
+column|review_states|vocabulary_id|uuid|true|||
+column|role_permissions|permission_id|integer|true|||
+column|role_permissions|role_id|integer|true|||
+column|roles|description|text|false|||
+column|roles|display_name|character varying(150)|false|||
+column|roles|name|character varying(50)|true|||
+column|roles|role_id|integer|true||d|
+column|score_conversion_rules|correct_count|integer|true|||
+column|score_conversion_rules|estimated_score|integer|true|||
+column|score_conversion_rules|rule_id|uuid|true|||
+column|score_conversion_rules|score_conversion_table_id|uuid|true|||
+column|score_conversion_rules|skill|character varying(20)|true|||
+column|score_conversion_tables|activated_at|timestamp with time zone|false|||
+column|score_conversion_tables|created_at|timestamp with time zone|true|||
+column|score_conversion_tables|name|character varying(150)|true|||
+column|score_conversion_tables|score_conversion_table_id|uuid|true|||
+column|score_conversion_tables|status|character varying(20)|true|||
+column|score_conversion_tables|version_number|integer|true|||
+column|shadowing_attempts|attempt_id|uuid|true|||
+column|shadowing_attempts|completed_at|timestamp with time zone|false|||
+column|shadowing_attempts|created_at|timestamp with time zone|true|now()||
+column|shadowing_attempts|fluency_score|numeric(5,2)|false|||
+column|shadowing_attempts|overall_score|numeric(5,2)|false|||
+column|shadowing_attempts|pronunciation_score|numeric(5,2)|false|||
+column|shadowing_attempts|recording_resource_id|uuid|false|||
+column|shadowing_attempts|shadowing_id|uuid|true|||
+column|shadowing_attempts|started_at|timestamp with time zone|true|||
+column|shadowing_attempts|status|character varying(20)|true|||
+column|shadowing_attempts|user_id|uuid|true|||
+column|shadowing_exercises|audio_resource_id|uuid|true|||
+column|shadowing_exercises|created_at|timestamp with time zone|true|now()||
+column|shadowing_exercises|created_by|uuid|true|||
+column|shadowing_exercises|difficulty|character varying(20)|false|||
+column|shadowing_exercises|instruction|text|false|||
+column|shadowing_exercises|shadowing_id|uuid|true|||
+column|shadowing_exercises|status|character varying(20)|true|||
+column|shadowing_exercises|title|character varying(255)|true|||
+column|shadowing_exercises|transcript|text|true|||
+column|shadowing_exercises|updated_at|timestamp with time zone|true|now()||
+column|shadowing_feedback|attempt_id|uuid|true|||
+column|shadowing_feedback|created_at|timestamp with time zone|true|now()||
+column|shadowing_feedback|feedback_id|uuid|true|||
+column|shadowing_feedback|feedback_text|text|true|||
+column|shadowing_feedback|feedback_type|character varying(30)|false|||
+column|system_deck_vocabularies|deck_id|uuid|true|||
+column|system_deck_vocabularies|display_order|integer|true|0||
+column|system_deck_vocabularies|vocabulary_id|uuid|true|||
+column|system_settings|revision|bigint|true|0||
+column|system_settings|setting_key|character varying(100)|true|||
+column|system_settings|setting_value|jsonb|true|||
+column|system_settings|updated_at|timestamp with time zone|true|now()||
+column|system_settings|updated_by|uuid|false|||
+column|system_vocabularies|created_at|timestamp with time zone|true|now()||
+column|system_vocabularies|example|text|false|||
+column|system_vocabularies|meaning|text|true|||
+column|system_vocabularies|note|text|false|||
+column|system_vocabularies|part_of_speech|character varying(40)|false|||
+column|system_vocabularies|pronunciation|character varying(255)|false|||
+column|system_vocabularies|source_name|character varying(255)|false|||
+column|system_vocabularies|source_url|text|false|||
+column|system_vocabularies|updated_at|timestamp with time zone|true|now()||
+column|system_vocabularies|vocabulary_id|uuid|true|||
+column|system_vocabularies|word|character varying(150)|true|||
+column|system_vocabulary_decks|category|character varying(100)|false|||
+column|system_vocabulary_decks|created_at|timestamp with time zone|true|now()||
+column|system_vocabulary_decks|deck_id|uuid|true|||
+column|system_vocabulary_decks|description|text|false|||
+column|system_vocabulary_decks|is_published|boolean|true|false||
+column|system_vocabulary_decks|name|character varying(150)|true|||
+column|system_vocabulary_decks|source_name|character varying(255)|false|||
+column|system_vocabulary_decks|source_url|text|false|||
+column|system_vocabulary_decks|updated_at|timestamp with time zone|true|now()||
+column|tags|code|character varying(80)|true|||
+column|tags|created_at|timestamp with time zone|true|||
+column|tags|name|character varying(120)|true|||
+column|tags|tag_id|uuid|true|||
+column|tags|updated_at|timestamp with time zone|true|||
+column|test_blueprint_items|blueprint_id|uuid|true|||
+column|test_blueprint_items|blueprint_item_id|uuid|true|||
+column|test_blueprint_items|expected_group_count|integer|false|||
+column|test_blueprint_items|expected_question_count|integer|true|||
+column|test_blueprint_items|part_id|integer|true|||
+column|test_blueprints|blueprint_id|uuid|true|||
+column|test_blueprints|blueprint_type|character varying(30)|true|||
+column|test_blueprints|code|character varying(80)|true|||
+column|test_blueprints|created_at|timestamp with time zone|true|||
+column|test_blueprints|expected_total_questions|integer|true|||
+column|test_blueprints|name|character varying(150)|true|||
+column|test_blueprints|status|character varying(20)|true|||
+column|test_blueprints|updated_at|timestamp with time zone|true|||
+column|test_blueprints|version_number|integer|true|||
+column|test_questions|points|numeric(6,2)|false|||
+column|test_questions|question_group_version_id|uuid|false|||
+column|test_questions|question_order|integer|true|||
+column|test_questions|question_version_id|uuid|true|||
+column|test_questions|test_version_id|uuid|true|||
+column|test_versions|blueprint_id|uuid|false|||
+column|test_versions|created_at|timestamp with time zone|true|||
+column|test_versions|duration_seconds|integer|false|||
+column|test_versions|max_attempts|integer|false|||
+column|test_versions|published_at|timestamp with time zone|false|||
+column|test_versions|retired_at|timestamp with time zone|false|||
+column|test_versions|status|character varying(20)|true|||
+column|test_versions|test_id|uuid|true|||
+column|test_versions|test_version_id|uuid|true|||
+column|test_versions|total_questions|integer|false|||
+column|test_versions|version_number|integer|true|||
+column|tests|created_at|timestamp with time zone|true|||
+column|tests|created_by|uuid|true|||
+column|tests|description|text|false|||
+column|tests|status|character varying(20)|true|||
+column|tests|test_id|uuid|true|||
+column|tests|test_type|character varying(30)|true|||
+column|tests|title|character varying(255)|true|||
+column|tests|updated_at|timestamp with time zone|true|||
+column|toeic_parts|name|character varying(100)|true|||
+column|toeic_parts|part_id|integer|true||d|
+column|toeic_parts|part_number|integer|true|||
+column|toeic_parts|skill|character varying(20)|true|||
+column|topics|description|text|false|||
+column|topics|name|character varying(100)|true|||
+column|topics|topic_id|integer|true||d|
+column|user_error_statistics|attempted_count|integer|true|||
+column|user_error_statistics|error_category_id|uuid|true|||
+column|user_error_statistics|incorrect_count|integer|true|||
+column|user_error_statistics|updated_at|timestamp with time zone|true|||
+column|user_error_statistics|user_id|uuid|true|||
+column|user_notifications|created_at|timestamp with time zone|true|now()||
+column|user_notifications|delivered_at|timestamp with time zone|false|||
+column|user_notifications|delivery_status|character varying(20)|true|||
+column|user_notifications|notification_id|uuid|true|||
+column|user_notifications|read_at|timestamp with time zone|false|||
+column|user_notifications|user_id|uuid|true|||
+column|user_notifications|user_notification_id|uuid|true|||
+column|user_roles|assigned_at|timestamp with time zone|false|||
+column|user_roles|role_id|integer|true|||
+column|user_roles|user_id|uuid|true|||
+column|users|avatar_url|text|false|||
+column|users|created_at|timestamp with time zone|true|||
+column|users|email_verified_at|timestamp with time zone|false|||
+column|users|email|character varying(255)|true|||
+column|users|full_name|character varying(150)|true|||
+column|users|last_login_at|timestamp with time zone|false|||
+column|users|password_hash|character varying(255)|false|||
+column|users|status|character varying(20)|true|||
+column|users|updated_at|timestamp with time zone|true|||
+column|users|user_id|uuid|true|||
+column|vocabularies|created_at|timestamp with time zone|true|now()||
+column|vocabularies|created_by|uuid|true|||
+column|vocabularies|example|text|false|||
+column|vocabularies|meaning|text|true|||
+column|vocabularies|note|text|false|||
+column|vocabularies|part_of_speech|character varying(40)|false|||
+column|vocabularies|pronunciation_audio_resource_id|uuid|false|||
+column|vocabularies|pronunciation|character varying(255)|false|||
+column|vocabularies|updated_at|timestamp with time zone|true|now()||
+column|vocabularies|vocabulary_id|uuid|true|||
+column|vocabularies|word|character varying(150)|true|||
+column|vocabulary_catalog_enrollments|enrolled_at|timestamp with time zone|true|now()||
+column|vocabulary_catalog_enrollments|enrollment_id|uuid|true|||
+column|vocabulary_catalog_enrollments|personal_deck_id|uuid|true|||
+column|vocabulary_catalog_enrollments|system_deck_id|uuid|true|||
+column|vocabulary_catalog_enrollments|user_id|uuid|true|||
+column|vocabulary_decks|created_at|timestamp with time zone|true|now()||
+column|vocabulary_decks|deck_id|uuid|true|||
+column|vocabulary_decks|description|text|false|||
+column|vocabulary_decks|name|character varying(150)|true|||
+column|vocabulary_decks|updated_at|timestamp with time zone|true|now()||
+column|vocabulary_decks|user_id|uuid|true|||
+column|vocabulary_learning_sessions|deck_id|uuid|true|||
+column|vocabulary_learning_sessions|revision|bigint|true|1||
+column|vocabulary_learning_sessions|session_data|jsonb|true|||
+column|vocabulary_learning_sessions|updated_at|timestamp with time zone|true|now()||
+column|vocabulary_learning_sessions|user_id|uuid|true|||
+constraint|ai_chat_requests|ai_chat_requests_conversation_id_fkey|FOREIGN KEY (conversation_id) REFERENCES ai_conversations(conversation_id)|true|false|false
+constraint|ai_chat_requests|ai_chat_requests_pkey|PRIMARY KEY (request_id)|true|false|false
+constraint|ai_chat_requests|ai_chat_requests_status_check|CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'COMPLETED'::character varying, 'FAILED'::character varying])::text[])))|true|false|false
+constraint|ai_chat_requests|ai_chat_requests_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|ai_citation_snapshots|ai_citation_snapshots_message_id_fkey|FOREIGN KEY (message_id) REFERENCES ai_messages(message_id) ON DELETE CASCADE|true|false|false
+constraint|ai_citation_snapshots|ai_citation_snapshots_pkey|PRIMARY KEY (message_id)|true|false|false
+constraint|ai_configs|ai_configs_config_key_key|UNIQUE (config_key)|true|false|false
+constraint|ai_configs|ai_configs_pkey|PRIMARY KEY (config_id)|true|false|false
+constraint|ai_configs|fk_ai_configs_updated_by|FOREIGN KEY (updated_by) REFERENCES users(user_id)|true|false|false
+constraint|ai_conversations|ai_conversations_pkey|PRIMARY KEY (conversation_id)|true|false|false
+constraint|ai_conversations|fk_ai_conversations_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|ai_indexed_versions|ai_indexed_versions_content_version_id_fkey|FOREIGN KEY (content_version_id) REFERENCES learning_content_versions(content_version_id)|true|false|false
+constraint|ai_indexed_versions|ai_indexed_versions_document_id_key|UNIQUE (document_id)|true|false|false
+constraint|ai_indexed_versions|ai_indexed_versions_pkey|PRIMARY KEY (content_version_id)|true|false|false
+constraint|ai_message_sources|ai_message_sources_pkey|PRIMARY KEY (message_id, chunk_id)|true|false|false
+constraint|ai_message_sources|fk_ai_sources_chunk|FOREIGN KEY (chunk_id) REFERENCES knowledge_chunks(chunk_id)|true|false|false
+constraint|ai_message_sources|fk_ai_sources_message|FOREIGN KEY (message_id) REFERENCES ai_messages(message_id) ON DELETE CASCADE|true|false|false
+constraint|ai_messages|ai_messages_pkey|PRIMARY KEY (message_id)|true|false|false
+constraint|ai_messages|fk_ai_messages_conversation|FOREIGN KEY (conversation_id) REFERENCES ai_conversations(conversation_id) ON DELETE CASCADE|true|false|false
+constraint|ai_request_logs|ai_request_logs_pkey|PRIMARY KEY (request_id)|true|false|false
+constraint|ai_request_logs|fk_arl_conversation|FOREIGN KEY (conversation_id) REFERENCES ai_conversations(conversation_id)|true|false|false
+constraint|ai_request_logs|fk_arl_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|attempt_answers|attempt_answers_pkey|PRIMARY KEY (attempt_answer_id)|true|false|false
+constraint|attempt_answers|ck_attempt_answer_part_number_snapshot|CHECK (((part_number_snapshot >= 1) AND (part_number_snapshot <= 7)))|true|false|false
+constraint|attempt_answers|fk_attempt_answer_correct_choice_version|FOREIGN KEY (question_version_id, correct_choice_id) REFERENCES question_choices(question_version_id, choice_id)|true|false|false
+constraint|attempt_answers|fk_attempt_answers_attempt|FOREIGN KEY (attempt_id) REFERENCES attempts(attempt_id)|true|false|false
+constraint|attempt_answers|fk_attempt_answers_choice_version|FOREIGN KEY (question_version_id, selected_choice_id) REFERENCES question_choices(question_version_id, choice_id)|true|false|false
+constraint|attempt_answers|fk_attempt_answers_question_version|FOREIGN KEY (question_version_id) REFERENCES question_versions(question_version_id)|true|false|false
+constraint|attempt_answers|uq_attempt_question|UNIQUE (attempt_id, question_version_id)|true|false|false
+constraint|attempt_part_results|attempt_part_results_pkey|PRIMARY KEY (attempt_part_result_id)|true|false|false
+constraint|attempt_part_results|fk_attempt_part_results_attempt|FOREIGN KEY (attempt_id) REFERENCES attempts(attempt_id)|true|false|false
+constraint|attempt_part_results|fk_attempt_part_results_part|FOREIGN KEY (part_id) REFERENCES toeic_parts(part_id)|true|false|false
+constraint|attempt_part_results|uq_attempt_part|UNIQUE (attempt_id, part_id)|true|false|false
+constraint|attempt_question_snapshots|attempt_question_snapshots_pkey|PRIMARY KEY (snapshot_id)|true|false|false
+constraint|attempt_question_snapshots|fk_aqs_attempt|FOREIGN KEY (attempt_id) REFERENCES attempts(attempt_id)|true|false|false
+constraint|attempt_question_snapshots|fk_aqs_question_group_version|FOREIGN KEY (question_version_id, question_group_version_id) REFERENCES question_versions(question_version_id, group_version_id)|true|false|false
+constraint|attempt_question_snapshots|fk_aqs_question_version|FOREIGN KEY (question_version_id) REFERENCES question_versions(question_version_id)|true|false|false
+constraint|attempt_question_snapshots|uq_aqs_order|UNIQUE (attempt_id, question_order)|true|false|false
+constraint|attempt_question_snapshots|uq_aqs_question|UNIQUE (attempt_id, question_version_id)|true|false|false
+constraint|attempts|attempts_pkey|PRIMARY KEY (attempt_id)|true|false|false
+constraint|attempts|ck_section_attempt_configuration|CHECK (((((attempt_source_type)::text = 'SECTION_SNAPSHOT'::text) AND ((attempt_type)::text = 'SECTION'::text) AND (test_version_id IS NULL) AND (section_type IS NOT NULL) AND ((section_type)::text = ANY ((ARRAY['LISTENING'::character varying, 'READING'::character varying])::text[])) AND (configured_duration_seconds IS NOT NULL) AND ((configured_duration_seconds >= 60) AND (configured_duration_seconds <= 7200)) AND ((configured_duration_seconds % 60) = 0) AND (total_questions IS NOT NULL) AND ((total_questions >= 1) AND (total_questions <= 100)) AND (expires_at = (started_at + ((configured_duration_seconds)::double precision * '00:00:01'::interval)))) OR (((attempt_source_type)::text <> 'SECTION_SNAPSHOT'::text) AND (section_type IS NULL) AND (configured_duration_seconds IS NULL))))|true|false|false
+constraint|attempts|fk_attempt_score_conversion|FOREIGN KEY (score_conversion_table_id) REFERENCES score_conversion_tables(score_conversion_table_id)|true|false|false
+constraint|attempts|fk_attempts_test_version|FOREIGN KEY (test_version_id) REFERENCES test_versions(test_version_id)|true|false|false
+constraint|attempts|fk_attempts_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|audit_logs|audit_logs_pkey|PRIMARY KEY (audit_id)|true|false|false
+constraint|audit_logs|fk_audit_logs_actor|FOREIGN KEY (actor_user_id) REFERENCES users(user_id)|true|false|false
+constraint|auth_sessions|auth_sessions_pkey|PRIMARY KEY (session_id)|true|false|false
+constraint|auth_sessions|auth_sessions_token_hash_key|UNIQUE (token_hash)|true|false|false
+constraint|auth_sessions|auth_sessions_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|auth_sessions|chk_auth_session_expiry|CHECK ((expires_at > created_at))|true|false|false
+constraint|auth_sessions|chk_auth_session_revocation|CHECK (((revoked_at IS NULL) OR (revoked_at >= created_at)))|true|false|false
+constraint|bookmarks|bookmarks_pkey|PRIMARY KEY (user_id, content_id)|true|false|false
+constraint|bookmarks|fk_bookmarks_content|FOREIGN KEY (content_id) REFERENCES learning_contents(content_id)|true|false|false
+constraint|bookmarks|fk_bookmarks_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|content_categories|content_categories_code_key|UNIQUE (code)|true|false|false
+constraint|content_categories|content_categories_pkey|PRIMARY KEY (category_id)|true|false|false
+constraint|content_resources|content_resources_pkey|PRIMARY KEY (content_id, resource_id)|true|false|false
+constraint|content_resources|fk_content_resources_content|FOREIGN KEY (content_id) REFERENCES learning_contents(content_id)|true|false|false
+constraint|content_resources|fk_content_resources_resource|FOREIGN KEY (resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|deck_vocabularies|deck_vocabularies_pkey|PRIMARY KEY (deck_id, vocabulary_id)|true|false|false
+constraint|deck_vocabularies|fk_deck_vocabularies_deck|FOREIGN KEY (deck_id) REFERENCES vocabulary_decks(deck_id) ON DELETE CASCADE|true|false|false
+constraint|deck_vocabularies|fk_deck_vocabularies_vocabulary|FOREIGN KEY (vocabulary_id) REFERENCES vocabularies(vocabulary_id)|true|false|false
+constraint|dictation_answers|chk_dictation_accuracy|CHECK (((accuracy IS NULL) OR ((accuracy >= (0)::numeric) AND (accuracy <= (100)::numeric))))|true|false|false
+constraint|dictation_answers|dictation_answers_pkey|PRIMARY KEY (answer_id)|true|false|false
+constraint|dictation_answers|fk_dictation_answers_attempt|FOREIGN KEY (attempt_id) REFERENCES dictation_attempts(attempt_id)|true|false|false
+constraint|dictation_attempts|chk_dictation_score|CHECK (((score IS NULL) OR ((score >= (0)::numeric) AND (score <= (100)::numeric))))|true|false|false
+constraint|dictation_attempts|dictation_attempts_pkey|PRIMARY KEY (attempt_id)|true|false|false
+constraint|dictation_attempts|fk_dictation_attempts_exercise|FOREIGN KEY (dictation_id) REFERENCES dictation_exercises(dictation_id)|true|false|false
+constraint|dictation_attempts|fk_dictation_attempts_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|dictation_exercises|dictation_exercises_pkey|PRIMARY KEY (dictation_id)|true|false|false
+constraint|dictation_exercises|fk_dictation_exercises_audio|FOREIGN KEY (audio_resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|dictation_exercises|fk_dictation_exercises_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|email_verification_otps|chk_email_otp_attempts|CHECK ((failed_attempts >= 0))|true|false|false
+constraint|email_verification_otps|chk_email_otp_expiry|CHECK ((expires_at > created_at))|true|false|false
+constraint|email_verification_otps|email_verification_otps_pkey|PRIMARY KEY (otp_id)|true|false|false
+constraint|email_verification_otps|email_verification_otps_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|error_categories|error_categories_code_key|UNIQUE (code)|true|false|false
+constraint|error_categories|error_categories_pkey|PRIMARY KEY (error_category_id)|true|false|false
+constraint|google_identities|google_identities_pkey|PRIMARY KEY (google_subject)|true|false|false
+constraint|google_identities|google_identities_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|google_identities|google_identities_user_id_key|UNIQUE (user_id)|true|false|false
+constraint|google_login_challenges|chk_google_challenge_consumed|CHECK (((consumed_at IS NULL) OR (consumed_at >= created_at)))|true|false|false
+constraint|google_login_challenges|chk_google_challenge_expiry|CHECK ((expires_at > created_at))|true|false|false
+constraint|google_login_challenges|google_login_challenges_pkey|PRIMARY KEY (challenge_id)|true|false|false
+constraint|knowledge_chunks|chk_embedding_dimensions|CHECK (((embedding IS NULL) OR (array_length(embedding, 1) = 768)))|true|false|false
+constraint|knowledge_chunks|fk_kc_content_version|FOREIGN KEY (learning_content_version_id) REFERENCES learning_content_versions(content_version_id)|true|false|false
+constraint|knowledge_chunks|fk_knowledge_chunks_document|FOREIGN KEY (document_id) REFERENCES knowledge_documents(document_id) ON DELETE CASCADE|true|false|false
+constraint|knowledge_chunks|knowledge_chunks_pkey|PRIMARY KEY (chunk_id)|true|false|false
+constraint|knowledge_chunks|uq_knowledge_chunk_index|UNIQUE (document_id, chunk_index)|true|false|false
+constraint|knowledge_documents|fk_kd_content_version|FOREIGN KEY (learning_content_version_id) REFERENCES learning_content_versions(content_version_id)|true|false|false
+constraint|knowledge_documents|knowledge_documents_pkey|PRIMARY KEY (document_id)|true|false|false
+constraint|learning_content_history|fk_content_history_matching_version|FOREIGN KEY (content_id, content_version_id) REFERENCES learning_content_versions(content_id, content_version_id)|true|false|false
+constraint|learning_content_history|learning_content_history_content_id_fkey|FOREIGN KEY (content_id) REFERENCES learning_contents(content_id)|true|false|false
+constraint|learning_content_history|learning_content_history_pkey|PRIMARY KEY (user_id, content_id)|true|false|false
+constraint|learning_content_history|learning_content_history_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|learning_content_version_resources|learning_content_version_resources_content_version_id_fkey|FOREIGN KEY (content_version_id) REFERENCES learning_content_versions(content_version_id)|true|false|false
+constraint|learning_content_version_resources|learning_content_version_resources_display_order_check|CHECK ((display_order >= 1))|true|false|false
+constraint|learning_content_version_resources|learning_content_version_resources_pkey|PRIMARY KEY (content_version_id, resource_id)|true|false|false
+constraint|learning_content_version_resources|learning_content_version_resources_resource_id_fkey|FOREIGN KEY (resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|learning_content_versions|fk_lcv_content|FOREIGN KEY (content_id) REFERENCES learning_contents(content_id)|true|false|false
+constraint|learning_content_versions|fk_lcv_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|learning_content_versions|learning_content_versions_pkey|PRIMARY KEY (content_version_id)|true|false|false
+constraint|learning_content_versions|uq_lcv_content_version|UNIQUE (content_id, content_version_id)|true|false|false
+constraint|learning_content_versions|uq_lcv_number|UNIQUE (content_id, version_number)|true|false|false
+constraint|learning_contents|chk_content_visibility|CHECK (((visibility)::text = ANY ((ARRAY['PUBLIC'::character varying, 'AUTHENTICATED'::character varying, 'PRIVATE'::character varying])::text[])))|true|false|false
+constraint|learning_contents|fk_lc_published_version|FOREIGN KEY (content_id, current_published_version_id) REFERENCES learning_content_versions(content_id, content_version_id)|true|false|false
+constraint|learning_contents|fk_learning_contents_author|FOREIGN KEY (author_id) REFERENCES users(user_id)|true|false|false
+constraint|learning_contents|fk_learning_contents_category|FOREIGN KEY (category_id) REFERENCES content_categories(category_id)|true|false|false
+constraint|learning_contents|learning_contents_pkey|PRIMARY KEY (content_id)|true|false|false
+constraint|learning_contents|uq_learning_contents_published_version|UNIQUE (content_id, current_published_version_id)|true|false|false
+constraint|learning_profiles|fk_learning_profiles_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|learning_profiles|learning_profiles_pkey|PRIMARY KEY (profile_id)|true|false|false
+constraint|learning_profiles|learning_profiles_user_id_key|UNIQUE (user_id)|true|false|false
+constraint|learning_progress|chk_learning_progress_percent|CHECK (((progress_percent IS NULL) OR ((progress_percent >= (0)::numeric) AND (progress_percent <= (100)::numeric))))|true|false|false
+constraint|learning_progress|fk_learning_progress_content|FOREIGN KEY (content_id) REFERENCES learning_contents(content_id)|true|false|false
+constraint|learning_progress|fk_learning_progress_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|learning_progress|fk_lp_completed_version|FOREIGN KEY (completed_content_version_id) REFERENCES learning_content_versions(content_version_id)|true|false|false
+constraint|learning_progress|learning_progress_pkey|PRIMARY KEY (progress_id)|true|false|false
+constraint|learning_progress|uq_learning_progress_user_content|UNIQUE (user_id, content_id)|true|false|false
+constraint|media_resources|chk_media_visibility|CHECK (((visibility)::text = ANY ((ARRAY['PUBLIC'::character varying, 'AUTHENTICATED'::character varying, 'PRIVATE'::character varying])::text[])))|true|false|false
+constraint|media_resources|media_resources_owner_id_fkey|FOREIGN KEY (owner_id) REFERENCES users(user_id)|true|false|false
+constraint|media_resources|media_resources_pkey|PRIMARY KEY (resource_id)|true|false|false
+constraint|media_reuse_grants|chk_media_grant_revocation|CHECK (((revoked_at IS NULL) = (revoked_by IS NULL)))|true|false|false
+constraint|media_reuse_grants|chk_media_grant_time|CHECK (((revoked_at IS NULL) OR (revoked_at >= granted_at)))|true|false|false
+constraint|media_reuse_grants|media_reuse_grants_granted_by_fkey|FOREIGN KEY (granted_by) REFERENCES users(user_id)|true|false|false
+constraint|media_reuse_grants|media_reuse_grants_media_id_fkey|FOREIGN KEY (media_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|media_reuse_grants|media_reuse_grants_pkey|PRIMARY KEY (media_id, user_id)|true|false|false
+constraint|media_reuse_grants|media_reuse_grants_revoked_by_fkey|FOREIGN KEY (revoked_by) REFERENCES users(user_id)|true|false|false
+constraint|media_reuse_grants|media_reuse_grants_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|moderation_contributors|moderation_contributors_action_check|CHECK (((action)::text = ANY ((ARRAY['CREATED'::character varying, 'EDITED'::character varying, 'SUBMITTED'::character varying])::text[])))|true|false|false
+constraint|moderation_contributors|moderation_contributors_actor_id_fkey|FOREIGN KEY (actor_id) REFERENCES users(user_id)|true|false|false
+constraint|moderation_contributors|moderation_contributors_kind_version_id_fkey|FOREIGN KEY (kind, version_id) REFERENCES moderation_versions(kind, version_id) ON DELETE CASCADE|true|false|false
+constraint|moderation_contributors|moderation_contributors_pkey|PRIMARY KEY (event_id)|true|false|false
+constraint|moderation_decisions|moderation_decisions_actor_id_fkey|FOREIGN KEY (actor_id) REFERENCES users(user_id)|true|false|false
+constraint|moderation_decisions|moderation_decisions_kind_version_id_fkey|FOREIGN KEY (kind, version_id) REFERENCES moderation_versions(kind, version_id) ON DELETE CASCADE|true|false|false
+constraint|moderation_decisions|moderation_decisions_pkey|PRIMARY KEY (decision_id)|true|false|false
+constraint|moderation_versions|moderation_versions_kind_check|CHECK (((kind)::text = ANY ((ARRAY['contents'::character varying, 'questions'::character varying, 'groups'::character varying])::text[])))|true|false|false
+constraint|moderation_versions|moderation_versions_pkey|PRIMARY KEY (kind, version_id)|true|false|false
+constraint|moderation_versions|moderation_versions_revision_check|CHECK ((revision >= 0))|true|false|false
+constraint|notifications|notifications_pkey|PRIMARY KEY (notification_id)|true|false|false
+constraint|outbox_events|chk_outbox_retry_count|CHECK ((retry_count >= 0))|true|false|false
+constraint|outbox_events|outbox_events_pkey|PRIMARY KEY (event_id)|true|false|false
+constraint|part_performance|chk_part_performance_accuracy|CHECK (((accuracy IS NULL) OR ((accuracy >= (0)::numeric) AND (accuracy <= (100)::numeric))))|true|false|false
+constraint|part_performance|chk_part_performance_counts|CHECK (((attempted_questions >= 0) AND (correct_questions >= 0) AND (correct_questions <= attempted_questions)))|true|false|false
+constraint|part_performance|chk_part_performance_mastery|CHECK (((mastery_score IS NULL) OR ((mastery_score >= (0)::numeric) AND (mastery_score <= (100)::numeric))))|true|false|false
+constraint|part_performance|fk_part_performance_part|FOREIGN KEY (part_id) REFERENCES toeic_parts(part_id)|true|false|false
+constraint|part_performance|fk_part_performance_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|part_performance|part_performance_pkey|PRIMARY KEY (performance_id)|true|false|false
+constraint|part_performance|uq_part_performance_user_part|UNIQUE (user_id, part_id)|true|false|false
+constraint|password_reset_otps|chk_password_reset_attempts|CHECK ((failed_attempts >= 0))|true|false|false
+constraint|password_reset_otps|chk_password_reset_expiry|CHECK ((expires_at > created_at))|true|false|false
+constraint|password_reset_otps|password_reset_otps_pkey|PRIMARY KEY (otp_id)|true|false|false
+constraint|password_reset_otps|password_reset_otps_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|permissions|permissions_code_key|UNIQUE (code)|true|false|false
+constraint|permissions|permissions_pkey|PRIMARY KEY (permission_id)|true|false|false
+constraint|question_choices|fk_question_choices_version|FOREIGN KEY (question_version_id) REFERENCES question_versions(question_version_id)|true|false|false
+constraint|question_choices|question_choices_pkey|PRIMARY KEY (choice_id)|true|false|false
+constraint|question_choices|uq_question_choice_label|UNIQUE (question_version_id, choice_label)|true|false|false
+constraint|question_choices|uq_question_choice_order|UNIQUE (question_version_id, display_order)|true|false|false
+constraint|question_choices|uq_question_choice_version|UNIQUE (question_version_id, choice_id)|true|false|false
+constraint|question_error_categories|fk_qec_category|FOREIGN KEY (error_category_id) REFERENCES error_categories(error_category_id)|true|false|false
+constraint|question_error_categories|fk_qec_question|FOREIGN KEY (question_id) REFERENCES questions(question_id)|true|false|false
+constraint|question_error_categories|question_error_categories_pkey|PRIMARY KEY (question_id, error_category_id)|true|false|false
+constraint|question_group_version_resources|fk_qgvr_resource|FOREIGN KEY (resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|question_group_version_resources|fk_qgvr_version|FOREIGN KEY (group_version_id) REFERENCES question_group_versions(group_version_id)|true|false|false
+constraint|question_group_version_resources|question_group_version_resources_pkey|PRIMARY KEY (group_version_id, resource_id)|true|false|false
+constraint|question_group_versions|fk_qgv_group|FOREIGN KEY (group_id) REFERENCES question_groups(group_id)|true|false|false
+constraint|question_group_versions|question_group_versions_pkey|PRIMARY KEY (group_version_id)|true|false|false
+constraint|question_group_versions|uq_qgv_number|UNIQUE (group_id, version_number)|true|false|false
+constraint|question_group_versions|uq_qgv_version_group|UNIQUE (group_version_id, group_id)|true|false|false
+constraint|question_groups|fk_group_current_version|FOREIGN KEY (current_published_version_id, group_id) REFERENCES question_group_versions(group_version_id, group_id)|true|false|false
+constraint|question_groups|question_groups_created_by_fkey|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|question_groups|question_groups_pkey|PRIMARY KEY (group_id)|true|false|false
+constraint|question_resources|fk_question_resources_resource|FOREIGN KEY (resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|question_resources|fk_question_resources_version|FOREIGN KEY (question_version_id) REFERENCES question_versions(question_version_id)|true|false|false
+constraint|question_resources|question_resources_pkey|PRIMARY KEY (question_version_id, resource_id)|true|false|false
+constraint|question_tags|fk_question_tags_question|FOREIGN KEY (question_id) REFERENCES questions(question_id)|true|false|false
+constraint|question_tags|fk_question_tags_tag|FOREIGN KEY (tag_id) REFERENCES tags(tag_id)|true|false|false
+constraint|question_tags|question_tags_pkey|PRIMARY KEY (question_id, tag_id)|true|false|false
+constraint|question_types|question_types_code_key|UNIQUE (code)|true|false|false
+constraint|question_types|question_types_pkey|PRIMARY KEY (question_type_id)|true|false|false
+constraint|question_versions|chk_question_version_group_order|CHECK (((group_question_order IS NULL) OR (group_question_order > 0)))|true|false|false
+constraint|question_versions|fk_question_versions_approver|FOREIGN KEY (approved_by) REFERENCES users(user_id)|true|false|false
+constraint|question_versions|fk_question_versions_question|FOREIGN KEY (question_id) REFERENCES questions(question_id)|true|false|false
+constraint|question_versions|fk_question_versions_reviewer|FOREIGN KEY (reviewed_by) REFERENCES users(user_id)|true|false|false
+constraint|question_versions|fk_qv_group_version|FOREIGN KEY (group_version_id) REFERENCES question_group_versions(group_version_id)|true|false|false
+constraint|question_versions|question_versions_pkey|PRIMARY KEY (question_version_id)|true|false|false
+constraint|question_versions|uq_question_version_group|UNIQUE (question_version_id, group_version_id)|true|false|false
+constraint|question_versions|uq_question_version_number|UNIQUE (question_id, version_number)|true|false|false
+constraint|question_versions|uq_question_version_question|UNIQUE (question_version_id, question_id)|true|false|false
+constraint|questions|fk_question_current_version|FOREIGN KEY (current_published_version_id, question_id) REFERENCES question_versions(question_version_id, question_id)|true|false|false
+constraint|questions|fk_questions_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|questions|fk_questions_group|FOREIGN KEY (group_id) REFERENCES question_groups(group_id)|true|false|false
+constraint|questions|fk_questions_part|FOREIGN KEY (part_id) REFERENCES toeic_parts(part_id)|true|false|false
+constraint|questions|fk_questions_topic|FOREIGN KEY (topic_id) REFERENCES topics(topic_id)|true|false|false
+constraint|questions|fk_questions_type|FOREIGN KEY (question_type_id) REFERENCES question_types(question_type_id)|true|false|false
+constraint|questions|questions_pkey|PRIMARY KEY (question_id)|true|false|false
+constraint|recommendations|fk_recommendations_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|recommendations|recommendations_pkey|PRIMARY KEY (recommendation_id)|true|false|false
+constraint|review_history|chk_review_new_interval|CHECK (((new_interval IS NULL) OR (new_interval >= 0)))|true|false|false
+constraint|review_history|chk_review_previous_interval|CHECK (((previous_interval IS NULL) OR (previous_interval >= 0)))|true|false|false
+constraint|review_history|chk_review_rating|CHECK (((rating >= 1) AND (rating <= 4)))|true|false|false
+constraint|review_history|fk_review_history_state|FOREIGN KEY (review_state_id) REFERENCES review_states(review_state_id)|true|false|false
+constraint|review_history|review_history_pkey|PRIMARY KEY (review_history_id)|true|false|false
+constraint|review_states|chk_review_ease|CHECK (((ease_factor IS NULL) OR (ease_factor > (0)::numeric)))|true|false|false
+constraint|review_states|chk_review_interval|CHECK ((interval_days >= 0))|true|false|false
+constraint|review_states|chk_review_repetition|CHECK ((repetition_count >= 0))|true|false|false
+constraint|review_states|fk_review_states_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|review_states|fk_review_states_vocabulary|FOREIGN KEY (vocabulary_id) REFERENCES vocabularies(vocabulary_id)|true|false|false
+constraint|review_states|review_states_pkey|PRIMARY KEY (review_state_id)|true|false|false
+constraint|review_states|uq_review_state_user_vocabulary|UNIQUE (user_id, vocabulary_id)|true|false|false
+constraint|role_permissions|fk_role_permissions_permission|FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)|true|false|false
+constraint|role_permissions|fk_role_permissions_role|FOREIGN KEY (role_id) REFERENCES roles(role_id)|true|false|false
+constraint|role_permissions|role_permissions_pkey|PRIMARY KEY (role_id, permission_id)|true|false|false
+constraint|roles|roles_name_key|UNIQUE (name)|true|false|false
+constraint|roles|roles_pkey|PRIMARY KEY (role_id)|true|false|false
+constraint|score_conversion_rules|fk_scr_table|FOREIGN KEY (score_conversion_table_id) REFERENCES score_conversion_tables(score_conversion_table_id)|true|false|false
+constraint|score_conversion_rules|score_conversion_rules_pkey|PRIMARY KEY (rule_id)|true|false|false
+constraint|score_conversion_rules|uq_scr_skill_count|UNIQUE (score_conversion_table_id, skill, correct_count)|true|false|false
+constraint|score_conversion_tables|score_conversion_tables_pkey|PRIMARY KEY (score_conversion_table_id)|true|false|false
+constraint|shadowing_attempts|chk_shadowing_scores|CHECK ((((pronunciation_score IS NULL) OR ((pronunciation_score >= (0)::numeric) AND (pronunciation_score <= (100)::numeric))) AND ((fluency_score IS NULL) OR ((fluency_score >= (0)::numeric) AND (fluency_score <= (100)::numeric))) AND ((overall_score IS NULL) OR ((overall_score >= (0)::numeric) AND (overall_score <= (100)::numeric)))))|true|false|false
+constraint|shadowing_attempts|fk_shadowing_attempts_exercise|FOREIGN KEY (shadowing_id) REFERENCES shadowing_exercises(shadowing_id)|true|false|false
+constraint|shadowing_attempts|fk_shadowing_attempts_recording|FOREIGN KEY (recording_resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|shadowing_attempts|fk_shadowing_attempts_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|shadowing_attempts|shadowing_attempts_pkey|PRIMARY KEY (attempt_id)|true|false|false
+constraint|shadowing_exercises|fk_shadowing_exercises_audio|FOREIGN KEY (audio_resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|shadowing_exercises|fk_shadowing_exercises_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|shadowing_exercises|shadowing_exercises_pkey|PRIMARY KEY (shadowing_id)|true|false|false
+constraint|shadowing_feedback|fk_shadowing_feedback_attempt|FOREIGN KEY (attempt_id) REFERENCES shadowing_attempts(attempt_id)|true|false|false
+constraint|shadowing_feedback|shadowing_feedback_pkey|PRIMARY KEY (feedback_id)|true|false|false
+constraint|system_deck_vocabularies|fk_system_deck_vocabularies_deck|FOREIGN KEY (deck_id) REFERENCES system_vocabulary_decks(deck_id) ON DELETE CASCADE|true|false|false
+constraint|system_deck_vocabularies|fk_system_deck_vocabularies_vocabulary|FOREIGN KEY (vocabulary_id) REFERENCES system_vocabularies(vocabulary_id)|true|false|false
+constraint|system_deck_vocabularies|system_deck_vocabularies_pkey|PRIMARY KEY (deck_id, vocabulary_id)|true|false|false
+constraint|system_settings|ck_system_settings_revision|CHECK ((revision >= 0))|true|false|false
+constraint|system_settings|fk_system_settings_updated_by|FOREIGN KEY (updated_by) REFERENCES users(user_id)|true|false|false
+constraint|system_settings|system_settings_pkey|PRIMARY KEY (setting_key)|true|false|false
+constraint|system_vocabularies|system_vocabularies_pkey|PRIMARY KEY (vocabulary_id)|true|false|false
+constraint|system_vocabulary_decks|system_vocabulary_decks_pkey|PRIMARY KEY (deck_id)|true|false|false
+constraint|tags|tags_code_key|UNIQUE (code)|true|false|false
+constraint|tags|tags_pkey|PRIMARY KEY (tag_id)|true|false|false
+constraint|test_blueprint_items|fk_tbi_blueprint|FOREIGN KEY (blueprint_id) REFERENCES test_blueprints(blueprint_id)|true|false|false
+constraint|test_blueprint_items|fk_tbi_part|FOREIGN KEY (part_id) REFERENCES toeic_parts(part_id)|true|false|false
+constraint|test_blueprint_items|test_blueprint_items_pkey|PRIMARY KEY (blueprint_item_id)|true|false|false
+constraint|test_blueprint_items|uq_tbi_blueprint_part|UNIQUE (blueprint_id, part_id)|true|false|false
+constraint|test_blueprints|test_blueprints_pkey|PRIMARY KEY (blueprint_id)|true|false|false
+constraint|test_blueprints|uq_test_blueprint_version|UNIQUE (code, version_number)|true|false|false
+constraint|test_questions|fk_test_questions_question_version|FOREIGN KEY (question_version_id) REFERENCES question_versions(question_version_id)|true|false|false
+constraint|test_questions|fk_test_questions_test_version|FOREIGN KEY (test_version_id) REFERENCES test_versions(test_version_id)|true|false|false
+constraint|test_questions|fk_tq_question_group_version|FOREIGN KEY (question_version_id, question_group_version_id) REFERENCES question_versions(question_version_id, group_version_id)|true|false|false
+constraint|test_questions|test_questions_pkey|PRIMARY KEY (test_version_id, question_version_id)|true|false|false
+constraint|test_questions|uq_test_question_order|UNIQUE (test_version_id, question_order)|true|false|false
+constraint|test_versions|fk_test_versions_test|FOREIGN KEY (test_id) REFERENCES tests(test_id)|true|false|false
+constraint|test_versions|fk_tv_blueprint|FOREIGN KEY (blueprint_id) REFERENCES test_blueprints(blueprint_id)|true|false|false
+constraint|test_versions|test_versions_pkey|PRIMARY KEY (test_version_id)|true|false|false
+constraint|test_versions|uq_test_version_number|UNIQUE (test_id, version_number)|true|false|false
+constraint|tests|fk_tests_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|tests|tests_pkey|PRIMARY KEY (test_id)|true|false|false
+constraint|toeic_parts|toeic_parts_part_number_key|UNIQUE (part_number)|true|false|false
+constraint|toeic_parts|toeic_parts_pkey|PRIMARY KEY (part_id)|true|false|false
+constraint|topics|topics_name_key|UNIQUE (name)|true|false|false
+constraint|topics|topics_pkey|PRIMARY KEY (topic_id)|true|false|false
+constraint|user_error_statistics|chk_ues_counts|CHECK (((attempted_count >= 0) AND (incorrect_count >= 0) AND (incorrect_count <= attempted_count)))|true|false|false
+constraint|user_error_statistics|fk_ues_category|FOREIGN KEY (error_category_id) REFERENCES error_categories(error_category_id)|true|false|false
+constraint|user_error_statistics|fk_ues_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|user_error_statistics|user_error_statistics_pkey|PRIMARY KEY (user_id, error_category_id)|true|false|false
+constraint|user_notifications|fk_user_notifications_notification|FOREIGN KEY (notification_id) REFERENCES notifications(notification_id)|true|false|false
+constraint|user_notifications|fk_user_notifications_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|user_notifications|uq_user_notification|UNIQUE (user_id, notification_id)|true|false|false
+constraint|user_notifications|user_notifications_pkey|PRIMARY KEY (user_notification_id)|true|false|false
+constraint|user_roles|fk_user_roles_role|FOREIGN KEY (role_id) REFERENCES roles(role_id)|true|false|false
+constraint|user_roles|fk_user_roles_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|user_roles|user_roles_pkey|PRIMARY KEY (user_id, role_id)|true|false|false
+constraint|users|users_email_key|UNIQUE (email)|true|false|false
+constraint|users|users_pkey|PRIMARY KEY (user_id)|true|false|false
+constraint|vocabularies|fk_vocab_pronunciation_audio|FOREIGN KEY (pronunciation_audio_resource_id) REFERENCES media_resources(resource_id)|true|false|false
+constraint|vocabularies|fk_vocabularies_creator|FOREIGN KEY (created_by) REFERENCES users(user_id)|true|false|false
+constraint|vocabularies|vocabularies_pkey|PRIMARY KEY (vocabulary_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_personal_deck|FOREIGN KEY (personal_deck_id) REFERENCES vocabulary_decks(deck_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_system_deck|FOREIGN KEY (system_deck_id) REFERENCES system_vocabulary_decks(deck_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|fk_catalog_enrollment_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|uq_catalog_enrollment_personal_deck|UNIQUE (personal_deck_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|uq_catalog_enrollment_user_deck|UNIQUE (user_id, system_deck_id)|true|false|false
+constraint|vocabulary_catalog_enrollments|vocabulary_catalog_enrollments_pkey|PRIMARY KEY (enrollment_id)|true|false|false
+constraint|vocabulary_decks|fk_vocabulary_decks_user|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+constraint|vocabulary_decks|vocabulary_decks_pkey|PRIMARY KEY (deck_id)|true|false|false
+constraint|vocabulary_learning_sessions|chk_learning_session_object|CHECK ((jsonb_typeof(session_data) = 'object'::text))|true|false|false
+constraint|vocabulary_learning_sessions|vocabulary_learning_sessions_deck_id_fkey|FOREIGN KEY (deck_id) REFERENCES vocabulary_decks(deck_id) ON DELETE CASCADE|true|false|false
+constraint|vocabulary_learning_sessions|vocabulary_learning_sessions_pkey|PRIMARY KEY (user_id, deck_id)|true|false|false
+constraint|vocabulary_learning_sessions|vocabulary_learning_sessions_user_id_fkey|FOREIGN KEY (user_id) REFERENCES users(user_id)|true|false|false
+extension|plpgsql|1.0|pg_catalog
+index|ai_chat_requests|ai_chat_requests_pkey|CREATE UNIQUE INDEX ai_chat_requests_pkey ON public.ai_chat_requests USING btree (request_id)|true|true
+index|ai_chat_requests|idx_ai_chat_requests_user_time|CREATE INDEX idx_ai_chat_requests_user_time ON public.ai_chat_requests USING btree (user_id, created_at DESC)|true|true
+index|ai_citation_snapshots|ai_citation_snapshots_pkey|CREATE UNIQUE INDEX ai_citation_snapshots_pkey ON public.ai_citation_snapshots USING btree (message_id)|true|true
+index|ai_configs|ai_configs_config_key_key|CREATE UNIQUE INDEX ai_configs_config_key_key ON public.ai_configs USING btree (config_key)|true|true
+index|ai_configs|ai_configs_pkey|CREATE UNIQUE INDEX ai_configs_pkey ON public.ai_configs USING btree (config_id)|true|true
+index|ai_conversations|ai_conversations_pkey|CREATE UNIQUE INDEX ai_conversations_pkey ON public.ai_conversations USING btree (conversation_id)|true|true
+index|ai_conversations|idx_ai_conversations_user|CREATE INDEX idx_ai_conversations_user ON public.ai_conversations USING btree (user_id)|true|true
+index|ai_indexed_versions|ai_indexed_versions_document_id_key|CREATE UNIQUE INDEX ai_indexed_versions_document_id_key ON public.ai_indexed_versions USING btree (document_id)|true|true
+index|ai_indexed_versions|ai_indexed_versions_pkey|CREATE UNIQUE INDEX ai_indexed_versions_pkey ON public.ai_indexed_versions USING btree (content_version_id)|true|true
+index|ai_message_sources|ai_message_sources_pkey|CREATE UNIQUE INDEX ai_message_sources_pkey ON public.ai_message_sources USING btree (message_id, chunk_id)|true|true
+index|ai_message_sources|idx_ai_sources_chunk|CREATE INDEX idx_ai_sources_chunk ON public.ai_message_sources USING btree (chunk_id)|true|true
+index|ai_messages|ai_messages_pkey|CREATE UNIQUE INDEX ai_messages_pkey ON public.ai_messages USING btree (message_id)|true|true
+index|ai_messages|idx_ai_messages_conversation_date|CREATE INDEX idx_ai_messages_conversation_date ON public.ai_messages USING btree (conversation_id, created_at)|true|true
+index|ai_request_logs|ai_request_logs_pkey|CREATE UNIQUE INDEX ai_request_logs_pkey ON public.ai_request_logs USING btree (request_id)|true|true
+index|ai_request_logs|idx_arl_conversation|CREATE INDEX idx_arl_conversation ON public.ai_request_logs USING btree (conversation_id)|true|true
+index|ai_request_logs|idx_arl_user_created|CREATE INDEX idx_arl_user_created ON public.ai_request_logs USING btree (user_id, created_at DESC)|true|true
+index|attempt_answers|attempt_answers_pkey|CREATE UNIQUE INDEX attempt_answers_pkey ON public.attempt_answers USING btree (attempt_answer_id)|true|true
+index|attempt_answers|idx_attempt_answers_question|CREATE INDEX idx_attempt_answers_question ON public.attempt_answers USING btree (question_version_id)|true|true
+index|attempt_answers|uq_attempt_question|CREATE UNIQUE INDEX uq_attempt_question ON public.attempt_answers USING btree (attempt_id, question_version_id)|true|true
+index|attempt_part_results|attempt_part_results_pkey|CREATE UNIQUE INDEX attempt_part_results_pkey ON public.attempt_part_results USING btree (attempt_part_result_id)|true|true
+index|attempt_part_results|idx_attempt_part_results_part|CREATE INDEX idx_attempt_part_results_part ON public.attempt_part_results USING btree (part_id)|true|true
+index|attempt_part_results|uq_attempt_part|CREATE UNIQUE INDEX uq_attempt_part ON public.attempt_part_results USING btree (attempt_id, part_id)|true|true
+index|attempt_question_snapshots|attempt_question_snapshots_pkey|CREATE UNIQUE INDEX attempt_question_snapshots_pkey ON public.attempt_question_snapshots USING btree (snapshot_id)|true|true
+index|attempt_question_snapshots|idx_aqs_question|CREATE INDEX idx_aqs_question ON public.attempt_question_snapshots USING btree (question_version_id)|true|true
+index|attempt_question_snapshots|uq_aqs_order|CREATE UNIQUE INDEX uq_aqs_order ON public.attempt_question_snapshots USING btree (attempt_id, question_order)|true|true
+index|attempt_question_snapshots|uq_aqs_question|CREATE UNIQUE INDEX uq_aqs_question ON public.attempt_question_snapshots USING btree (attempt_id, question_version_id)|true|true
+index|attempts|attempts_pkey|CREATE UNIQUE INDEX attempts_pkey ON public.attempts USING btree (attempt_id)|true|true
+index|attempts|idx_attempts_status|CREATE INDEX idx_attempts_status ON public.attempts USING btree (status)|true|true
+index|attempts|idx_attempts_test_version|CREATE INDEX idx_attempts_test_version ON public.attempts USING btree (test_version_id)|true|true
+index|attempts|idx_attempts_user|CREATE INDEX idx_attempts_user ON public.attempts USING btree (user_id)|true|true
+index|audit_logs|audit_logs_pkey|CREATE UNIQUE INDEX audit_logs_pkey ON public.audit_logs USING btree (audit_id)|true|true
+index|audit_logs|idx_audit_logs_actor|CREATE INDEX idx_audit_logs_actor ON public.audit_logs USING btree (actor_user_id)|true|true
+index|audit_logs|idx_audit_logs_created_at|CREATE INDEX idx_audit_logs_created_at ON public.audit_logs USING btree (created_at DESC)|true|true
+index|audit_logs|idx_audit_logs_entity|CREATE INDEX idx_audit_logs_entity ON public.audit_logs USING btree (entity_type, entity_id)|true|true
+index|auth_sessions|auth_sessions_pkey|CREATE UNIQUE INDEX auth_sessions_pkey ON public.auth_sessions USING btree (session_id)|true|true
+index|auth_sessions|auth_sessions_token_hash_key|CREATE UNIQUE INDEX auth_sessions_token_hash_key ON public.auth_sessions USING btree (token_hash)|true|true
+index|auth_sessions|idx_auth_sessions_expiry|CREATE INDEX idx_auth_sessions_expiry ON public.auth_sessions USING btree (expires_at)|true|true
+index|auth_sessions|idx_auth_sessions_user|CREATE INDEX idx_auth_sessions_user ON public.auth_sessions USING btree (user_id)|true|true
+index|bookmarks|bookmarks_pkey|CREATE UNIQUE INDEX bookmarks_pkey ON public.bookmarks USING btree (user_id, content_id)|true|true
+index|bookmarks|idx_bookmarks_content|CREATE INDEX idx_bookmarks_content ON public.bookmarks USING btree (content_id)|true|true
+index|bookmarks|idx_bookmarks_user_time|CREATE INDEX idx_bookmarks_user_time ON public.bookmarks USING btree (user_id, created_at DESC, content_id)|true|true
+index|content_categories|content_categories_code_key|CREATE UNIQUE INDEX content_categories_code_key ON public.content_categories USING btree (code)|true|true
+index|content_categories|content_categories_pkey|CREATE UNIQUE INDEX content_categories_pkey ON public.content_categories USING btree (category_id)|true|true
+index|content_resources|content_resources_pkey|CREATE UNIQUE INDEX content_resources_pkey ON public.content_resources USING btree (content_id, resource_id)|true|true
+index|content_resources|idx_content_resources_resource|CREATE INDEX idx_content_resources_resource ON public.content_resources USING btree (resource_id)|true|true
+index|deck_vocabularies|deck_vocabularies_pkey|CREATE UNIQUE INDEX deck_vocabularies_pkey ON public.deck_vocabularies USING btree (deck_id, vocabulary_id)|true|true
+index|deck_vocabularies|idx_deck_vocabularies_vocabulary|CREATE INDEX idx_deck_vocabularies_vocabulary ON public.deck_vocabularies USING btree (vocabulary_id)|true|true
+index|dictation_answers|dictation_answers_pkey|CREATE UNIQUE INDEX dictation_answers_pkey ON public.dictation_answers USING btree (answer_id)|true|true
+index|dictation_answers|idx_dictation_answers_attempt|CREATE INDEX idx_dictation_answers_attempt ON public.dictation_answers USING btree (attempt_id)|true|true
+index|dictation_attempts|dictation_attempts_pkey|CREATE UNIQUE INDEX dictation_attempts_pkey ON public.dictation_attempts USING btree (attempt_id)|true|true
+index|dictation_attempts|idx_dictation_attempts_exercise|CREATE INDEX idx_dictation_attempts_exercise ON public.dictation_attempts USING btree (dictation_id)|true|true
+index|dictation_attempts|idx_dictation_attempts_user|CREATE INDEX idx_dictation_attempts_user ON public.dictation_attempts USING btree (user_id)|true|true
+index|dictation_exercises|dictation_exercises_pkey|CREATE UNIQUE INDEX dictation_exercises_pkey ON public.dictation_exercises USING btree (dictation_id)|true|true
+index|dictation_exercises|idx_dictation_exercises_audio|CREATE INDEX idx_dictation_exercises_audio ON public.dictation_exercises USING btree (audio_resource_id)|true|true
+index|dictation_exercises|idx_dictation_exercises_creator|CREATE INDEX idx_dictation_exercises_creator ON public.dictation_exercises USING btree (created_by)|true|true
+index|email_verification_otps|email_verification_otps_pkey|CREATE UNIQUE INDEX email_verification_otps_pkey ON public.email_verification_otps USING btree (otp_id)|true|true
+index|email_verification_otps|idx_email_verification_otps_user_created|CREATE INDEX idx_email_verification_otps_user_created ON public.email_verification_otps USING btree (user_id, created_at DESC)|true|true
+index|error_categories|error_categories_code_key|CREATE UNIQUE INDEX error_categories_code_key ON public.error_categories USING btree (code)|true|true
+index|error_categories|error_categories_pkey|CREATE UNIQUE INDEX error_categories_pkey ON public.error_categories USING btree (error_category_id)|true|true
+index|google_identities|google_identities_pkey|CREATE UNIQUE INDEX google_identities_pkey ON public.google_identities USING btree (google_subject)|true|true
+index|google_identities|google_identities_user_id_key|CREATE UNIQUE INDEX google_identities_user_id_key ON public.google_identities USING btree (user_id)|true|true
+index|google_login_challenges|google_login_challenges_pkey|CREATE UNIQUE INDEX google_login_challenges_pkey ON public.google_login_challenges USING btree (challenge_id)|true|true
+index|google_login_challenges|idx_google_challenges_expiry|CREATE INDEX idx_google_challenges_expiry ON public.google_login_challenges USING btree (expires_at)|true|true
+index|knowledge_chunks|idx_knowledge_chunks_document|CREATE INDEX idx_knowledge_chunks_document ON public.knowledge_chunks USING btree (document_id)|true|true
+index|knowledge_chunks|knowledge_chunks_pkey|CREATE UNIQUE INDEX knowledge_chunks_pkey ON public.knowledge_chunks USING btree (chunk_id)|true|true
+index|knowledge_chunks|uq_knowledge_chunk_index|CREATE UNIQUE INDEX uq_knowledge_chunk_index ON public.knowledge_chunks USING btree (document_id, chunk_index)|true|true
+index|knowledge_documents|idx_knowledge_documents_status|CREATE INDEX idx_knowledge_documents_status ON public.knowledge_documents USING btree (status)|true|true
+index|knowledge_documents|knowledge_documents_pkey|CREATE UNIQUE INDEX knowledge_documents_pkey ON public.knowledge_documents USING btree (document_id)|true|true
+index|learning_content_history|idx_content_history_user_time|CREATE INDEX idx_content_history_user_time ON public.learning_content_history USING btree (user_id, last_accessed_at DESC, content_id)|true|true
+index|learning_content_history|idx_content_history_version|CREATE INDEX idx_content_history_version ON public.learning_content_history USING btree (content_version_id)|true|true
+index|learning_content_history|learning_content_history_pkey|CREATE UNIQUE INDEX learning_content_history_pkey ON public.learning_content_history USING btree (user_id, content_id)|true|true
+index|learning_content_version_resources|idx_lcvr_resource|CREATE INDEX idx_lcvr_resource ON public.learning_content_version_resources USING btree (resource_id)|true|true
+index|learning_content_version_resources|learning_content_version_resources_pkey|CREATE UNIQUE INDEX learning_content_version_resources_pkey ON public.learning_content_version_resources USING btree (content_version_id, resource_id)|true|true
+index|learning_content_versions|idx_lcv_content|CREATE INDEX idx_lcv_content ON public.learning_content_versions USING btree (content_id)|true|true
+index|learning_content_versions|learning_content_versions_pkey|CREATE UNIQUE INDEX learning_content_versions_pkey ON public.learning_content_versions USING btree (content_version_id)|true|true
+index|learning_content_versions|uq_lcv_content_version|CREATE UNIQUE INDEX uq_lcv_content_version ON public.learning_content_versions USING btree (content_id, content_version_id)|true|true
+index|learning_content_versions|uq_lcv_number|CREATE UNIQUE INDEX uq_lcv_number ON public.learning_content_versions USING btree (content_id, version_number)|true|true
+index|learning_contents|idx_learning_contents_author|CREATE INDEX idx_learning_contents_author ON public.learning_contents USING btree (author_id)|true|true
+index|learning_contents|idx_learning_contents_category|CREATE INDEX idx_learning_contents_category ON public.learning_contents USING btree (category_id)|true|true
+index|learning_contents|learning_contents_pkey|CREATE UNIQUE INDEX learning_contents_pkey ON public.learning_contents USING btree (content_id)|true|true
+index|learning_contents|uq_learning_contents_published_version|CREATE UNIQUE INDEX uq_learning_contents_published_version ON public.learning_contents USING btree (content_id, current_published_version_id)|true|true
+index|learning_profiles|learning_profiles_pkey|CREATE UNIQUE INDEX learning_profiles_pkey ON public.learning_profiles USING btree (profile_id)|true|true
+index|learning_profiles|learning_profiles_user_id_key|CREATE UNIQUE INDEX learning_profiles_user_id_key ON public.learning_profiles USING btree (user_id)|true|true
+index|learning_progress|idx_learning_progress_content|CREATE INDEX idx_learning_progress_content ON public.learning_progress USING btree (content_id)|true|true
+index|learning_progress|learning_progress_pkey|CREATE UNIQUE INDEX learning_progress_pkey ON public.learning_progress USING btree (progress_id)|true|true
+index|learning_progress|uq_learning_progress_user_content|CREATE UNIQUE INDEX uq_learning_progress_user_content ON public.learning_progress USING btree (user_id, content_id)|true|true
+index|media_resources|idx_media_owner|CREATE INDEX idx_media_owner ON public.media_resources USING btree (owner_id)|true|true
+index|media_resources|media_resources_pkey|CREATE UNIQUE INDEX media_resources_pkey ON public.media_resources USING btree (resource_id)|true|true
+index|media_reuse_grants|idx_media_reuse_user|CREATE INDEX idx_media_reuse_user ON public.media_reuse_grants USING btree (user_id)|true|true
+index|media_reuse_grants|media_reuse_grants_pkey|CREATE UNIQUE INDEX media_reuse_grants_pkey ON public.media_reuse_grants USING btree (media_id, user_id)|true|true
+index|moderation_contributors|idx_moderation_contributor|CREATE INDEX idx_moderation_contributor ON public.moderation_contributors USING btree (kind, version_id, actor_id)|true|true
+index|moderation_contributors|moderation_contributors_pkey|CREATE UNIQUE INDEX moderation_contributors_pkey ON public.moderation_contributors USING btree (event_id)|true|true
+index|moderation_decisions|moderation_decisions_pkey|CREATE UNIQUE INDEX moderation_decisions_pkey ON public.moderation_decisions USING btree (decision_id)|true|true
+index|moderation_versions|idx_moderation_cycle|CREATE INDEX idx_moderation_cycle ON public.moderation_versions USING btree (kind, parent_id, cycle_key)|true|true
+index|moderation_versions|moderation_versions_pkey|CREATE UNIQUE INDEX moderation_versions_pkey ON public.moderation_versions USING btree (kind, version_id)|true|true
+index|notifications|notifications_pkey|CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (notification_id)|true|true
+index|outbox_events|idx_outbox_events_aggregate|CREATE INDEX idx_outbox_events_aggregate ON public.outbox_events USING btree (aggregate_type, aggregate_id)|true|true
+index|outbox_events|idx_outbox_events_status|CREATE INDEX idx_outbox_events_status ON public.outbox_events USING btree (status, occurred_at)|true|true
+index|outbox_events|outbox_events_pkey|CREATE UNIQUE INDEX outbox_events_pkey ON public.outbox_events USING btree (event_id)|true|true
+index|part_performance|idx_part_performance_part|CREATE INDEX idx_part_performance_part ON public.part_performance USING btree (part_id)|true|true
+index|part_performance|part_performance_pkey|CREATE UNIQUE INDEX part_performance_pkey ON public.part_performance USING btree (performance_id)|true|true
+index|part_performance|uq_part_performance_user_part|CREATE UNIQUE INDEX uq_part_performance_user_part ON public.part_performance USING btree (user_id, part_id)|true|true
+index|password_reset_otps|idx_password_reset_user_created|CREATE INDEX idx_password_reset_user_created ON public.password_reset_otps USING btree (user_id, created_at DESC)|true|true
+index|password_reset_otps|password_reset_otps_pkey|CREATE UNIQUE INDEX password_reset_otps_pkey ON public.password_reset_otps USING btree (otp_id)|true|true
+index|permissions|permissions_code_key|CREATE UNIQUE INDEX permissions_code_key ON public.permissions USING btree (code)|true|true
+index|permissions|permissions_pkey|CREATE UNIQUE INDEX permissions_pkey ON public.permissions USING btree (permission_id)|true|true
+index|question_choices|idx_question_choices_version|CREATE INDEX idx_question_choices_version ON public.question_choices USING btree (question_version_id)|true|true
+index|question_choices|question_choices_pkey|CREATE UNIQUE INDEX question_choices_pkey ON public.question_choices USING btree (choice_id)|true|true
+index|question_choices|uq_question_choice_label|CREATE UNIQUE INDEX uq_question_choice_label ON public.question_choices USING btree (question_version_id, choice_label)|true|true
+index|question_choices|uq_question_choice_order|CREATE UNIQUE INDEX uq_question_choice_order ON public.question_choices USING btree (question_version_id, display_order)|true|true
+index|question_choices|uq_question_choice_version|CREATE UNIQUE INDEX uq_question_choice_version ON public.question_choices USING btree (question_version_id, choice_id)|true|true
+index|question_error_categories|idx_qec_category|CREATE INDEX idx_qec_category ON public.question_error_categories USING btree (error_category_id)|true|true
+index|question_error_categories|question_error_categories_pkey|CREATE UNIQUE INDEX question_error_categories_pkey ON public.question_error_categories USING btree (question_id, error_category_id)|true|true
+index|question_group_version_resources|idx_qgvr_resource|CREATE INDEX idx_qgvr_resource ON public.question_group_version_resources USING btree (resource_id)|true|true
+index|question_group_version_resources|question_group_version_resources_pkey|CREATE UNIQUE INDEX question_group_version_resources_pkey ON public.question_group_version_resources USING btree (group_version_id, resource_id)|true|true
+index|question_group_versions|idx_qgv_group|CREATE INDEX idx_qgv_group ON public.question_group_versions USING btree (group_id)|true|true
+index|question_group_versions|question_group_versions_pkey|CREATE UNIQUE INDEX question_group_versions_pkey ON public.question_group_versions USING btree (group_version_id)|true|true
+index|question_group_versions|uq_qgv_number|CREATE UNIQUE INDEX uq_qgv_number ON public.question_group_versions USING btree (group_id, version_number)|true|true
+index|question_group_versions|uq_qgv_version_group|CREATE UNIQUE INDEX uq_qgv_version_group ON public.question_group_versions USING btree (group_version_id, group_id)|true|true
+index|question_groups|idx_question_groups_creator|CREATE INDEX idx_question_groups_creator ON public.question_groups USING btree (created_by)|true|true
+index|question_groups|question_groups_pkey|CREATE UNIQUE INDEX question_groups_pkey ON public.question_groups USING btree (group_id)|true|true
+index|question_resources|idx_question_resources_resource|CREATE INDEX idx_question_resources_resource ON public.question_resources USING btree (resource_id)|true|true
+index|question_resources|question_resources_pkey|CREATE UNIQUE INDEX question_resources_pkey ON public.question_resources USING btree (question_version_id, resource_id)|true|true
+index|question_tags|idx_question_tags_tag|CREATE INDEX idx_question_tags_tag ON public.question_tags USING btree (tag_id)|true|true
+index|question_tags|question_tags_pkey|CREATE UNIQUE INDEX question_tags_pkey ON public.question_tags USING btree (question_id, tag_id)|true|true
+index|question_types|question_types_code_key|CREATE UNIQUE INDEX question_types_code_key ON public.question_types USING btree (code)|true|true
+index|question_types|question_types_pkey|CREATE UNIQUE INDEX question_types_pkey ON public.question_types USING btree (question_type_id)|true|true
+index|question_versions|idx_question_versions_question|CREATE INDEX idx_question_versions_question ON public.question_versions USING btree (question_id)|true|true
+index|question_versions|question_versions_pkey|CREATE UNIQUE INDEX question_versions_pkey ON public.question_versions USING btree (question_version_id)|true|true
+index|question_versions|uq_question_version_group|CREATE UNIQUE INDEX uq_question_version_group ON public.question_versions USING btree (question_version_id, group_version_id)|true|true
+index|question_versions|uq_question_version_number|CREATE UNIQUE INDEX uq_question_version_number ON public.question_versions USING btree (question_id, version_number)|true|true
+index|question_versions|uq_question_version_question|CREATE UNIQUE INDEX uq_question_version_question ON public.question_versions USING btree (question_version_id, question_id)|true|true
+index|questions|idx_questions_creator|CREATE INDEX idx_questions_creator ON public.questions USING btree (created_by)|true|true
+index|questions|idx_questions_group|CREATE INDEX idx_questions_group ON public.questions USING btree (group_id)|true|true
+index|questions|idx_questions_part|CREATE INDEX idx_questions_part ON public.questions USING btree (part_id)|true|true
+index|questions|idx_questions_topic|CREATE INDEX idx_questions_topic ON public.questions USING btree (topic_id)|true|true
+index|questions|idx_questions_type|CREATE INDEX idx_questions_type ON public.questions USING btree (question_type_id)|true|true
+index|questions|questions_pkey|CREATE UNIQUE INDEX questions_pkey ON public.questions USING btree (question_id)|true|true
+index|recommendations|idx_recommendations_user_date|CREATE INDEX idx_recommendations_user_date ON public.recommendations USING btree (user_id, generated_at DESC)|true|true
+index|recommendations|recommendations_pkey|CREATE UNIQUE INDEX recommendations_pkey ON public.recommendations USING btree (recommendation_id)|true|true
+index|review_history|idx_review_history_state_date|CREATE INDEX idx_review_history_state_date ON public.review_history USING btree (review_state_id, reviewed_at DESC)|true|true
+index|review_history|review_history_pkey|CREATE UNIQUE INDEX review_history_pkey ON public.review_history USING btree (review_history_id)|true|true
+index|review_states|idx_review_states_due|CREATE INDEX idx_review_states_due ON public.review_states USING btree (user_id, next_review_at)|true|true
+index|review_states|review_states_pkey|CREATE UNIQUE INDEX review_states_pkey ON public.review_states USING btree (review_state_id)|true|true
+index|review_states|uq_review_state_user_vocabulary|CREATE UNIQUE INDEX uq_review_state_user_vocabulary ON public.review_states USING btree (user_id, vocabulary_id)|true|true
+index|role_permissions|role_permissions_pkey|CREATE UNIQUE INDEX role_permissions_pkey ON public.role_permissions USING btree (role_id, permission_id)|true|true
+index|roles|roles_name_key|CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name)|true|true
+index|roles|roles_pkey|CREATE UNIQUE INDEX roles_pkey ON public.roles USING btree (role_id)|true|true
+index|score_conversion_rules|idx_scr_table|CREATE INDEX idx_scr_table ON public.score_conversion_rules USING btree (score_conversion_table_id)|true|true
+index|score_conversion_rules|score_conversion_rules_pkey|CREATE UNIQUE INDEX score_conversion_rules_pkey ON public.score_conversion_rules USING btree (rule_id)|true|true
+index|score_conversion_rules|uq_scr_skill_count|CREATE UNIQUE INDEX uq_scr_skill_count ON public.score_conversion_rules USING btree (score_conversion_table_id, skill, correct_count)|true|true
+index|score_conversion_tables|score_conversion_tables_pkey|CREATE UNIQUE INDEX score_conversion_tables_pkey ON public.score_conversion_tables USING btree (score_conversion_table_id)|true|true
+index|shadowing_attempts|idx_shadowing_attempts_exercise|CREATE INDEX idx_shadowing_attempts_exercise ON public.shadowing_attempts USING btree (shadowing_id)|true|true
+index|shadowing_attempts|idx_shadowing_attempts_recording|CREATE INDEX idx_shadowing_attempts_recording ON public.shadowing_attempts USING btree (recording_resource_id)|true|true
+index|shadowing_attempts|idx_shadowing_attempts_user|CREATE INDEX idx_shadowing_attempts_user ON public.shadowing_attempts USING btree (user_id)|true|true
+index|shadowing_attempts|shadowing_attempts_pkey|CREATE UNIQUE INDEX shadowing_attempts_pkey ON public.shadowing_attempts USING btree (attempt_id)|true|true
+index|shadowing_exercises|idx_shadowing_exercises_audio|CREATE INDEX idx_shadowing_exercises_audio ON public.shadowing_exercises USING btree (audio_resource_id)|true|true
+index|shadowing_exercises|idx_shadowing_exercises_creator|CREATE INDEX idx_shadowing_exercises_creator ON public.shadowing_exercises USING btree (created_by)|true|true
+index|shadowing_exercises|shadowing_exercises_pkey|CREATE UNIQUE INDEX shadowing_exercises_pkey ON public.shadowing_exercises USING btree (shadowing_id)|true|true
+index|shadowing_feedback|idx_shadowing_feedback_attempt|CREATE INDEX idx_shadowing_feedback_attempt ON public.shadowing_feedback USING btree (attempt_id)|true|true
+index|shadowing_feedback|shadowing_feedback_pkey|CREATE UNIQUE INDEX shadowing_feedback_pkey ON public.shadowing_feedback USING btree (feedback_id)|true|true
+index|system_deck_vocabularies|idx_system_deck_vocabularies_order|CREATE INDEX idx_system_deck_vocabularies_order ON public.system_deck_vocabularies USING btree (deck_id, display_order)|true|true
+index|system_deck_vocabularies|system_deck_vocabularies_pkey|CREATE UNIQUE INDEX system_deck_vocabularies_pkey ON public.system_deck_vocabularies USING btree (deck_id, vocabulary_id)|true|true
+index|system_settings|idx_system_settings_updated_by|CREATE INDEX idx_system_settings_updated_by ON public.system_settings USING btree (updated_by)|true|true
+index|system_settings|system_settings_pkey|CREATE UNIQUE INDEX system_settings_pkey ON public.system_settings USING btree (setting_key)|true|true
+index|system_vocabularies|idx_system_vocabularies_word|CREATE INDEX idx_system_vocabularies_word ON public.system_vocabularies USING btree (lower((word)::text))|true|true
+index|system_vocabularies|system_vocabularies_pkey|CREATE UNIQUE INDEX system_vocabularies_pkey ON public.system_vocabularies USING btree (vocabulary_id)|true|true
+index|system_vocabulary_decks|idx_system_decks_published|CREATE INDEX idx_system_decks_published ON public.system_vocabulary_decks USING btree (is_published)|true|true
+index|system_vocabulary_decks|system_vocabulary_decks_pkey|CREATE UNIQUE INDEX system_vocabulary_decks_pkey ON public.system_vocabulary_decks USING btree (deck_id)|true|true
+index|system_vocabulary_decks|uq_system_decks_name|CREATE UNIQUE INDEX uq_system_decks_name ON public.system_vocabulary_decks USING btree (lower((name)::text))|true|true
+index|tags|tags_code_key|CREATE UNIQUE INDEX tags_code_key ON public.tags USING btree (code)|true|true
+index|tags|tags_pkey|CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (tag_id)|true|true
+index|test_blueprint_items|idx_tbi_part|CREATE INDEX idx_tbi_part ON public.test_blueprint_items USING btree (part_id)|true|true
+index|test_blueprint_items|test_blueprint_items_pkey|CREATE UNIQUE INDEX test_blueprint_items_pkey ON public.test_blueprint_items USING btree (blueprint_item_id)|true|true
+index|test_blueprint_items|uq_tbi_blueprint_part|CREATE UNIQUE INDEX uq_tbi_blueprint_part ON public.test_blueprint_items USING btree (blueprint_id, part_id)|true|true
+index|test_blueprints|test_blueprints_pkey|CREATE UNIQUE INDEX test_blueprints_pkey ON public.test_blueprints USING btree (blueprint_id)|true|true
+index|test_blueprints|uq_test_blueprint_version|CREATE UNIQUE INDEX uq_test_blueprint_version ON public.test_blueprints USING btree (code, version_number)|true|true
+index|test_questions|idx_test_questions_question|CREATE INDEX idx_test_questions_question ON public.test_questions USING btree (question_version_id)|true|true
+index|test_questions|test_questions_pkey|CREATE UNIQUE INDEX test_questions_pkey ON public.test_questions USING btree (test_version_id, question_version_id)|true|true
+index|test_questions|uq_test_question_order|CREATE UNIQUE INDEX uq_test_question_order ON public.test_questions USING btree (test_version_id, question_order)|true|true
+index|test_versions|idx_test_versions_test|CREATE INDEX idx_test_versions_test ON public.test_versions USING btree (test_id)|true|true
+index|test_versions|test_versions_pkey|CREATE UNIQUE INDEX test_versions_pkey ON public.test_versions USING btree (test_version_id)|true|true
+index|test_versions|uq_test_version_number|CREATE UNIQUE INDEX uq_test_version_number ON public.test_versions USING btree (test_id, version_number)|true|true
+index|tests|idx_tests_creator|CREATE INDEX idx_tests_creator ON public.tests USING btree (created_by)|true|true
+index|tests|tests_pkey|CREATE UNIQUE INDEX tests_pkey ON public.tests USING btree (test_id)|true|true
+index|toeic_parts|toeic_parts_part_number_key|CREATE UNIQUE INDEX toeic_parts_part_number_key ON public.toeic_parts USING btree (part_number)|true|true
+index|toeic_parts|toeic_parts_pkey|CREATE UNIQUE INDEX toeic_parts_pkey ON public.toeic_parts USING btree (part_id)|true|true
+index|topics|topics_name_key|CREATE UNIQUE INDEX topics_name_key ON public.topics USING btree (name)|true|true
+index|topics|topics_pkey|CREATE UNIQUE INDEX topics_pkey ON public.topics USING btree (topic_id)|true|true
+index|user_error_statistics|idx_ues_category|CREATE INDEX idx_ues_category ON public.user_error_statistics USING btree (error_category_id)|true|true
+index|user_error_statistics|user_error_statistics_pkey|CREATE UNIQUE INDEX user_error_statistics_pkey ON public.user_error_statistics USING btree (user_id, error_category_id)|true|true
+index|user_notifications|idx_user_notifications_notification|CREATE INDEX idx_user_notifications_notification ON public.user_notifications USING btree (notification_id)|true|true
+index|user_notifications|idx_user_notifications_status|CREATE INDEX idx_user_notifications_status ON public.user_notifications USING btree (user_id, delivery_status)|true|true
+index|user_notifications|idx_user_notifications_user|CREATE INDEX idx_user_notifications_user ON public.user_notifications USING btree (user_id)|true|true
+index|user_notifications|uq_user_notification|CREATE UNIQUE INDEX uq_user_notification ON public.user_notifications USING btree (user_id, notification_id)|true|true
+index|user_notifications|user_notifications_pkey|CREATE UNIQUE INDEX user_notifications_pkey ON public.user_notifications USING btree (user_notification_id)|true|true
+index|user_roles|user_roles_pkey|CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (user_id, role_id)|true|true
+index|users|uq_users_email_lower|CREATE UNIQUE INDEX uq_users_email_lower ON public.users USING btree (lower((email)::text))|true|true
+index|users|users_email_key|CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)|true|true
+index|users|users_pkey|CREATE UNIQUE INDEX users_pkey ON public.users USING btree (user_id)|true|true
+index|vocabularies|idx_vocabularies_creator|CREATE INDEX idx_vocabularies_creator ON public.vocabularies USING btree (created_by)|true|true
+index|vocabularies|idx_vocabularies_word|CREATE INDEX idx_vocabularies_word ON public.vocabularies USING btree (word)|true|true
+index|vocabularies|vocabularies_pkey|CREATE UNIQUE INDEX vocabularies_pkey ON public.vocabularies USING btree (vocabulary_id)|true|true
+index|vocabulary_catalog_enrollments|idx_catalog_enrollment_user|CREATE INDEX idx_catalog_enrollment_user ON public.vocabulary_catalog_enrollments USING btree (user_id)|true|true
+index|vocabulary_catalog_enrollments|uq_catalog_enrollment_personal_deck|CREATE UNIQUE INDEX uq_catalog_enrollment_personal_deck ON public.vocabulary_catalog_enrollments USING btree (personal_deck_id)|true|true
+index|vocabulary_catalog_enrollments|uq_catalog_enrollment_user_deck|CREATE UNIQUE INDEX uq_catalog_enrollment_user_deck ON public.vocabulary_catalog_enrollments USING btree (user_id, system_deck_id)|true|true
+index|vocabulary_catalog_enrollments|vocabulary_catalog_enrollments_pkey|CREATE UNIQUE INDEX vocabulary_catalog_enrollments_pkey ON public.vocabulary_catalog_enrollments USING btree (enrollment_id)|true|true
+index|vocabulary_decks|idx_vocabulary_decks_user|CREATE INDEX idx_vocabulary_decks_user ON public.vocabulary_decks USING btree (user_id)|true|true
+index|vocabulary_decks|vocabulary_decks_pkey|CREATE UNIQUE INDEX vocabulary_decks_pkey ON public.vocabulary_decks USING btree (deck_id)|true|true
+index|vocabulary_learning_sessions|vocabulary_learning_sessions_pkey|CREATE UNIQUE INDEX vocabulary_learning_sessions_pkey ON public.vocabulary_learning_sessions USING btree (user_id, deck_id)|true|true
+relation|ai_chat_requests|r|p|false|false
+relation|ai_citation_snapshots|r|p|false|false
+relation|ai_configs|r|p|false|false
+relation|ai_conversations|r|p|false|false
+relation|ai_indexed_versions|r|p|false|false
+relation|ai_message_sources|r|p|false|false
+relation|ai_messages|r|p|false|false
+relation|ai_request_logs|r|p|false|false
+relation|attempt_answers|r|p|false|false
+relation|attempt_part_results|r|p|false|false
+relation|attempt_question_snapshots|r|p|false|false
+relation|attempts|r|p|false|false
+relation|audit_logs|r|p|false|false
+relation|auth_sessions|r|p|false|false
+relation|bookmarks|r|p|false|false
+relation|content_categories_category_id_seq|S|p|false|false
+relation|content_categories|r|p|false|false
+relation|content_resources|r|p|false|false
+relation|deck_vocabularies|r|p|false|false
+relation|dictation_answers|r|p|false|false
+relation|dictation_attempts|r|p|false|false
+relation|dictation_exercises|r|p|false|false
+relation|email_verification_otps|r|p|false|false
+relation|error_categories|r|p|false|false
+relation|google_identities|r|p|false|false
+relation|google_login_challenges|r|p|false|false
+relation|knowledge_chunks|r|p|false|false
+relation|knowledge_documents|r|p|false|false
+relation|learning_content_history|r|p|false|false
+relation|learning_content_version_resources|r|p|false|false
+relation|learning_content_versions|r|p|false|false
+relation|learning_contents|r|p|false|false
+relation|learning_profiles|r|p|false|false
+relation|learning_progress|r|p|false|false
+relation|media_resources|r|p|false|false
+relation|media_reuse_grants|r|p|false|false
+relation|moderation_contributors|r|p|false|false
+relation|moderation_decisions|r|p|false|false
+relation|moderation_versions|r|p|false|false
+relation|notifications|r|p|false|false
+relation|outbox_events|r|p|false|false
+relation|part_performance|r|p|false|false
+relation|password_reset_otps|r|p|false|false
+relation|permissions_permission_id_seq|S|p|false|false
+relation|permissions|r|p|false|false
+relation|question_choices|r|p|false|false
+relation|question_error_categories|r|p|false|false
+relation|question_group_version_resources|r|p|false|false
+relation|question_group_versions|r|p|false|false
+relation|question_groups|r|p|false|false
+relation|question_resources|r|p|false|false
+relation|question_tags|r|p|false|false
+relation|question_types_question_type_id_seq|S|p|false|false
+relation|question_types|r|p|false|false
+relation|question_versions|r|p|false|false
+relation|questions|r|p|false|false
+relation|recommendations|r|p|false|false
+relation|review_history|r|p|false|false
+relation|review_states|r|p|false|false
+relation|role_permissions|r|p|false|false
+relation|roles_role_id_seq|S|p|false|false
+relation|roles|r|p|false|false
+relation|score_conversion_rules|r|p|false|false
+relation|score_conversion_tables|r|p|false|false
+relation|shadowing_attempts|r|p|false|false
+relation|shadowing_exercises|r|p|false|false
+relation|shadowing_feedback|r|p|false|false
+relation|system_deck_vocabularies|r|p|false|false
+relation|system_settings|r|p|false|false
+relation|system_vocabularies|r|p|false|false
+relation|system_vocabulary_decks|r|p|false|false
+relation|tags|r|p|false|false
+relation|test_blueprint_items|r|p|false|false
+relation|test_blueprints|r|p|false|false
+relation|test_questions|r|p|false|false
+relation|test_versions|r|p|false|false
+relation|tests|r|p|false|false
+relation|toeic_parts_part_id_seq|S|p|false|false
+relation|toeic_parts|r|p|false|false
+relation|topics_topic_id_seq|S|p|false|false
+relation|topics|r|p|false|false
+relation|user_error_statistics|r|p|false|false
+relation|user_notifications|r|p|false|false
+relation|user_roles|r|p|false|false
+relation|users|r|p|false|false
+relation|vocabularies|r|p|false|false
+relation|vocabulary_catalog_enrollments|r|p|false|false
+relation|vocabulary_decks|r|p|false|false
+relation|vocabulary_learning_sessions|r|p|false|false
+sequence|content_categories_category_id_seq|integer|1|1|2147483647|1|1|false
+sequence|permissions_permission_id_seq|integer|1|1|2147483647|1|1|false
+sequence|question_types_question_type_id_seq|integer|1|1|2147483647|1|1|false
+sequence|roles_role_id_seq|integer|1|1|2147483647|1|1|false
+sequence|toeic_parts_part_id_seq|integer|1|1|2147483647|1|1|false
+sequence|topics_topic_id_seq|integer|1|1|2147483647|1|1|false

@@ -182,7 +182,7 @@ không được suy từ test mock. Bộ test backend phải chạy trên DB ri�
 ## AI-RAG-03 - Exam Guard
 
 - Exam state is verified using server-side attempt records.
-- Active SECTION and FULL_TEST attempts restrict AI Tutor access.
+- Active SECTION, legacy FULL_TEST and blueprint-pinned FULL_MOCK attempts restrict AI Tutor access.
 - PRACTICE attempts do not restrict AI Tutor.
 - Expired or graded attempts do not restrict AI Tutor.
 - Restricted requests return HTTP 403 with code AI_EXAM_RESTRICTED.

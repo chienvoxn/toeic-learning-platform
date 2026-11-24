@@ -1,121 +1,83 @@
-
 package com.toeic.backend.assessment.api;
 
+import com.toeic.backend.assessment.application.*;
 import com.toeic.backend.identity.application.SessionPrincipal;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/teacher/tests")
-@PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
 public class TeacherTestController {
-
-    private final JdbcTemplate jdbc;
-
-    public TeacherTestController(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    private final ExamDraftService service;
+    private final ExamWorkflowService workflow;
+    public TeacherTestController(ExamDraftService service,ExamWorkflowService workflow) { this.service=service;this.workflow=workflow; }
+    private static void noParams(MultiValueMap<String,String> params) { if(!params.isEmpty())throw ExamDraftException.invalid(); }
+    @GetMapping("/capabilities")
+    public Object capabilities(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params) {
+        noParams(params);return workflow.capabilities(actor.userId());
     }
-
-    public record CreateTestRequest(
-            String title,
-            String description
-    ) {}
-
-    public record TestSummary(
-            UUID testId,
-            String title,
-            String description,
-            String testType,
-            String status
-    ) {}
-
-    public record CreatedTest(
-            UUID testId,
-            UUID testVersionId,
-            String title,
-            String status
-    ) {}
-
+    @GetMapping("/question-units")
+    public Object units(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params) {
+        if(!Set.of("partNumber","page").containsAll(params.keySet()) || !params.containsKey("partNumber")
+                || params.values().stream().anyMatch(v->v.size()!=1))throw ExamDraftException.invalid();
+        try {
+            String part=params.getFirst("partNumber"),page=params.getFirst("page");
+            if(part==null || !part.matches("[1-7]") || page!=null && !page.matches("0|[1-9][0-9]*"))throw ExamDraftException.invalid();
+            return service.units(actor.userId(),Integer.parseInt(part),page==null?0:Integer.parseInt(page));
+        } catch(NumberFormatException e) { throw ExamDraftException.invalid(); }
+    }
     @GetMapping
-    @Transactional(readOnly = true)
-    public List<TestSummary> list(
-            @AuthenticationPrincipal SessionPrincipal actor
-    ) {
-        return jdbc.query("""
-                SELECT test_id, title, description,
-                       test_type, status
-                FROM tests
-                WHERE created_by = ?
-                ORDER BY updated_at DESC, test_id ASC
-                """,
-                (rs, rowNum) -> new TestSummary(
-                        rs.getObject("test_id", UUID.class),
-                        rs.getString("title"),
-                        rs.getString("description"),
-                        rs.getString("test_type"),
-                        rs.getString("status")
-                ),
-                actor.userId()
-        );
+    public Object list(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params) {
+        if(!Set.of("page").containsAll(params.keySet()) || params.values().stream().anyMatch(v->v.size()!=1))throw ExamDraftException.invalid();
+        int page=0;
+        try { if(params.containsKey("page")) { var raw=params.getFirst("page"); if(raw==null || !raw.matches("0|[1-9][0-9]*"))throw ExamDraftException.invalid(); page=Integer.parseInt(raw); } }
+        catch(NumberFormatException e) { throw ExamDraftException.invalid(); }
+        return workflow.list(actor.userId(),page);
     }
-
-    @PostMapping
-    @Transactional
-    public ResponseEntity<CreatedTest> create(
-            @AuthenticationPrincipal SessionPrincipal actor,
-            @RequestBody CreateTestRequest request
-    ) {
-        if (request == null
-                || request.title() == null
-                || request.title().isBlank()
-                || request.title().length() > 255) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Tieu de de thi khong hop le"
-            );
-        }
-
-        String title = request.title().trim();
-        UUID testId = UUID.randomUUID();
-        UUID versionId = UUID.randomUUID();
-
-        jdbc.update("""
-                INSERT INTO tests (
-                    test_id, created_by, title,
-                    description, test_type, status,
-                    created_at, updated_at
-                )
-                VALUES (?, ?, ?, ?, 'FULL_TEST', 'DRAFT', now(), now())
-                """,
-                testId,
-                actor.userId(),
-                title,
-                request.description()
-        );
-
-        jdbc.update("""
-                INSERT INTO test_versions (
-                    test_version_id, test_id,
-                    version_number, duration_seconds,
-                    total_questions, status, created_at
-                )
-                VALUES (?, ?, 1, 7200, 0, 'DRAFT', now())
-                """,
-                versionId,
-                testId
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new CreatedTest(
-                        testId, versionId, title, "DRAFT"
-                ));
+    @GetMapping({"/{testId}","/{testId}/versions/{versionId}"})
+    public Object read(@AuthenticationPrincipal SessionPrincipal actor, @PathVariable UUID testId,
+            @PathVariable(required=false) UUID versionId, @RequestParam MultiValueMap<String,String> params) {
+        noParams(params); return workflow.read(actor.userId(),testId,versionId);
+    }
+    @PostMapping(consumes="application/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Object create(@AuthenticationPrincipal SessionPrincipal actor, @RequestParam MultiValueMap<String,String> params, @RequestBody String body) {
+        noParams(params); var node=ExamDraftRequest.tree(body);
+        com.toeic.backend.assessment.domain.ExamDraftDocument document;
+        if(!node.has("testType")&&!node.has("sections")) {
+            // Title-only client from develop still creates a real canonical DRAFT, without numeric preset.
+            if(!node.has("title")||node.size()!=(node.has("description")?2:1)||!node.get("title").isString()
+                    ||node.has("description")&&!node.get("description").isNull()&&!node.get("description").isString())throw ExamDraftException.invalid();
+            document=new com.toeic.backend.assessment.domain.ExamDraftDocument(node.get("title").asString(),
+                    !node.has("description")||node.get("description").isNull()?null:node.get("description").asString(),"FULL",null,List.of());
+        }else document=ExamDraftRequest.parse(body,false).document();
+        var draft=service.create(actor.userId(),document);
+        var result=new LinkedHashMap<>(workflow.read(actor.userId(),draft.testId(),draft.versionId()));
+        result.put("testVersionId",draft.versionId());result.put("title",document.title());return result;
+    }
+    @PutMapping(path="/{testId}/versions/{versionId}",consumes="application/json")
+    public Object save(@AuthenticationPrincipal SessionPrincipal actor, @PathVariable UUID testId, @PathVariable UUID versionId,
+            @RequestParam MultiValueMap<String,String> params, @RequestBody String body) {
+        noParams(params); var edit=ExamDraftRequest.parse(body,true);
+        service.update(actor.userId(),testId,versionId,edit.revision(),edit.document());return workflow.read(actor.userId(),testId,versionId);
+    }
+    @GetMapping("/{testId}/versions")
+    public Object versions(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@RequestParam MultiValueMap<String,String> params){noParams(params);return workflow.versions(actor.userId(),testId);}
+    @PostMapping("/{testId}/versions/{versionId}/{command:submit-review|approve|return|revoke|publish}")
+    public Object transition(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@PathVariable String command,@RequestParam MultiValueMap<String,String> params,@RequestBody com.toeic.backend.system.api.ModerationRequest body){
+        noParams(params);String action=command.equals("submit-review")?"submit":command;var value=body.validate(action,false);
+        return workflow.transition(actor.userId(),testId,versionId,action,value.expectedRevision(),value.reason());
+    }
+    @PostMapping("/{testId}/versions/{versionId}/{command:fork|retire|unpublish}")
+    public Object versionCommand(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@PathVariable String command,@RequestParam MultiValueMap<String,String> params,@RequestBody String body){
+        noParams(params);var n=ExamDraftRequest.tree(body);ExamDraftRequest.fields(n,"expectedRevision");long revision=ExamDraftRequest.integer(n.get("expectedRevision"));
+        return command.equals("fork")?workflow.fork(actor.userId(),testId,versionId,revision):workflow.retire(actor.userId(),testId,versionId,revision);
+    }
+    @PutMapping("/{testId}/versions/{versionId}/blueprint")
+    public Object blueprint(@AuthenticationPrincipal SessionPrincipal actor,@PathVariable UUID testId,@PathVariable UUID versionId,@RequestParam MultiValueMap<String,String> params,@RequestBody String body){
+        noParams(params);var n=ExamDraftRequest.tree(body);ExamDraftRequest.fields(n,"expectedRevision","blueprintId");return workflow.blueprint(actor.userId(),testId,versionId,ExamDraftRequest.integer(n.get("expectedRevision")),ExamDraftRequest.uuid(n.get("blueprintId"),false));
     }
 }

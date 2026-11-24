@@ -1,7 +1,7 @@
 import { CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function SaveStatusBadge({ status, onRetry, className }) {
+export function SaveStatusBadge({ status, onRetry, className, retryDisabled = false }) {
   if (status === 'saving') {
     return (
       <span className={cn('inline-flex items-center gap-1.5 text-xs text-amber-600 font-medium animate-pulse', className)}>
@@ -15,10 +15,11 @@ export function SaveStatusBadge({ status, onRetry, className }) {
     return (
       <button
         onClick={onRetry}
+        disabled={retryDisabled}
         className={cn('inline-flex items-center gap-1.5 text-xs text-red-600 font-medium hover:underline cursor-pointer', className)}
       >
         <AlertCircle className="h-3.5 w-3.5" />
-        Chưa lưu được (Nhấn thử lại)
+        {retryDisabled ? 'Có lựa chọn chưa xác nhận đã lưu' : 'Chưa lưu được (Nhấn thử lại)'}
       </button>
     );
   }

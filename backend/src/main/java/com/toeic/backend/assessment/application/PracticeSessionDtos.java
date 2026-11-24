@@ -20,7 +20,8 @@ public final class PracticeSessionDtos {
     public record SavedAnswer(UUID questionVersionId,UUID selectedChoiceId,OffsetDateTime updatedAt) { }
     public record Session(UUID attemptId,String sourceType,String status,OffsetDateTime startedAt,OffsetDateTime expiresAt,
             boolean expired,int totalQuestions,List<Question> questions,List<SavedAnswer> answers,
-            @JsonInclude(JsonInclude.Include.NON_NULL) SectionDtos.Configuration section) {
+            @JsonInclude(JsonInclude.Include.NON_NULL) SectionDtos.Configuration section,
+            @JsonInclude(JsonInclude.Include.NON_NULL) com.toeic.backend.assessment.domain.TestAttemptSnapshot test) {
         public Session { questions=List.copyOf(questions);answers=List.copyOf(answers); }
     }
 }

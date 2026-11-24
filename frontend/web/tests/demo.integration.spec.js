@@ -200,6 +200,27 @@ test('Guest vẫn là mẫu local được ghi rõ, không gọi API tạo attem
   await expect(page.locator('.question-panel').first()).toBeVisible(); expect(serverCreates).toBe(0);
 });
 
+test('Lịch sử thật: API phân trang, điểm đã lưu, mở kết quả và reload', async ({ page }) => {
+  await login(page);
+  const id = await start(page);
+  await choose(page, 0, 0); await submit(page);
+  const result = (await api(page, 'GET', '/attempts/' + id + '/result')).data;
+  await page.goto('/practice/history');
+  await expect(page.getByRole('heading', { name: 'Lịch sử bài làm', exact: true })).toBeVisible();
+  const row = page.locator(`[data-attempt-id="${id}"]`);
+  await expect(row).toContainText(`Điểm thô: ${result.rawScore}/4`);
+  const history = await api(page, 'GET', '/attempts?page=0&size=20');
+  expect(history.status).toBe(200);
+  expect(history.data.items.some(item => item.attemptId === id)).toBe(true);
+  expect(/"(?:questions|correctChoiceId|explanation|transcript)"/.test(JSON.stringify(history.data))).toBe(false);
+  await page.reload(); await expect(row).toContainText('Đã chấm');
+  await row.getByRole('link', { name: 'Xem kết quả', exact: true }).click();
+  await page.waitForURL(new RegExp(`/practice/attempts/${id}/result$`));
+  await expect(page.locator('.score-summary')).toContainText(`Điểm thô: ${result.rawScore}`);
+  expect((await api(page, 'GET', '/attempts/' + id + '/result')).data).toEqual(result);
+  expect((await api(page, 'GET', '/attempts?actorId=other')).status).toBe(400);
+});
+
 test('OTP reset qua Mailpit và UI thật trên tài khoản demo mới, không sửa timestamp DB', async ({ page, request }) => {
   const email = 'demo-otp-' + randomUUID() + '@example.test';
   const password = randomUUID() + 'aA9!'; const nextPassword = randomUUID() + 'bB8!';

@@ -1,0 +1,1 @@
+index|test_versions|uq_test_working_version|CREATE UNIQUE INDEX uq_test_working_version ON public.test_versions USING btree (test_id) WHERE ((status)::text = ANY (ARRAY[('DRAFT'::character varying)::text, ('IN_REVIEW'::character varying)::text, ('APPROVED'::character varying)::text]))|true|true

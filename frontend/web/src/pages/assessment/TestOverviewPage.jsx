@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import FullMockOverview from '@/features/assessment/FullMockOverview';
 import { Headphones, BookOpen, ChevronLeft } from 'lucide-react';
 import AssessmentLayout from '@/components/templates/AssessmentLayout';
 import { GuestPracticeNotice } from '@/components/molecules/GuestPracticeNotice';
@@ -9,6 +10,11 @@ import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { assessmentRepo } from '@/features/assessment/repositories/assessment.repo';
 
 export default function TestOverviewPage() {
+  const [params] = useSearchParams();
+  const { testId } = useParams();
+  return params.get('server') === '1' ? <FullMockOverview key={testId} testId={testId} /> : <GuestTestOverviewPage />;
+}
+function GuestTestOverviewPage() {
   const { testId } = useParams();
   const navigate = useNavigate();
   const [test, setTest] = useState(null);

@@ -17,6 +17,7 @@ public class PracticeAnswerRepository {
     }
     private final JdbcTemplate jdbc;
     public PracticeAnswerRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public void clearExpiryRetry(UUID attemptId){jdbc.update("DELETE FROM attempt_expiry_retries WHERE attempt_id=?",attemptId);}
 
     public boolean choiceBelongs(UUID versionId, UUID choiceId) {
         return Boolean.TRUE.equals(jdbc.queryForObject("""

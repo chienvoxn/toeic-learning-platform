@@ -14,22 +14,25 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 import { GuestPracticeNotice } from '@/components/molecules/GuestPracticeNotice';
 import { remoteAssessmentRepo } from '@/features/assessment/repositories/assessment.repo';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { rememberExam, forgetExam } from '@/features/ai/exam-tutor-state';
 
 export default function AttemptPage({ remote = false }) {
   const { attemptId } = useParams();
   const navigate = useNavigate();
-  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
+  const { user } = useAuth();
+  const userId = user?.id || user?.userId;
+  const { attempt, isLoading, isSubmitting, loadError, saveStatus, saveError, expiryError, currentIndex, setCurrentIndex, selectAnswer, toggleFlag, submitExam, retryLastSave } = useAttemptSession(attemptId, remote ? remoteAssessmentRepo : undefined);
   const [error, setError] = useState('');
   const [timedOutId, setTimedOutId] = useState(null);
   const [strictAudioOverride, setStrictAudioOverride] = useState(null);
   const attemptBase = remote ? '/practice/attempts' : '/attempts';
-  const catalogPath = remote ? '/practice' : '/tests';
+  const catalogPath = remote && attempt?.sourceType !== 'TEST_VERSION' ? '/practice' : '/tests';
+  const examSource = attempt?.sourceType, examStatus = attempt?.status, examDeadline = attempt?.expiresAt, examExpired = attempt?.expired;
 
   useEffect(() => {
-    if (!remote || !attemptId) return undefined;
-    localStorage.setItem('toeic.active.exam', attemptId);
-    return () => localStorage.removeItem('toeic.active.exam');
-  }, [remote, attemptId]);
+    if (remote && examStatus) rememberExam({ id: attemptId, remote, sourceType: examSource, status: examStatus, expiresAt: examDeadline, expired: examExpired }, userId);
+  }, [remote, attemptId, examSource, examStatus, examDeadline, examExpired, userId]);
 
   useEffect(() => {
     if (attempt?.status === 'GRADED') navigate(`${attemptBase}/${attemptId}/result`, { replace: true });
@@ -41,7 +44,7 @@ export default function AttemptPage({ remote = false }) {
   const questions = attempt.parts.flatMap(p => p.questions);
   const answered = questions.filter(q => q.userAnswer).length;
   const expired = attempt.expired || timedOutId === attemptId;
-  const submitDisabled = isSubmitting || (remote && expired && attempt.sourceType !== 'SECTION_SNAPSHOT');
+  const submitDisabled = isSubmitting || (remote && expired && attempt.sourceType !== 'SECTION_SNAPSHOT' && !attempt.autoSubmitAtExpiry);
   const hasListeningMedia = questions.some(q => q.partNumber <= 4 || q.hasMedia);
   const strictExamMode = strictAudioOverride !== null ? strictAudioOverride : attempt.sourceType === 'SECTION_SNAPSHOT';
   const isDisabled = isSubmitting || attempt.status !== 'IN_PROGRESS' || (remote && expired);
@@ -51,6 +54,7 @@ export default function AttemptPage({ remote = false }) {
     if (!byTimer && !window.confirm(`Bạn còn ${questions.length - answered} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`)) return;
     try {
       const result = await submitExam();
+      if (remote) forgetExam(attemptId, userId);
       navigate(`${attemptBase}/${attemptId}/result`, { state: { result } });
     } catch (err) {
       setError(err.message || 'Không thể nộp bài. Vui lòng thử lại.');
@@ -71,7 +75,7 @@ export default function AttemptPage({ remote = false }) {
             <div>
               <h1>{attempt.testTitle}</h1>
               <small>Part {questions[currentIndex]?.partNumber} · {answered}/{questions.length} câu</small>
-              <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} />
+              <SaveStatusBadge status={saveStatus} onRetry={retryLastSave} retryDisabled={expired && attempt.sourceType === 'TEST_VERSION'} />
             </div>
           </div>
           {attempt.sourceType === 'PRACTICE_SNAPSHOT' &&
@@ -135,10 +139,11 @@ export default function AttemptPage({ remote = false }) {
           )}
           {expired && remote && (
             <p role="status" className="integration-notice">
-              Đã hết thời gian, không thể đổi đáp án. {attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên Practice hết hạn không nhận nộp mới.'}
+              Đã hết thời gian, không thể đổi đáp án. {attempt.autoSubmitAtExpiry ? 'Máy chủ đang tự chốt Full Mock. Chỉ đáp án đã lưu trước hạn được chấm; đang đọc lại trạng thái và kết quả.' : attempt.sourceType === 'SECTION_SNAPSHOT' ? 'Bạn vẫn có thể nộp các đáp án đã lưu. Chưa có tự chốt bài.' : 'Phiên cũ hết hạn không nhận nộp mới; không áp worker hồi tố.'}
             </p>
           )}
           {(error || saveError) && <p className="form-error" role="alert">{error || saveError}</p>}
+          {expiryError && <p role="alert">{expiryError}</p>}
           {saveStatus === 'error' && (
             <p>
               Các lựa chọn chưa lưu không được dùng để chấm.{' '}

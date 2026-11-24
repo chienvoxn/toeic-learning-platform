@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MessageCircle, X, Send, Plus, ArrowLeft, BookOpen, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { chatApi } from './chat.api';
+import { useAuth } from '../auth/hooks/useAuth';
+import { EXAM_CHANGED, examTutorState, restrictExam, confirmAiAllowed } from './exam-tutor-state';
 import './chat.css';
 
 export default function ChatBubble() {
+  const { user } = useAuth();
+  const userId = user?.id || user?.userId;
   const [open, setOpen] = useState(false);
   const [list, setList] = useState([]);
   const [conversation, setConversation] = useState(null);
@@ -17,17 +21,64 @@ export default function ChatBubble() {
   const [older, setOlder] = useState(false);
   const [listPage, setListPage] = useState(0);
   const [moreConversations, setMoreConversations] = useState(false);
-  const [examActive, setExamActive] = useState(() => Boolean(localStorage.getItem('toeic.active.exam')));
+  const [examActive, setExamActive] = useState(() => examTutorState(userId).active);
+  const [checkingExam, setCheckingExam] = useState(false);
   const panel = useRef(null), trigger = useRef(null), input = useRef(null), end = useRef(null);
   const operation = useRef(0), mounted = useRef(true), sending = useRef(false);
   const pendingRequest = useRef(null);
+  const denied = useRef(false), probePending = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
-    const sync = () => setExamActive(Boolean(localStorage.getItem('toeic.active.exam')));
+    const sync = () => setExamActive(denied.current || examTutorState(userId).active);
     window.addEventListener('storage', sync);
+    window.addEventListener(EXAM_CHANGED, sync);
+    window.addEventListener('focus', sync);
     const timer = window.setInterval(sync, 1000);
-    return () => { window.removeEventListener('storage', sync); window.clearInterval(timer); };
-  }, []);
+    return () => { window.removeEventListener('storage', sync); window.removeEventListener(EXAM_CHANGED, sync); window.removeEventListener('focus', sync); window.clearInterval(timer); };
+  }, [userId]);
+  function examDenied(id) {
+    denied.current = true;restrictExam(userId, id);setExamActive(true);setMessages([]);
+    setError('AI Tutor tạm khóa trong lúc bạn đang làm bài thi. Hãy nộp bài hoặc chờ phiên thi hết hạn.');
+  }
+  const probeId = examTutorState(userId).conversationId || conversation?.id || list[0]?.id;
+  const checkExam = useCallback(async (id) => {
+    if (!id || probePending.current) return;
+    probePending.current = true;
+    setCheckingExam(true);
+    try {
+      await chatApi.messages(id); // Existing read checks the backend exam guard; no provider call.
+      if (mounted.current) { denied.current = false;confirmAiAllowed(userId);setExamActive(false);setError(''); }
+    } catch (err) {
+      if (mounted.current) {
+        if (err.code === 'AI_EXAM_RESTRICTED') { denied.current = true;restrictExam(userId, id);setExamActive(true);setMessages([]); }
+        else if (err.status === 404) {
+          // Deletion is not permission to unlock; choose a new owned probe on the next explicit check.
+          denied.current = true;restrictExam(userId, null);setExamActive(true);
+          setConversation(value => value?.id === id ? null : value);setList(rows => rows.filter(row => row.id !== id));
+          setError('Hội thoại kiểm tra không còn khả dụng. Hãy kiểm tra lại trạng thái thi.');
+        }
+        else setError('Chưa xác minh được trạng thái thi. Khóa AI vẫn giữ; hãy thử lại khi có kết nối.');
+      }
+    } finally { probePending.current = false;if (mounted.current) setCheckingExam(false); }
+  }, [userId]);
+  useEffect(() => {
+    if (!open || !examActive || !probeId) return;
+    const timer = window.setInterval(() => { void checkExam(probeId); }, 10000);
+    return () => window.clearInterval(timer);
+  }, [open, examActive, probeId, checkExam]);
+  async function refreshExam() {
+    if (checkingExam) return;
+    let id = probeId;
+    if (!id) {
+      setCheckingExam(true);
+      try {
+        const rows = await chatApi.conversations();
+        id = rows[0]?.id;
+        if (!id) { const item = await chatApi.create();id = item.id;setConversation(item); }
+      } catch { setError('Chưa xác minh được trạng thái thi. Khóa AI vẫn giữ.');setCheckingExam(false);return; }
+    }
+    await checkExam(id);
+  }
   async function loadList(append = false) {
     const current = ++operation.current;
     setLoading(true); setError('');
@@ -62,8 +113,9 @@ export default function ChatBubble() {
       const next = append ? page + 1 : 0;
       const rows = await chatApi.messages(item.id, undefined, next);
       if (!mounted.current || current !== operation.current) return;
+      denied.current = false;confirmAiAllowed(userId);setExamActive(false);
       setConversation(item); setMessages(value => append ? [...rows, ...value] : rows); setPage(next); setOlder(rows.length === 50);
-    } catch (err) { if (mounted.current && current === operation.current) setError(err.message); }
+    } catch (err) { if (mounted.current && current === operation.current) { if (err.code === 'AI_EXAM_RESTRICTED') examDenied(item.id);else setError(err.message); } }
     finally { if (mounted.current && current === operation.current) setLoading(false); }
   }
   async function remove(item) {
@@ -93,10 +145,9 @@ export default function ChatBubble() {
       if (!mounted.current) return;
       setQuestion(''); await select(item);
     } catch (err) {
-      if (err.code === 'AI_EXAM_RESTRICTED' || err.status === 403 && err.code === 'AI_EXAM_RESTRICTED') {
-        localStorage.setItem('toeic.active.exam', 'server-enforced');
-        setExamActive(true);
-        if (mounted.current) setError('AI Tutor tạm khóa trong lúc bạn đang làm bài thi. Hãy nộp bài hoặc kết thúc phiên thi để tiếp tục.');
+      if (err.code === 'AI_EXAM_RESTRICTED') {
+        pendingRequest.current = null;
+        if (mounted.current) examDenied(item.id);
         return;
       }
       // A transport failure may hide a completed server response. Reuse its identifier on retry.
@@ -117,9 +168,9 @@ export default function ChatBubble() {
         {!conversation && <><div className="tutor-welcome"><span>ENGLINGO · AI TUTOR</span><h2>Bạn muốn học gì hôm nay?</h2><p>Hỏi về ngữ pháp, từ vựng hoặc cách dùng tiếng Anh trong TOEIC.</p></div>
           {!list.length && !loading && <button className="tutor-suggestion" type="button" onClick={() => { setQuestion('Khi nào sử dụng thì hiện tại hoàn thành?'); input.current?.focus(); }}>Khi nào dùng thì hiện tại hoàn thành?</button>}
           {!!list.length && <div className="tutor-history"><small>Hội thoại gần đây</small>{list.map(item => <div className="tutor-history-row" key={item.id}><button className="tutor-history-open" type="button" disabled={busy || loading} onClick={() => select(item)}><MessageCircle size={16} />{item.title}</button><button className="tutor-history-delete" type="button" disabled={busy || loading} aria-label={`Xóa hội thoại ${item.title}`} onClick={() => remove(item)}><Trash2 size={16} /></button></div>)}{moreConversations && <button type="button" disabled={loading} onClick={() => loadList(true)}>Xem thêm hội thoại</button>}</div>}</>}
-        {examActive && <p className="tutor-warning" role="status">AI Tutor tạm khóa trong lúc bạn đang làm bài thi.</p>}
+        {examActive && <div className="tutor-warning"><p role="status">AI Tutor tạm khóa trong lúc bạn đang làm bài thi.</p><button type="button" disabled={checkingExam || busy || loading} onClick={refreshExam}>Kiểm tra lại trạng thái thi</button></div>}
         {older && conversation && <button type="button" className="tutor-reload" disabled={loading || busy} onClick={() => select(conversation, true)}>Xem tin nhắn trước</button>}
-        <div role="log" aria-label="Tin nhắn">{messages.map(message => <article key={message.id} className={`tutor-message tutor-${message.role}`}>
+        <div role="log" aria-label="Tin nhắn">{!examActive && messages.map(message => <article key={message.id} className={`tutor-message tutor-${message.role}`}>
           <small>{message.role === 'user' ? 'Bạn' : 'Trợ lý TOEIC'}</small><p>{message.content}</p>
           {message.answer?.warning && <div className="tutor-warning">{message.answer.warning}</div>}
           {!!message.answer?.citations?.length && <details><summary>Nguồn tham khảo ({message.answer.citations.length})</summary>{message.answer.citations.map(source => <div className="tutor-source" key={`${source.documentId}-${source.chunkId}`}><Link to={`/catalog/${source.contentId}`}>{source.title}{source.page ? ` · Trang ${source.page}` : ''}</Link><p>{source.excerpt}</p><small>Phiên bản: {source.contentVersionId.slice(0, 8)}</small></div>)}</details>}
@@ -128,7 +179,7 @@ export default function ChatBubble() {
         <div ref={end} />
       </div>
       {error && <div className="tutor-error" role="alert">{error}{conversation && <button type="button" disabled={busy || loading} onClick={() => select(conversation)}>Tải lại lịch sử</button>}</div>}
-      <form className="tutor-composer" onSubmit={send}><label className="sr-only" htmlFor="tutor-question">Câu hỏi TOEIC</label><textarea id="tutor-question" ref={input} rows={2} maxLength={4000} value={question} disabled={busy} placeholder="Nhập câu hỏi của bạn…" onChange={e => setQuestion(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.form.requestSubmit(); } }} /><button type="submit" aria-label="Gửi câu hỏi" disabled={busy || loading || !question.trim()}><Send size={19} /></button><small>AI có thể mắc lỗi. Hãy đối chiếu nguồn tham khảo.</small></form>
+      <form className="tutor-composer" onSubmit={send}><label className="sr-only" htmlFor="tutor-question">Câu hỏi TOEIC</label><textarea id="tutor-question" ref={input} rows={2} maxLength={4000} value={question} disabled={busy || examActive} placeholder="Nhập câu hỏi của bạn…" onChange={e => setQuestion(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.form.requestSubmit(); } }} /><button type="submit" aria-label="Gửi câu hỏi" disabled={examActive || busy || loading || !question.trim()}><Send size={19} /></button><small>AI có thể mắc lỗi. Hãy đối chiếu nguồn tham khảo.</small></form>
     </section>}
     <button className="tutor-trigger" ref={trigger} type="button" aria-label={open ? 'Đóng trợ lý TOEIC' : 'Mở trợ lý TOEIC'} aria-expanded={open} onClick={() => { setOpen(value => !value); if (!open && !conversation) loadList(); }}>{open ? <X size={23} /> : <><MessageCircle size={23} /><span>Hỏi trợ lý</span></>}</button>
   </aside>;

@@ -1,0 +1,14 @@
+column|checksum|integer|false|
+column|description|character varying(200)|true|
+column|execution_time|integer|true|
+column|installed_by|character varying(100)|true|
+column|installed_on|timestamp without time zone|true|now()
+column|installed_rank|integer|true|
+column|script|character varying(1000)|true|
+column|success|boolean|true|
+column|type|character varying(20)|true|
+column|version|character varying(50)|false|
+constraint|flyway_schema_history_pk|PRIMARY KEY (installed_rank)|true
+index|CREATE INDEX flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success)|true
+index|CREATE UNIQUE INDEX flyway_schema_history_pk ON public.flyway_schema_history USING btree (installed_rank)|true
+relation|r|p

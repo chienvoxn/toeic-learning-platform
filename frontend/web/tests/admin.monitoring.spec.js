@@ -117,6 +117,7 @@ test('revoking ADMIN applies to current browser/token, refreshes capability and 
   const learner = roles.find(role => role.name === 'LEARNER').roleId; const administrator = roles.find(role => role.administrativeRole).roleId;
   expect((await api(request, 'PUT', '/admin/users/' + actor.user.userId + '/roles', admin.accessToken, { roleIds: [learner, administrator] })).status()).toBe(200);
   await login(page, actor.email, actor.password); await page.goto('/admin/audit'); await expect(page.locator('#audit-actor')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Làm mới', exact: true })).toBeEnabled();
   expect((await api(request, 'PUT', '/admin/users/' + actor.user.userId + '/roles', admin.accessToken, { roleIds: [learner] })).status()).toBe(200);
   await page.getByRole('button', { name: 'Làm mới', exact: true }).click(); await expect(page.getByRole('alert')).toHaveText('Bạn không có quyền đọc audit.');
   await expect(page.getByRole('link', { name: 'Audit quản trị', exact: true })).toHaveCount(0);

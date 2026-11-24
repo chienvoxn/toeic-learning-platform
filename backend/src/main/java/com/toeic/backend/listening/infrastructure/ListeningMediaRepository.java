@@ -121,7 +121,12 @@ public class ListeningMediaRepository {
                 FROM attempts
                 WHERE attempt_id = ?
                   AND user_id = ?
-                  AND attempt_source_type IN ('PRACTICE_SNAPSHOT', 'SECTION_SNAPSHOT')
+                  AND (attempt_source_type IN ('PRACTICE_SNAPSHOT', 'SECTION_SNAPSHOT') OR (attempt_source_type='TEST_VERSION' AND (test_blueprint_snapshot IS NOT NULL OR (attempt_type='FULL_TEST' AND test_version_id IS NOT NULL AND test_blueprint_snapshot IS NULL
+                    AND total_questions=200 AND expires_at=started_at+interval '120 minutes'
+                    AND (SELECT count(*) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200
+                    AND (SELECT count(DISTINCT s.question_version_id) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200
+                    AND (SELECT min(s.question_order) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=1
+                    AND (SELECT max(s.question_order) FROM attempt_question_snapshots s WHERE s.attempt_id=attempts.attempt_id)=200))))
                 """,
                 (rs, i) -> new AttemptHeader(
                         rs.getObject("attempt_id", UUID.class),

@@ -190,11 +190,20 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 ### 3.4 Tests/Blueprint/Attempts
 
+**EXAM-04 DRAFT runtime 2026-11-20–21:** [API, payload, AC và giới hạn](EXAM04_Draft_Authoring_20261120.md).
+Teacher/Admin có `test:manage:self`/`test:manage:any` tạo/đọc/sửa DRAFT tại `/teacher/tests`;
+PUT `/teacher/tests/{testId}/versions/{versionId}` dùng `{revision,document}`. Chọn nguyên
+publication unit qua `/teacher/tests/question-units?partNumber=3&page=0`, pin QuestionVersion/
+GroupVersion vào test_questions, không tạo/publish bank. Ownership404, stale revision409,
+version đã pin hoặc PUBLISHED/RETIRED409, sai refs/group422. DRAFT có thể thiếu câu/thời lượng;
+không coi bảng DESIGN bên dưới là mandatory blueprint đã chốt. Chưa có publish/unpublish,
+version fork, TEST_VERSION runtime hoặc quy đổi TOEIC. Giữ nguyên năm route Practice/Section.
+
 **EXAM-01 runtime — quyết định sản phẩm 2026-11-11:** [Section Listening/Reading, payload và kiểm thử](EXAM01_Section_Attempts.md). Dùng chung năm route `/attempts` bên dưới, thêm sourceType=SECTION_SNAPSHOT với section `{type,questionCount,durationMinutes}`. LISTENING đủ Part 1–4; READING đủ Part 5–7; tổng 1–100 và 1–120 phút là giới hạn sản phẩm, nguyên nhóm/đúng tổng hoặc 409 SECTION_QUESTIONS_INSUFFICIENT. Permission exam:manage:self mặc định LEARNER; mỗi attempt kiểm permission đúng source sau ownership, không dùng union endpoint để bypass. Pin version/group/order + cấu hình/server expiry V27. Save chỉ trước hạn, submit lần đầu sau hạn được chấm các lựa chọn đã lưu; không nhận body. Không worker tự chốt (EXAM-03) hoặc phụ thuộc CRUD TestVersion (EXAM-04), không quy đổi TOEIC.
 
 **Runtime PRAC-01/02:** PRACTICE_SNAPSHOT có POST/GET attempt và PUT answer/POST submit/GET result theo §4.3–4.5. [PRAC-01](PRAC01_Practice_Sessions.md) giữ pin/order/24h; [PRAC-02 — quyết định sản phẩm vừa chốt 2026-11-11](PRAC02_Answers_Submission_Grading.md) chấm điểm thô đồng bộ/nguyên tử, replay kết quả đã lưu, explanation chỉ sau submit. Các Test/Blueprint/list/TEST_VERSION còn DESIGN.
 
-**Runtime Full Test catalog (2026-11-23):** `GET /full-tests` trả danh sách phẳng các phiên bản `FULL_TEST` mà cả test/version đều `PUBLISHED`, có thời lượng, khai báo 200 câu và thực tế gắn đúng 200 question/group version đang `PUBLISHED`. Route cần `exam:manage:self`; dữ liệu trả về gồm `testId`, `testVersionId`, `title`, `description`, `durationSeconds`, `totalQuestions`, `publishedAt`. `POST /full-tests/{testVersionId}/attempts` tạo attempt pin đúng phiên bản người học đã chọn. Luồng này không tự publish đề và không thay thế các API `/tests` còn DESIGN.
+**Runtime hợp nhất Full Test/Full Mock (working tree tích hợp 2026-11-24):** client dùng `GET /tests` và `POST /attempts` với `{sourceType:"TEST_VERSION",testVersionId}`. Chỉ current published TestVersion có blueprint snapshot, publication evidence, nguồn question/group version còn hợp lệ và quyền media M1 mới được cung cấp; start khóa và kiểm lại. Số câu/thời hạn lấy từ blueprint/version, không hard-code 200/120. `/full-tests` và `/full-tests/{testVersionId}/attempts` được giữ làm adapter tới cùng engine, cần `exam:manage:self`; catalog alias có `testId`, `testVersionId`, `title`, `description`, `durationSeconds`, `totalQuestions`, `publishedAt`, `blueprintCode`, `blueprintVersion`. Không có submit/result route thứ hai. FULL-LR/v1 và khóa/chuyển Section vẫn OPEN, không seed. Attempt FULL_TEST cũ của develop giữ pin, deadline, kết quả và timeout cũ; không backfill blueprint hoặc áp worker hồi tố. Chi tiết: [báo cáo tích hợp](TV2_G1_Develop_Integration_20261124.md).
 
 | Method | Path | Access | Request | R | Error |
 |---|---|---|---|---|---|
@@ -235,8 +244,9 @@ Q-02: page=0/size=20 mặc định, size 1–100, sort một trường questionI
 
 **Authorization implemented:** all routes in this section, the personal
 vocabulary catalog routes, and `/learning-profile/**` require an authenticated
-session with `vocabulary:learn:self`. Migration V38 grants that permission to
-the `LEARNER` system role only. The service layer additionally verifies that
+session with `vocabulary:learn:self`. Historical vocabulary V38, or compatibility
+V43 for the completion lineage, grants that permission to the `LEARNER` system
+role only; existing grants/revocations are retained. The service layer additionally verifies that
 the requested deck/vocabulary belongs to the authenticated learner; a role or
 permission never grants access to another user's data.
 
@@ -370,11 +380,53 @@ Các API hội thoại bên dưới vẫn là DESIGN, chưa được phần tri�
 | `GET` | `/admin/health` | ACTIVE ADMIN + system:health:read | — | 200 trạng thái/thời điểm thành phần | 401/403 |
 | `GET` | `/admin/usage-statistics` | ACTIVE ADMIN + system:usage:read | from,to UTC [from,to), mặc định30ngày | 200 aggregate tài khoản/Practice/Section/audit | 400/401/403/503 |
 
-| `GET` | `/admin/system-settings` | Admin | — | 200 Settings | 403 |
+| `GET` | `/admin/system-settings` | ACTIVE ADMIN + system:settings:manage | — (không nhận query) | 200 Setting[] (đúng hai key allowlist) | 400/401/403/503 |
 
-| `PATCH` | `/admin/system-settings/{key}` | Admin | UpdateSettingRequest | 200 Setting | 422 |
+| `PATCH` | `/admin/system-settings/{key}` | ACTIVE ADMIN + system:settings:manage | {value: integer, expectedRevision: integer >=0}, không nhận field/query lạ | 200 Setting | 400/401/403/404/409/503 |
+
+**ADMIN-06 runtime:** [Contract, AC và demo Settings/data management](ADMIN06_System_Configuration_Data_Management.md).
+Chỉ `vocabulary.recommendations.defaultLimit` (10, 1–100) và
+`learning.progress.defaultDays` (7, 1–90), kiểu INTEGER. DTO gồm key/type/value/
+defaultValue/minValue/maxValue/revision/updatedAt/updatedBy. PATCH kiểm revision,
+409 khi cũ; giá trị không đổi với revision đúng là no-op. Audit cùng transaction.
+Không có API tạo/xóa key. `GET /vocabulary/recommendations` bỏ `limit` và
+`GET /learning-profile/progress` bỏ `days` đọc mặc định từ DB ở request kế tiếp;
+tham số hợp lệ đã truyền được ưu tiên, rỗng/sai/duplicate trả400. Không thay lịch sử,
+attempt, auth/session/grading. Settings audit thêm action SYSTEM_SETTING_UPDATED,
+entityType SYSTEM_SETTING, entityId là một trong hai key; chi tiết chỉ số/revision.
 
 ## 4. DTO schema definitions (contract draft)
+
+**ADMIN-03 runtime (phần độc lập):** [Phạm vi/OPEN và bằng chứng](ADMIN03_Content_Moderation.md).
+UI Admin dùng lại GET/POST/PATCH/DELETE `/teacher/contents`, `/teacher/questions`,
+`/teacher/question-groups`; giữ own/any và media policy hiện có, không API authoring
+song song. Login/me thêm `adminCapabilities.contentManagement` và
+`questionManagement` cho ACTIVE ADMIN có `content:manage:any`/`question:manage:any`.
+GET `/teacher/question-options` không nhận query, trả danh mục Part/topic thật
+cho editor; kiểm `question:manage:self` hoặc `question:manage:any` và actor ACTIVE.
+Create/update ghi audit nguyên tử với tên field được yêu cầu và UUID phiên bản,
+không ghi giá trị nội dung; lỗi audit503 CONTENT_AUDIT_UNAVAILABLE rollback.
+Archive lần đầu ghi audit nguyên tử; lỗi audit503 ARCHIVE_AUDIT_UNAVAILABLE,
+lặp204 không thêm audit. Audit ADMIN07 nhận CREATED/UPDATED/ARCHIVED cho
+CONTENT/QUESTION/QUESTION_GROUP; chi tiết chỉ status, UUID version và tên field
+allowlist. Thống kê sự kiện quản lý bao gồm chín action này của Teacher hoặc
+Admin; không phải tổng mọi hoạt động.
+**Workflow ADMIN03 xác nhận2026-11-15:** dùng `/moderation`, không dùng các route
+review/approve/publish DESIGN phía trên. GET `/moderation/capabilities`, GET
+`/moderation/{contents|questions|groups}?page=0` (size20 cố định), GET
+`/moderation/{kind}/{parentId}/versions/{versionId}` và POST cùng path thêm
+`/{submit|approve|return|revoke|publish}`. Payload `{expectedRevision}`;
+return/revoke bắt buộc thêm reason1–2000; publish content bắt buộc visibility
+PUBLIC/AUTHENTICATED. Từ chối field lạ/duplicate/sai kiểu/query không hợp lệ400.
+Submit self/any+ownership; review/publish ACTIVE ADMIN+quyền riêng, không cần
+manage. Legacy thiếu evidence, stale, tự duyệt, group publication, media sai409;
+audit/DB lỗi503 và rollback. Reply gồm status/revision/approvedRevision,
+sourceVersionId/evidenceComplete/payload/decisions/capabilities. Payload/reason chỉ
+trong scope authoring/review; Learner không đọc được. Revision tăng mỗi authoring
+hoặc transition, approval pin revision sau approve, khóa nội dung cho tới revoke.
+Thêm audit SUBMITTED/APPROVED/RETURNED/APPROVAL_REVOKED/PUBLISHED cho ba resource,
+projection chỉ status/version UUID; không reason hay nội dung. Chưa G1, bộ đề,
+unpublish/restore hoặc grant API. [Contract và kiểm chứng](ADMIN03_Content_Moderation.md).
 
 ### 4.1 Authentication
 
@@ -654,3 +706,39 @@ Log provider/model, token counts, latency, cost, status, trace ID; do not log ra
 | SRS scheduling | Simplified SM-2, 4 ratings | **OPEN — chưa chốt công thức** |
 
 > **Lưu ý:** Các ghi chú về ERD v1.2/v1.3 trong phần nội dung gốc là thông tin lịch sử. Đối chiếu ERD v1.6 trước khi triển khai; không sửa Flyway migration đã được áp dụng.
+
+## Triển khai TestVersion publication / Full Mock — 2026-11-21
+
+Contract người dùng đã chốt và API thực tế được mô tả tại
+[TV2_Publication_FullMock_20261121.md](TV2_Publication_FullMock_20261121.md).
+Phần này bổ sung EXAM-04 DRAFT đã triển khai và thay mô tả DESIGN cũ về luồng publication/runtime tương ứng.
+Teacher version transitions dùng `/api/v1/teacher/tests/{testId}/versions/{versionId}/…`;
+review/publish yêu cầu ACTIVE ADMIN và `test:review`/`test:publish`, contributor cycle và expectedRevision.
+Full Mock tạo bằng `POST /api/v1/attempts` với `{sourceType:"TEST_VERSION",testVersionId:"uuid"}`;
+lưu đáp án, submit, result vẫn dùng routes attempts hiện có, không nhận câu/blueprint/deadline từ client.
+Unpublish/retire chặn start mới nhưng giữ phiên đã pin; hết hạn chặn sửa và cho explicit submit các đáp án đã lưu.
+Blueprint số liệu chính thức còn chờ xác nhận, không coi fixture nhỏ là cấu trúc TOEIC đã phê duyệt.
+Không worker EXAM-03, quy đổi điểm hoặc bypass G1/media trong gói này.
+
+## Bổ sung EXAM-03 — 2026-11-22
+
+[Worker Full Mock expiry](EXAM03_Worker_20261122.md) bổ sung tự chốt chỉ cho TEST_VERSION/FULL_MOCK có pin/snapshot hợp lệ. Scheduler chạy độc lập token/browser, claim parent SKIP LOCKED, reuse grading transaction và durable retry V42. Năm route attempts giữ nguyên; GET không tự grade. Hết hạn chặn save; UI đọc lại trạng thái đến GRADED rồi đọc result DB. Worker/submit tay chỉ commit một bộ kết quả. Practice và Section giữ policy cũ, không tự chốt bởi worker này. Chưa seed blueprint chính thức hoặc thực thi đề xuất khóa/chuyển Section 45/75 phút.
+
+## Bổ sung EXAM-05 — 2026-11-24
+
+`GET /api/v1/attempts?page=0&size=20` trả lịch sử own có phân trang (size 1–100),
+lọc đúng permission theo source trước count/page, không nhận actorId hoặc query ngoài
+allowlist. Summary GRADED chỉ đọc điểm/count/accuracy đã lưu; IN_PROGRESS không có
+score. Không trả key/explanation/transcript trong list. Result và submit replay vẫn
+dùng endpoint cũ; Part stats đã lưu được trả thêm cho Practice, không chấm lại bank.
+Payload/error/demo/giới hạn: [runbook TV2](TV2_Sprint3_Completion_20261124.md).
+Không có quy đổi TOEIC, FULL-LR seed hoặc Section timing mới.
+
+## Bổ sung G1 hỗ trợ TV2 — phạm vi TV1, 2026-11-24
+
+`POST /api/v1/moderation/groups/{groupId}/versions/{groupVersionId}/publish-batch`
+publish nguyên tử group và tập member APPROVED có revision/pointer/order tường minh;
+ACTIVE ADMIN + question:publish, contributor cycle, current source, media M1 và audit
+đều bắt buộc. Authoring question thêm optional `groupQuestionOrder` qua cột V23 đã có;
+không sửa order approved/published khi publish. Không tạo media grant API hoặc UI batch.
+[Contract, payload, lỗi và manifest hỗ trợ TV1](G1_TV2_Support_20261124.md).
