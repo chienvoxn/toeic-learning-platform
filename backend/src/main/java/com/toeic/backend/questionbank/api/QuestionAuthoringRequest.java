@@ -8,7 +8,7 @@ import tools.jackson.databind.JsonNode;
 
 /** Local strict allowlist; no global Jackson behavior change. */
 public class QuestionAuthoringRequest {
-    private static final Set<String> QUESTION=Set.of("partId","topicId","questionTypeId","groupVersionId","questionText","explanation","difficulty","choices","assets");
+    private static final Set<String> QUESTION=Set.of("partId","topicId","questionTypeId","groupVersionId","groupQuestionOrder","questionText","explanation","difficulty","choices","assets");
     private static final Set<String> GROUP=Set.of("groupType","instruction","passageText","assets");
     private final Map<String,JsonNode> values=new HashMap<>();
     @JsonAnySetter public void field(String name,JsonNode value) {
@@ -43,7 +43,7 @@ public class QuestionAuthoringRequest {
             return new QuestionAuthoringEdit(values.keySet(),number("partId",false),number("topicId",true),number("questionTypeId",false),
                     values.containsKey("groupVersionId")?uuid(values.get("groupVersionId"),true):null,
                     string("questionText",false),string("explanation",true),string("difficulty",true),string("groupType",true),
-                    string("instruction",true),string("passageText",true),choices,assets);
+                    string("instruction",true),string("passageText",true),choices,assets,number("groupQuestionOrder",true));
         } catch(IllegalArgumentException|NullPointerException ex) { throw QuestionAuthoringException.invalid(); }
     }
     private String string(String key,boolean nullable) { return values.containsKey(key)?text(values.get(key),nullable):null; }

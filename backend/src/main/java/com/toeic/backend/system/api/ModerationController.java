@@ -10,8 +10,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/moderation")
 public class ModerationController {
     private final ModerationService service;
-    public ModerationController(ModerationService service){this.service=service;}
+    private final GroupPublicationService groups;
+    public ModerationController(ModerationService service,GroupPublicationService groups){this.service=service;this.groups=groups;}
     private static void empty(MultiValueMap<String,String> params){if(!params.isEmpty())throw ModerationException.invalid();}
+    @PostMapping("/groups/{parent}/versions/{version}/publish-batch")
+    public Object publishGroup(@PathVariable UUID parent,@PathVariable UUID version,@RequestParam MultiValueMap<String,String> params,@RequestBody GroupPublicationRequest body){
+        empty(params);return groups.publish(parent,version,body.command());
+    }
     @GetMapping("/capabilities") public Object capabilities(@RequestParam MultiValueMap<String,String> params){empty(params);return service.capabilities();}
     @GetMapping("/{kind:contents|questions|groups}") public Object list(@PathVariable String kind,@RequestParam MultiValueMap<String,String> params){
         int page=0;if(!params.isEmpty()){

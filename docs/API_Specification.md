@@ -727,3 +727,12 @@ score. Không trả key/explanation/transcript trong list. Result và submit rep
 dùng endpoint cũ; Part stats đã lưu được trả thêm cho Practice, không chấm lại bank.
 Payload/error/demo/giới hạn: [runbook TV2](TV2_Sprint3_Completion_20261124.md).
 Không có quy đổi TOEIC, FULL-LR seed hoặc Section timing mới.
+
+## Bổ sung G1 hỗ trợ TV2 — phạm vi TV1, 2026-11-24
+
+`POST /api/v1/moderation/groups/{groupId}/versions/{groupVersionId}/publish-batch`
+publish nguyên tử group và tập member APPROVED có revision/pointer/order tường minh;
+ACTIVE ADMIN + question:publish, contributor cycle, current source, media M1 và audit
+đều bắt buộc. Authoring question thêm optional `groupQuestionOrder` qua cột V23 đã có;
+không sửa order approved/published khi publish. Không tạo media grant API hoặc UI batch.
+[Contract, payload, lỗi và manifest hỗ trợ TV1](G1_TV2_Support_20261124.md).

@@ -76,7 +76,7 @@ public class QuestionAuthoringService {
             result.add(new QuestionAuthoringDtos.Version(version.getQuestionVersionId(),version.getVersionNumber(),version.getStatus(),
                     snapshot.prompt().questionText(),snapshot.explanation(),version.getDifficulty(),pin==null?null:pin.getGroupVersionId(),
                     snapshot.prompt().passage(),snapshot.choices(),data.readableAssets(false,version.getQuestionVersionId(),access.readMedia()),
-                    pin==null?List.of():data.readableAssets(true,pin.getGroupVersionId(),access.readMedia())));
+                    pin==null?List.of():data.readableAssets(true,pin.getGroupVersionId(),access.readMedia()),data.groupOrder(version.getQuestionVersionId())));
         }
         return new QuestionAuthoringDtos.QuestionDetail(data.questionSummary(parent),result);
     }
@@ -161,7 +161,7 @@ public class QuestionAuthoringService {
     private static void groupType(String type) { if(type!=null&&(type.isBlank()||type.length()>30))throw QuestionAuthoringException.invalid(); }
     private static void requireEdit(QuestionAuthoringEdit edit,boolean group) {
         var allowed=group?Set.of("groupType","instruction","passageText","assets")
-                :Set.of("partId","topicId","questionTypeId","groupVersionId","questionText","explanation","difficulty","choices","assets");
+                :Set.of("partId","topicId","questionTypeId","groupVersionId","groupQuestionOrder","questionText","explanation","difficulty","choices","assets");
         if(edit==null||edit.fields().isEmpty()||!allowed.containsAll(edit.fields())
                 ||edit.has("assets")&&edit.assets()==null||edit.has("choices")&&edit.choices()==null
                 ||edit.has("partId")&&edit.partId()==null||edit.has("questionTypeId")&&edit.questionTypeId()==null)
@@ -185,6 +185,7 @@ public class QuestionAuthoringService {
         if(!edit.has("partId")||!edit.has("questionText")||!edit.has("choices"))throw QuestionAuthoringException.invalid();
         int part=data.partNumber(edit.partId()),type=data.typeId(edit.questionTypeId());data.topic(edit.topicId());
         var gid=groupOf(edit.groupVersionId());
+        if(edit.groupQuestionOrder()!=null&&(gid==null||edit.groupQuestionOrder()<1))throw QuestionAuthoringException.invalid();
         lockGroups(actorId,Collections.singletonList(gid),true);
         var pin=groupPin(actorId,edit.groupVersionId(),gid);
         validateQuestion(part,gid,edit.questionText(),edit.difficulty(),edit.choices());
@@ -192,6 +193,7 @@ public class QuestionAuthoringService {
         media.validate(actorId,plus(target,passageAssets(pin)),passageAssets(pin),false);
         var id=UUID.randomUUID();var time=now();data.insertQuestion(id,actorId,edit.partId(),edit.topicId(),type,gid,time);
         var version=data.insertVersion(false,id,1,edit.groupVersionId(),edit.questionText(),edit.explanation(),edit.difficulty(),time);
+        data.groupOrder(version,edit.groupQuestionOrder());
         data.replaceChoices(version,edit.choices());data.replaceAssets(false,version,target);
         evidence.record("questions",id,version,null,actorId,true);
         audit.created(actorId,ContentManagementAudit.Resource.QUESTION,id,version,edit.fields(),time);
@@ -231,6 +233,8 @@ public class QuestionAuthoringService {
         Integer topic=edit.has("topicId")?edit.topicId():parent.topicId();
         int type=data.typeId(edit.has("questionTypeId")?edit.questionTypeId():parent.typeId());data.topic(topic);
         var groupVersion=edit.has("groupVersionId")?edit.groupVersionId():sourceVersion.groupVersionId();
+        var groupOrder=edit.has("groupQuestionOrder")?edit.groupQuestionOrder():data.groupOrder(sourceVersion.id());
+        if(groupVersion==null&&groupOrder!=null||groupOrder!=null&&groupOrder<1)throw QuestionAuthoringException.invalid();
         var pin=groupPin(actorId,groupVersion,proposedGroup);
         // An explicit valid new pin may repair a question whose historical group version was archived.
         // The old snapshot is only read for clone/media checks; it is never reactivated or overwritten.
@@ -244,6 +248,7 @@ public class QuestionAuthoringService {
         media.validate(actorId,plus(target,passageAssets(pin)),plus(source,passageAssets(oldPin)),working.cloning());
         var version=working.cloning()?data.insertVersion(false,id,working.nextNumber(),groupVersion,text,explanation,difficulty,now()):working.draft().id();
         if(!working.cloning())data.editVersion(false,version,groupVersion,text,explanation,difficulty);
+        data.groupOrder(version,groupOrder);
         if(working.cloning()||edit.has("choices"))data.replaceChoices(version,choices);
         if(working.cloning()||edit.has("assets"))data.replaceAssets(false,version,target);
         data.updateQuestion(parent,partId,topic,type,proposedGroup,now());

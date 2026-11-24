@@ -31,8 +31,9 @@ export default function ModerationPage() {
     finally { setBusy(false); }
   }
   return <LearnerTemplate><div className="max-w-6xl mx-auto space-y-5">
-    <div className="page-heading"><h1>Duyệt và xuất bản</h1><p>Approval gắn đúng version/revision. Nhóm và câu thuộc nhóm chưa hỗ trợ xuất bản; bộ đề chưa tích hợp.</p></div>
+    <div className="page-heading"><h1>Duyệt và xuất bản</h1><p>Approval gắn đúng version/revision. Màn hình này duyệt từng phiên bản; xuất bản nguyên nhóm cần thao tác batch riêng, chưa có trên màn hình này.</p></div>
     <Link className="pill-button" to="/teacher/content">Soạn học liệu và câu hỏi</Link>
+    <Link className="pill-button" to="/teacher/tests">Quản lý và xuất bản bộ đề</Link>
     <label htmlFor="moderation-kind">Loại<select id="moderation-kind" disabled={busy} value={query.kind} onChange={e => { setDetail(null); setQuery({ kind: e.target.value, page: 0 }); }}>{Object.entries(names).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
     {(caps.loading || report.loading || busy) && <p>Đang tải...</p>}
     {(error || caps.error || report.error) && <p role="alert">{error || caps.error || report.error}</p>}{notice && <p role="status">{notice}</p>}

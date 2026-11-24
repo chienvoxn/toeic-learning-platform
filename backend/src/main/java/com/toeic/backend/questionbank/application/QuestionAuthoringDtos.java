@@ -13,7 +13,7 @@ public final class QuestionAuthoringDtos {
     public record GroupSummary(UUID groupId,String groupType,String status,UUID publishedVersionId,OffsetDateTime createdAt,OffsetDateTime updatedAt) {}
     public record Asset(UUID mediaId,String resourceType,String mimeType,Long fileSize,Integer durationSeconds,Integer displayOrder,String transcript) {}
     public record Version(UUID questionVersionId,int versionNumber,String status,String questionText,String explanation,String difficulty,
-            UUID groupVersionId,QuestionPrompt.Passage passage,List<QuestionAuthoringSnapshotMapper.Choice> choices,List<Asset> assets,List<Asset> passageAssets) {
+            UUID groupVersionId,QuestionPrompt.Passage passage,List<QuestionAuthoringSnapshotMapper.Choice> choices,List<Asset> assets,List<Asset> passageAssets,Integer groupQuestionOrder) {
         public Version { choices=List.copyOf(choices); assets=List.copyOf(assets); passageAssets=List.copyOf(passageAssets); }
         @Override public String toString(){return "ManagementQuestionVersion[redacted]";}
     }

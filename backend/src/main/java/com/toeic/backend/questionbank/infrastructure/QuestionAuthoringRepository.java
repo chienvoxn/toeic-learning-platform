@@ -22,6 +22,12 @@ public class QuestionAuthoringRepository {
     public record Media(UUID id,UUID owner,String visibility,String type) {}
     private final JdbcTemplate jdbc;
     public QuestionAuthoringRepository(JdbcTemplate jdbc) { this.jdbc=jdbc; }
+    public Integer groupOrder(UUID version) {
+        return jdbc.queryForObject("SELECT group_question_order FROM question_versions WHERE question_version_id=?",Integer.class,version);
+    }
+    public void groupOrder(UUID version,Integer order) {
+        jdbc.update("UPDATE question_versions SET group_question_order=? WHERE question_version_id=?",order,version);
+    }
     public QuestionAuthoringDtos.Options options() {
         return new QuestionAuthoringDtos.Options(
                 jdbc.query("SELECT part_id,part_number,skill,name FROM toeic_parts ORDER BY part_number,part_id",(r,n) -> new QuestionReadDtos.Part(r.getInt(1),r.getInt(2),r.getString(3),r.getString(4))),
